@@ -56,6 +56,7 @@ try:
         find_latest_save,
         find_save_files,
         SATURDAY_MARKET_VENDORS,
+        ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     )
     from export_gift_rankings import (
         load_npc_preferences_from_fiddle,
@@ -87,6 +88,7 @@ except ImportError:
             find_latest_save,
             find_save_files,
             SATURDAY_MARKET_VENDORS,
+            ANIMAL_FESTIVAL_ATTENDING_VENDORS,
         )
         from scripts.export_gift_rankings import (
             load_npc_preferences_from_fiddle,
@@ -114,6 +116,7 @@ except ImportError:
             find_latest_save,
             find_save_files,
             SATURDAY_MARKET_VENDORS,
+            ANIMAL_FESTIVAL_ATTENDING_VENDORS,
         )
         from export_gift_rankings import (
             load_npc_preferences_from_fiddle,
@@ -935,8 +938,10 @@ def plan_daily_gift_bag(
     initial_inventory = dict(current_inventory)
 
     is_sat = False
+    is_animal_fest = False
     if save is not None and hasattr(save, "in_game_date") and save.in_game_date is not None:
         is_sat = getattr(save.in_game_date, "is_saturday", False)
+        is_animal_fest = getattr(save.in_game_date, "is_animal_festival", False)
 
     planning_for_saturday = (mode in ("saturday", "market")) or (mode == "auto" and is_sat)
 
@@ -1069,7 +1074,8 @@ def plan_daily_gift_bag(
             def recip_sort_key(nid):
                 is_v = npc_progress[nid]["is_vendor"]
                 is_l = nid in new_loved
-                return (0 if is_l and is_v else (1 if is_l else (2 if is_v else 3)), npc_progress[nid]["name"])
+                is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                return (0 if is_l and is_boosted else (1 if is_l else (2 if is_boosted else 3)), npc_progress[nid]["name"])
 
             sorted_recips = sorted(list(new_loved | new_liked), key=recip_sort_key)
 
@@ -1082,17 +1088,19 @@ def plan_daily_gift_bag(
             selected_loved = [nid for nid in selected_recips if nid in new_loved]
             selected_liked = [nid for nid in selected_recips if nid in new_liked]
 
-            # Score calculation with Saturday vendor boost
+            # Score calculation with Saturday / Festival vendor boost
             score = 0.0
             for nid in selected_loved:
                 weight = float(loved_weight)
-                if planning_for_saturday and npc_progress[nid]["is_vendor"]:
+                is_boosted = (planning_for_saturday and npc_progress[nid]["is_vendor"]) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                if is_boosted:
                     weight *= vendor_boost
                 score += weight
 
             for nid in selected_liked:
                 weight = float(liked_weight)
-                if planning_for_saturday and npc_progress[nid]["is_vendor"]:
+                is_boosted = (planning_for_saturday and npc_progress[nid]["is_vendor"]) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                if is_boosted:
                     weight *= vendor_boost
                 score += weight
 
@@ -1119,8 +1127,12 @@ def plan_daily_gift_bag(
 
             item_name = str(meta.get("display_name", item_id))
 
-            # Count how many visiting vendors are covered by this item
-            vendor_hits = sum(1 for nid in selected_recips if npc_progress[nid]["is_vendor"])
+            # Count how many visiting / boosted vendors are covered by this item
+            vendor_hits = sum(
+                1 for nid in selected_recips
+                if (planning_for_saturday and npc_progress[nid]["is_vendor"])
+                or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+            )
 
             # 7-element Candidate ranking tuple:
             # (availability_tier, score, vendor_hits, len(selected_loved), -bin_p, -store_p, -len(item_name))
@@ -1230,6 +1242,7 @@ def plan_daily_gift_bag(
     overall_stats = {
         "mode": mode,
         "planning_for_saturday": planning_for_saturday,
+        "is_animal_festival": is_animal_fest,
         "target_npcs_count": len(target_npcs),
         "covered_npcs_count": len(covered_npcs),
         "slots_used": len(bag_plan),
@@ -1294,7 +1307,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
         print(f"  • Chest Storage: {chest_items} unique items across all farm/world chests")
         print(f"  • Total Available for Gifting/Crafting: {total_avail} unique items")
 
-    # Market context banner
+    # Market & Festival context banner
     if getattr(date_info, "is_saturday", False) or stats["mode"] in ("saturday", "market"):
         if getattr(date_info, "is_saturday", False):
             print(f"\n🎉 TODAY IS SATURDAY MARKET DAY! All 34 NPCs (26 townsfolk + 8 visiting vendors) are in town!")
@@ -1306,6 +1319,15 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     elif stats["mode"] == "market-only":
         print(f"\n🎪 PLANNING FOR SATURDAY MARKET VENDORS ONLY:")
         print(f"  • Focuses exclusively on the 8 weekly visiting vendors (Darcy, Louis, Merri, Stillwell, Taliferro, Vera, Wheedle, Zorel).")
+    elif getattr(date_info, "is_animal_festival", False) or stats.get("is_animal_festival", False):
+        days_until = getattr(date_info, "days_until_saturday", 0)
+        next_sat = getattr(date_info, "next_saturday_day", 6)
+        print(f"\n🎉 TODAY IS ANIMAL FESTIVAL DAY! (Winter 10)")
+        print(f"  • 28 NPCs present in town (26 permanent townsfolk + visiting contestants Merri & Louis)!")
+        print(f"  • Merri & Louis receive priority boost for this special non-Saturday festival appearance.")
+        aldaria_vendors = sorted([npc_progress[x]["name"] for x in npc_progress if npc_progress[x]["is_vendor"] and x.lower() not in ANIMAL_FESTIVAL_ATTENDING_VENDORS])
+        print(f"  ℹ️  6 Saturday Market vendors remain in Aldaria and return this Saturday (Day {next_sat}, in {days_until} days):")
+        print(f"     {', '.join(aldaria_vendors)}")
     else:
         day_of_week = getattr(date_info, "day_of_week", "Weekday")
         days_until = getattr(date_info, "days_until_saturday", 0)
@@ -1822,6 +1844,19 @@ def main():
         if "sat" in d_lower or d_lower in ("6", "13", "20", "27"):
             if effective_mode == "auto":
                 effective_mode = "saturday"
+        elif "animal" in d_lower or "winter 10" in d_lower or "10 winter" in d_lower or d_lower in ("winter_10", "animal_festival"):
+            yr = 1
+            if save is not None and hasattr(save, "in_game_date") and save.in_game_date:
+                yr = save.in_game_date.year
+            elif save is None:
+                cal_days = (yr - 1) * 112 + 3 * 28 + 9
+                dummy_entries = {
+                    "header": json.dumps({"name": "Player", "calendar_time": cal_days * 86400, "clock_time": 36000}),
+                    "player": json.dumps({"name": "Player", "inventory": []}),
+                    "npcs": json.dumps({}),
+                }
+                save = SaveData(Path("simulated.sav"), dummy_entries)
+            save.in_game_date = InGameDate(year=yr, season="winter", day=10, time_str="10:00")
 
     # 5. Exclude NPCs if requested
     excluded = set([x.strip().lower() for x in args.exclude_npcs.split(",") if x.strip()])

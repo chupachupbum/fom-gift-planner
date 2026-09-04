@@ -63,6 +63,18 @@ SATURDAY_MARKET_VENDORS = {
     "darcy", "louis", "merri", "stillwell", "taliferro", "vera", "wheedle", "zorel"
 }
 
+# Visiting vendors who attend the Animal Festival on Winter 10
+ANIMAL_FESTIVAL_ATTENDING_VENDORS = {"louis", "merri"}
+
+# Calendar of annual festivals in Fields of Mistria
+FESTIVAL_CALENDAR = {
+    ("spring", 17): "Spring Festival",
+    ("summer", 28): "Shooting Star Festival",
+    ("fall", 10): "Harvest Festival",
+    ("autumn", 10): "Harvest Festival",
+    ("winter", 10): "Animal Festival",
+}
+
 DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 
@@ -93,9 +105,24 @@ class InGameDate:
         """Returns the in-season day number of the next Saturday Market."""
         return self.day + self.days_until_saturday
 
+    @property
+    def is_animal_festival(self) -> bool:
+        """Returns True if today is the Animal Festival (Winter 10)."""
+        return self.season.lower() == "winter" and self.day == 10
+
+    @property
+    def festival_name(self) -> Optional[str]:
+        """Returns the festival name if today is an annual festival, else None."""
+        return FESTIVAL_CALENDAR.get((self.season.lower(), self.day))
+
     def __str__(self) -> str:
-        market_badge = " [SATURDAY MARKET DAY]" if self.is_saturday else ""
-        return f"Year {self.year}, {self.season.capitalize()} Day {self.day} ({self.day_of_week}, {self.time_str}){market_badge}"
+        if self.is_saturday:
+            event_badge = " [SATURDAY MARKET DAY]"
+        elif self.festival_name:
+            event_badge = f" [{self.festival_name.upper()} DAY]"
+        else:
+            event_badge = ""
+        return f"Year {self.year}, {self.season.capitalize()} Day {self.day} ({self.day_of_week}, {self.time_str}){event_badge}"
 
 
 class SaveData:
@@ -104,6 +131,7 @@ class SaveData:
     def __init__(self, file_path: Path, entries: Dict[str, str]):
         self.file_path = Path(file_path)
         self.raw_entries = entries
+        self._override_date: Optional[InGameDate] = None
 
         # Primary JSON blocks
         self.header: dict = self._safe_json("header")
@@ -141,6 +169,9 @@ class SaveData:
         FoM uses 28 days per season, 4 seasons per year (112 days / year).
         1 game day = 86,400 calendar_time units.
         """
+        if self._override_date is not None:
+            return self._override_date
+
         cal_time = self.header.get("calendar_time")
         if cal_time is None:
             cal_time = self.gamedata.get("date", 0)
@@ -166,6 +197,10 @@ class SaveData:
             day=day_in_season,
             time_str=time_str
         )
+
+    @in_game_date.setter
+    def in_game_date(self, val: InGameDate):
+        self._override_date = val
 
     @property
     def inventory(self) -> List[dict]:
@@ -215,9 +250,14 @@ class SaveData:
         """
         Returns True if the NPC is present in Mistria today.
         On Saturdays, all 34 NPCs (26 townsfolk + 8 vendors) are in town.
-        On weekdays/Sundays, the 8 Saturday Market vendors are off-map in Aldaria.
+        On Winter 10 (Animal Festival), 28 NPCs are in town (26 townsfolk + Louis & Merri).
+        On standard weekdays/Sundays, the 8 Saturday Market vendors are off-map in Aldaria.
         """
         if self.in_game_date.is_saturday:
+            return True
+
+        # Animal Festival exception: Louis and Merri attend as animal contestants
+        if self.in_game_date.is_animal_festival and npc_id.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS:
             return True
 
         if self.is_saturday_market_vendor(npc_id):

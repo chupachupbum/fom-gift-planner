@@ -38,6 +38,7 @@ try:
         find_save_files,
         find_latest_save,
         SATURDAY_MARKET_VENDORS,
+        ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     )
     from export_gift_rankings import (
         load_npc_preferences_from_fiddle,
@@ -71,6 +72,7 @@ except ImportError:
         find_save_files,
         find_latest_save,
         SATURDAY_MARKET_VENDORS,
+        ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     )
     from scripts.export_gift_rankings import (
         load_npc_preferences_from_fiddle,
@@ -167,9 +169,11 @@ def create_synthetic_save_entries(
     if gifted_npcs is None:
         gifted_npcs = {}
 
+    is_animal_fest = (season.lower() == "winter" and day == 10)
     for nid in all_34_npc_ids:
         is_vendor = nid in SATURDAY_MARKET_VENDORS
-        loc_id = "town" if (day % 7 == 6 or not is_vendor) else "aldaria"
+        is_fest_vendor = is_animal_fest and (nid in ("merri", "louis"))
+        loc_id = "town" if (day % 7 == 6 or not is_vendor or is_fest_vendor) else "aldaria"
         npcs_data[nid] = {
             "name": nid.capitalize(),
             "heart_points": 100.0,
@@ -1350,6 +1354,132 @@ class TestFocusSuggestions(unittest.TestCase):
         inv = {"lemon_cake": 1}
         suggs = compute_focus_suggestions(remaining_map, inventory=inv, recipes=recipes)
         self.assertEqual(suggs, [])
+
+
+class TestAnimalFestivalPlanning(unittest.TestCase):
+    """Integration tests for Animal Festival (Winter 10) planning, vendor boost, and CLI banners."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.work_dir = Path(self.temp_dir.name)
+        self.mock_recipes = get_mock_recipes()
+        self.mock_meta = get_mock_meta()
+
+        # Custom NPC list with townsfolk, festival vendors (Merri, Louis), and non-festival vendor (Darcy)
+        self.test_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["cornmeal"]
+            },
+            "march": {
+                "name": "March",
+                "loved": ["deluxe_sandwich"],
+                "liked": ["bread"]
+            },
+            "celine": {
+                "name": "Celine",
+                "loved": ["strawberry_shortcake"],
+                "liked": ["strawberry"]
+            },
+            "louis": {  # Saturday Vendor attending Animal Festival
+                "name": "Louis",
+                "loved": ["strawberry_shortcake"],
+                "liked": ["strawberry"]
+            },
+            "merri": {  # Saturday Vendor attending Animal Festival
+                "name": "Merri",
+                "loved": ["golden_cheesecake"],
+                "liked": ["cornmeal"]
+            },
+            "darcy": {  # Saturday Vendor NOT attending Animal Festival
+                "name": "Darcy",
+                "loved": ["deluxe_sandwich"],
+                "liked": ["sugar"]
+            },
+        }
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def test_auto_mode_on_winter_10_includes_merri_and_louis(self):
+        """Verify that on Winter 10 (Animal Festival), auto mode includes Merri & Louis and excludes Darcy."""
+        save_path = self.work_dir / "animal_festival.sav"
+        create_synthetic_save_file(save_path, season="winter", day=10)
+        save = parse_save_file(save_path)
+
+        self.assertTrue(save.in_game_date.is_animal_festival)
+        self.assertFalse(save.in_game_date.is_saturday)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.test_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+            max_slots=10,
+            recipes=self.mock_recipes,
+        )
+
+        stats = plan["overall_stats"]
+        self.assertTrue(stats["is_animal_festival"])
+        # Target NPCs should be 5: Adeline, March, Celine, Louis, Merri (Darcy is excluded as non-attending vendor)
+        self.assertEqual(stats["target_npcs_count"], 5)
+
+        p = plan["npc_progress"]
+        self.assertTrue(p["louis"]["is_present_today"])
+        self.assertTrue(p["merri"]["is_present_today"])
+        self.assertFalse(p["darcy"]["is_present_today"])
+
+    def test_vendor_boost_applies_to_animal_festival_vendors(self):
+        """Verify that vendor_boost prioritizes Louis/Merri over townsfolk on Animal Festival."""
+        # Player has 1 strawberry_shortcake (loved by Celine [townsfolk] and Louis [festival vendor]).
+        # With max_slots=1, if both compete for an item or if vendor boost is active, Louis gets priority.
+        bag = {"strawberry_shortcake": 1}
+        save_path = self.work_dir / "boost_test.sav"
+        create_synthetic_save_file(save_path, bag_items=bag, season="winter", day=10)
+        save = parse_save_file(save_path)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.test_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+            max_slots=1,
+            vendor_boost=2.0,
+            recipes=self.mock_recipes,
+        )
+
+        slot = plan["bag_plan"][0]
+        recip_ids = [r["npc_id"] for r in slot["all_recipients_today"]]
+        # Louis must be selected as the recipient due to vendor boost
+        self.assertIn("louis", recip_ids)
+
+    def test_animal_festival_terminal_banner(self):
+        """Verify print_terminal_plan prints dedicated Animal Festival banner."""
+        save_path = self.work_dir / "banner_test.sav"
+        create_synthetic_save_file(save_path, season="winter", day=10)
+        save = parse_save_file(save_path)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.test_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+            max_slots=5,
+            recipes=self.mock_recipes,
+        )
+
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            print_terminal_plan(save, plan)
+        output = buf.getvalue()
+
+        self.assertIn("TODAY IS ANIMAL FESTIVAL DAY! (Winter 10)", output)
+        self.assertIn("28 NPCs present in town", output)
+        self.assertIn("Merri & Louis receive priority boost", output)
+        self.assertIn("6 Saturday Market vendors remain in Aldaria", output)
 
 
 if __name__ == "__main__":

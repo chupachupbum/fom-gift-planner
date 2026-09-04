@@ -15,6 +15,9 @@ try:
     from save_parser import (
         NON_LOCATION_KEYS,
         SaveData,
+        InGameDate,
+        ANIMAL_FESTIVAL_ATTENDING_VENDORS,
+        SATURDAY_MARKET_VENDORS,
         _extract_slot_item_and_count,
         find_latest_save,
         find_save_files,
@@ -24,6 +27,9 @@ except ImportError:
     from scripts.save_parser import (
         NON_LOCATION_KEYS,
         SaveData,
+        InGameDate,
+        ANIMAL_FESTIVAL_ATTENDING_VENDORS,
+        SATURDAY_MARKET_VENDORS,
         _extract_slot_item_and_count,
         find_latest_save,
         find_save_files,
@@ -420,6 +426,70 @@ class TestSaveParserIntegration(unittest.TestCase):
         summary_str = save_data.summary()
         self.assertIn("unique items in chests", summary_str)
         self.assertIn("Total available:", summary_str)
+
+
+class TestAnimalFestivalCalendarAndPresence(unittest.TestCase):
+    """Tests for Animal Festival (Winter 10) date awareness and Saturday vendor presence exception."""
+
+    def test_in_game_date_animal_festival(self):
+        """Verify InGameDate correctly identifies Animal Festival on Winter 10."""
+        d_winter10 = InGameDate(year=1, season="winter", day=10)
+        self.assertTrue(d_winter10.is_animal_festival)
+        self.assertEqual(d_winter10.festival_name, "Animal Festival")
+        self.assertIn("[ANIMAL FESTIVAL DAY]", str(d_winter10))
+
+        # Winter 9 is not a festival
+        d_winter9 = InGameDate(year=1, season="winter", day=9)
+        self.assertFalse(d_winter9.is_animal_festival)
+        self.assertIsNone(d_winter9.festival_name)
+        self.assertNotIn("FESTIVAL", str(d_winter9))
+
+        # Spring 10 is not Animal Festival
+        d_spring10 = InGameDate(year=1, season="spring", day=10)
+        self.assertFalse(d_spring10.is_animal_festival)
+
+    def test_save_data_animal_festival_presence(self):
+        """Verify Merri and Louis are present on Winter 10 while other Saturday vendors remain in Aldaria."""
+        all_34_npcs = [
+            "adeline", "balor", "celine", "darcy", "dell", "dozy", "eiland", "elsie", "errol",
+            "hayden", "hemlock", "henrietta", "holt", "josephine", "juniper", "landen", "louis",
+            "luc", "maple", "march", "merri", "nora", "olric", "reina", "ryis", "seridia",
+            "stillwell", "taliferro", "terithia", "valen", "vera", "wheedle", "zorel", "caldarus"
+        ]
+        npcs_dict = {nid: {"gift_flag": True, "location_position": {"location_id": "town"}} for nid in all_34_npcs}
+        extra_entries = {"npcs": json.dumps(npcs_dict)}
+        save = _make_mock_savedata(extra_entries=extra_entries)
+
+        # 1. On Winter 10 (Wednesday, Animal Festival):
+        save.in_game_date = InGameDate(year=1, season="winter", day=10)
+        self.assertTrue(save.in_game_date.is_animal_festival)
+        self.assertFalse(save.in_game_date.is_saturday)
+
+        # Merri and Louis must be present in town
+        self.assertTrue(save.is_npc_present_in_town_today("merri"))
+        self.assertTrue(save.is_npc_present_in_town_today("louis"))
+
+        # Other 6 Saturday vendors must NOT be present in town
+        for v in ["darcy", "stillwell", "taliferro", "vera", "wheedle", "zorel"]:
+            self.assertFalse(save.is_npc_present_in_town_today(v), f"Vendor {v} should not be present on Winter 10")
+
+        # Townsfolk must be present
+        self.assertTrue(save.is_npc_present_in_town_today("march"))
+        self.assertTrue(save.is_npc_present_in_town_today("adeline"))
+
+        # Exactly 28 NPCs in town (26 townsfolk + Merri + Louis)
+        present_npcs = save.get_present_npcs_today()
+        self.assertEqual(len(present_npcs), 28)
+        self.assertIn("merri", present_npcs)
+        self.assertIn("louis", present_npcs)
+        self.assertNotIn("darcy", present_npcs)
+
+        # 2. On Winter 11 (Thursday, non-festival weekday):
+        save.in_game_date = InGameDate(year=1, season="winter", day=11)
+        self.assertFalse(save.in_game_date.is_animal_festival)
+        self.assertFalse(save.is_npc_present_in_town_today("merri"))
+        self.assertFalse(save.is_npc_present_in_town_today("louis"))
+        self.assertEqual(len(save.get_present_npcs_today()), 26)
 
 
 if __name__ == "__main__":
