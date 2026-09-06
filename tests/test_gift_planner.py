@@ -62,6 +62,7 @@ try:
         export_plan_to_excel,
         compute_focus_suggestions,
         resolve_root_raw_materials,
+        load_item_locations,
         ITEM_LOCATIONS,
     )
 except ImportError:
@@ -96,6 +97,7 @@ except ImportError:
         export_plan_to_excel,
         compute_focus_suggestions,
         resolve_root_raw_materials,
+        load_item_locations,
         ITEM_LOCATIONS,
     )
 
@@ -1609,6 +1611,73 @@ class TestAnimalFestivalPlanning(unittest.TestCase):
         self.assertIn("28 NPCs present in town", output)
         self.assertIn("Merri & Louis receive priority boost", output)
         self.assertIn("6 Saturday Market vendors remain in Aldaria", output)
+
+
+class TestItemLocations(unittest.TestCase):
+    """Tests verifying data/item_locations.json loading and injection."""
+
+    def test_load_item_locations_canonical(self):
+        """load_item_locations() loads data/item_locations.json with expected items."""
+        locs = load_item_locations()
+        self.assertIsInstance(locs, dict)
+        self.assertGreater(len(locs), 200)
+        self.assertIn("golden_cow_milk", locs)
+        self.assertEqual(locs["golden_cow_milk"], "Ranch (Cows with high happiness)")
+        self.assertIn("copper_ore", locs)
+        self.assertEqual(locs["copper_ore"], "Upper Mines (Floors 1-19)")
+        self.assertIn("tulip", locs)
+        self.assertEqual(locs["tulip"], "Farm (Spring Flower)")
+
+    def test_load_item_locations_custom_path(self):
+        """load_item_locations() loads custom path when specified."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            custom_file = Path(tmpdir) / "custom_locs.json"
+            custom_data = {
+                "super_gem": "Mystic Cavern Floor 100",
+                "rare_flower": "Secret Garden",
+            }
+            custom_file.write_text(json.dumps(custom_data), encoding="utf-8")
+
+            loaded = load_item_locations(str(custom_file))
+            self.assertEqual(loaded.get("super_gem"), "Mystic Cavern Floor 100")
+            self.assertEqual(loaded.get("rare_flower"), "Secret Garden")
+            self.assertNotIn("copper_ore", loaded)
+
+    def test_load_item_locations_missing_or_invalid(self):
+        """load_item_locations() returns empty dict for missing or invalid files."""
+        self.assertEqual(load_item_locations("non_existent_file.json"), {})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            corrupt = Path(tmpdir) / "corrupt.json"
+            corrupt.write_text("NOT JSON CONTENT", encoding="utf-8")
+            self.assertEqual(load_item_locations(str(corrupt)), {})
+
+    def test_compute_focus_suggestions_custom_locations(self):
+        """compute_focus_suggestions respects explicitly injected item_locations."""
+        remaining_map = {
+            "special_ore": {"loved": {"march"}, "liked": set()},
+        }
+        custom_locs = {"special_ore": "Custom Secret Spot"}
+        suggestions = compute_focus_suggestions(
+            remaining_map,
+            inventory={},
+            recipes={},
+            item_locations=custom_locs,
+        )
+        self.assertEqual(len(suggestions), 1)
+        self.assertEqual(suggestions[0]["location_hint"], "Custom Secret Spot")
+
+    def test_plan_daily_gift_bag_custom_locations(self):
+        """plan_daily_gift_bag propagates custom item_locations to focus suggestions."""
+        npcs = {
+            "march": {"name": "March", "loved": ["custom_ore"], "liked": []},
+        }
+        custom_locs = {"custom_ore": "Custom Mine Level 42"}
+        plan = plan_daily_gift_bag(
+            npc_gift_definitions=npcs,
+            item_locations=custom_locs,
+        )
+        suggs = plan.get("focus_suggestions", [])
+        self.assertTrue(any(s.get("location_hint") == "Custom Mine Level 42" for s in suggs))
 
 
 if __name__ == "__main__":

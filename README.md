@@ -41,27 +41,28 @@ You don't even need the game installed to try it out! A realistic sample save fi
 
 ```bash
 # Run daily planner on sample save
-python gift_planner.py --save-file samples/sample_save.sav --format terminal
+python main.py --save-file samples/sample_save.sav --format terminal
 
 # Simulate Saturday Market planning
-python gift_planner.py --save-file samples/sample_save.sav --mode saturday
+python main.py --save-file samples/sample_save.sav --mode saturday
 
-# Export gift rankings table to CSV
-python export_gift_rankings.py --format csv
+# Export gift rankings table to terminal or CSV
+python main.py rankings --format terminal --top 10
+python main.py rankings --format csv
 ```
 
 ### 2. Run with Your Own Game Save
 
-By default, running `python gift_planner.py` automatically detects your most recent Fields of Mistria save file on Windows or Linux/Steam Deck!
+By default, running `python main.py` automatically detects your most recent Fields of Mistria save file on Windows or Linux/Steam Deck!
 
 ```bash
-python gift_planner.py
+python main.py
 ```
 
 Or specify your save file manually:
 
 ```bash
-python gift_planner.py --save-file "path/to/your/save.sav"
+python main.py --save-file "path/to/your/save.sav"
 ```
 
 ---
@@ -85,15 +86,19 @@ Fields of Mistria save files (`.sav`) are located at:
 
 ## CLI Options & Usage
 
+Run the daily planner directly:
+
+```bash
+python main.py [OPTIONS]
 ```
-python gift_planner.py [OPTIONS]
-```
+*(Note: `python gift_planner.py` remains supported as a backward-compatible alias).*
 
 | Option | Choices / Default | Description |
 |---|---|---|
 | `--save-file` | *(auto-detect)* | Path to a specific `.sav` file. |
 | `--mode` | `auto`, `saturday`, `market-only`, `townsfolk`, `all` (default: `auto`) | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets the 8 vendors; `townsfolk` targets 26 residents; `all` plans all 34 NPCs. |
 | `--slots` | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
+| `--item-locations` | Path (default: `data/item_locations.json`) | Path to item locations database. |
 | `--format` | `terminal`, `csv`, `excel`, `all`, `both` (default: `all`) | Output destination format. |
 | `--output-dir` | Path (default: `exports`) | Output directory for CSV and Excel files. |
 | `--loved-weight`| Integer (default: `3`) | Score weight multiplier for loved gifts. |
@@ -106,13 +111,13 @@ python gift_planner.py [OPTIONS]
 
 ```bash
 # Plan Saturday Market with 15 bag slots and output to terminal
-python gift_planner.py --mode saturday --slots 15 --format terminal
+python main.py --mode saturday --slots 15 --format terminal
 
 # Export daily plan to CSV only
-python gift_planner.py --format csv
+python main.py --format csv
 
 # Plan for all NPCs regardless of whether they were gifted today
-python gift_planner.py --force-all-npcs
+python main.py --force-all-npcs
 ```
 
 ---
@@ -122,13 +127,14 @@ python gift_planner.py --force-all-npcs
 To analyze which items are most universally loved or liked across all characters in Mistria:
 
 ```bash
-python export_gift_rankings.py
+python main.py rankings [OPTIONS]
+# or: python export_gift_rankings.py [OPTIONS]
 ```
 
 Options:
 - `--sort-by [total|loved|liked]`: Primary ranking metric (default: `total`).
 - `--top N`: Limit output to top N items.
-- `--format [csv|excel|both]`: Export format (default: `both`).
+- `--format [csv|excel|both|terminal]`: Export format (default: `both`).
 
 ---
 
@@ -136,19 +142,39 @@ Options:
 
 ```
 fom-gift-planner/
-├── README.md                 # This documentation
+├── README.md                 # Project documentation
 ├── requirements.txt          # Optional dependencies (openpyxl)
-├── gift_planner.py           # Main CLI optimizer & loadout planner
-├── export_gift_rankings.py   # Gift popularity ranking & matrix generator
-├── save_parser.py            # FoM save (.sav) parser & chest inventory extractor
-├── crafting_calculator.py    # Recursive DAG crafting evaluator & pool deduction
+├── main.py                   # Primary unified CLI entry point
+│
+├── fom_planner/              # Modular package
+│   ├── __init__.py           # Public API re-exports
+│   ├── constants.py          # Vendors, festivals, and availability tiers
+│   ├── models.py             # Domain models (InGameDate, SaveData, CraftingPlan)
+│   ├── parser.py             # Binary save decompressor & parser
+│   ├── crafting.py           # Recursive DAG recipe calculator & material deduction
+│   ├── data_loader.py        # Database loaders (locations, recipes, metadata, prefs)
+│   ├── optimizer.py          # Greedy set-cover solver & focus suggestions
+│   ├── rankings.py           # Gift popularity ranking builder
+│   ├── cli.py                # Unified CLI parser & execution dispatch
+│   └── exporters/
+│       ├── __init__.py       # Exporters package
+│       ├── terminal.py       # Terminal UI formatting
+│       ├── csv_export.py     # CSV exporters
+│       └── excel_export.py   # Multi-sheet openpyxl Excel exporter
+│
+├── gift_planner.py           # Backward-compatible shim
+├── export_gift_rankings.py   # Backward-compatible shim
+├── save_parser.py            # Backward-compatible shim
+├── crafting_calculator.py    # Backward-compatible shim
+│
 ├── data/
 │   ├── item_data.json        # Database of 34 NPCs, 556 items, affinities, and tags
+│   ├── item_locations.json   # Database of 452 item spawn and acquisition locations
 │   └── recipes.json          # Complete cooking, crafting, and milling recipes
 ├── samples/
 │   └── sample_save.sav       # Sample save file for quick testing
 ├── exports/                  # Directory where CSV/Excel exports are saved
-└── tests/                    # Unit & regression test suite (110 tests)
+└── tests/                    # Unit & regression test suite (124 tests)
     ├── test_gift_planner.py
     ├── test_crafting_calculator.py
     └── test_save_parser.py
@@ -158,7 +184,7 @@ fom-gift-planner/
 
 ## Running the Test Suite
 
-Run the full automated test suite (110 tests):
+Run the full automated test suite (124 tests):
 
 ```bash
 python -m unittest discover -s tests
