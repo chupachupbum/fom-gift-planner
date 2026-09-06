@@ -1035,18 +1035,32 @@ def plan_daily_gift_bag(
         }
 
     # 2. Build remaining item coverage mapping
-    remaining_items_map = {}
+    # all_remaining_items_map: All non-excluded NPCs with pending preferences (for focus suggestions and game totals)
+    all_remaining_items_map = {}
+    for nid, p in npc_progress.items():
+        for item_id in p["remaining_loved"]:
+            if item_id not in all_remaining_items_map:
+                all_remaining_items_map[item_id] = {"loved": set(), "liked": set()}
+            all_remaining_items_map[item_id]["loved"].add(nid)
+
+        for item_id in p["remaining_liked"]:
+            if item_id not in all_remaining_items_map:
+                all_remaining_items_map[item_id] = {"loved": set(), "liked": set()}
+            all_remaining_items_map[item_id]["liked"].add(nid)
+
+    # today_remaining_items_map: Items relevant to today's target NPCs (for greedy bag selection)
+    today_remaining_items_map = {}
     for nid in target_npcs:
         p = npc_progress[nid]
         for item_id in p["remaining_loved"]:
-            if item_id not in remaining_items_map:
-                remaining_items_map[item_id] = {"loved": set(), "liked": set()}
-            remaining_items_map[item_id]["loved"].add(nid)
+            if item_id not in today_remaining_items_map:
+                today_remaining_items_map[item_id] = {"loved": set(), "liked": set()}
+            today_remaining_items_map[item_id]["loved"].add(nid)
 
         for item_id in p["remaining_liked"]:
-            if item_id not in remaining_items_map:
-                remaining_items_map[item_id] = {"loved": set(), "liked": set()}
-            remaining_items_map[item_id]["liked"].add(nid)
+            if item_id not in today_remaining_items_map:
+                today_remaining_items_map[item_id] = {"loved": set(), "liked": set()}
+            today_remaining_items_map[item_id]["liked"].add(nid)
 
     # 3. Greedy Weighted Set Cover Algorithm with Tiered Availability & Dynamic Pool Deduction
     covered_npcs = set()
@@ -1059,7 +1073,7 @@ def plan_daily_gift_bag(
         best_status_tier = AvailabilityTier.UNAVAILABLE
         best_qty = 0
 
-        for item_id, targets in remaining_items_map.items():
+        for item_id, targets in today_remaining_items_map.items():
             new_loved = (targets["loved"] & target_npcs) - covered_npcs
             new_liked = (targets["liked"] & target_npcs) - covered_npcs
 
@@ -1149,8 +1163,8 @@ def plan_daily_gift_bag(
             break
 
         owned = current_inventory.get(best_item_id, 0)
-        best_new_loved = [nid for nid in best_selected_recipients if nid in remaining_items_map[best_item_id]["loved"]]
-        best_new_liked = [nid for nid in best_selected_recipients if nid in remaining_items_map[best_item_id]["liked"]]
+        best_new_loved = [nid for nid in best_selected_recipients if nid in today_remaining_items_map[best_item_id]["loved"]]
+        best_new_liked = [nid for nid in best_selected_recipients if nid in today_remaining_items_map[best_item_id]["liked"]]
 
         meta = item_metadata.get(best_item_id, {})
         disp_name = meta.get("display_name") or best_item_id.replace("_", " ").title()
@@ -1201,9 +1215,9 @@ def plan_daily_gift_bag(
 
         crafting_chain = plan.chain_summary if plan is not None else ""
 
-        # Also get all potential NPCs who could take this item
-        all_potential_loved = sorted([npc_progress[x]["name"] for x in remaining_items_map[best_item_id]["loved"]])
-        all_potential_liked = sorted([npc_progress[x]["name"] for x in remaining_items_map[best_item_id]["liked"]])
+        # Also get all potential NPCs who could take this item across all NPCs in the game
+        all_potential_loved = sorted([npc_progress[x]["name"] for x in all_remaining_items_map.get(best_item_id, {}).get("loved", set())])
+        all_potential_liked = sorted([npc_progress[x]["name"] for x in all_remaining_items_map.get(best_item_id, {}).get("liked", set())])
 
         tag_list = meta.get("tags", [])
         tags_str = ", ".join(tag_list) if isinstance(tag_list, list) else str(tag_list)
@@ -1257,13 +1271,13 @@ def plan_daily_gift_bag(
         "game_given_loved": total_given_loved,
         "game_given_liked": total_given_liked,
         "game_given_total": total_given_loved + total_given_liked,
-        "remaining_unique_items": len(remaining_items_map),
+        "remaining_unique_items": len(all_remaining_items_map),
         "ungiftable_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in ungiftable_npcs if nid in npc_gift_definitions],
         "not_present_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in not_present_npcs if nid in npc_gift_definitions],
     }
 
     focus_suggestions = compute_focus_suggestions(
-        remaining_items_map=remaining_items_map,
+        remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
         recipes=recipes,
         item_metadata=item_metadata,
@@ -1275,7 +1289,9 @@ def plan_daily_gift_bag(
         "npc_progress": npc_progress,
         "covered_npcs": covered_npcs,
         "target_npcs": target_npcs,
-        "remaining_items_map": remaining_items_map,
+        "remaining_items_map": all_remaining_items_map,
+        "all_remaining_items_map": all_remaining_items_map,
+        "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
         "overall_stats": overall_stats,
     }
@@ -1380,7 +1396,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     if focus_suggestions is None:
         inv = save.get_all_available_items() if (save and hasattr(save, "get_all_available_items")) else {}
         focus_suggestions = compute_focus_suggestions(
-            remaining_items_map=plan_results.get("remaining_items_map", {}),
+            remaining_items_map=plan_results.get("all_remaining_items_map") or plan_results.get("remaining_items_map", {}),
             inventory=inv,
         )
 

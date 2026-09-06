@@ -1355,6 +1355,135 @@ class TestFocusSuggestions(unittest.TestCase):
         suggs = compute_focus_suggestions(remaining_map, inventory=inv, recipes=recipes)
         self.assertEqual(suggs, [])
 
+    def test_focus_suggestions_include_saturday_market_vendors_on_weekday(self):
+        """
+        Verify that even on a weekday (or mode='weekday') when Saturday Market vendors
+        (e.g. Darcy, Stillwell) are not in town, focus suggestions evaluate their pending
+        gift preferences so players know what to farm/collect during the week.
+        """
+        npcs = {
+            "adeline": {"name": "Adeline", "loved": ["tea"], "liked": []},
+            "darcy": {"name": "Darcy", "loved": ["spell_fruit"], "liked": []},
+        }
+        meta = {
+            "tea": {"display_name": "Tea"},
+            "spell_fruit": {"display_name": "Spell Fruit"},
+        }
+        plan = plan_daily_gift_bag(
+            save=None,
+            npc_gift_definitions=npcs,
+            item_metadata=meta,
+            mode="weekday",
+            recipes={},
+        )
+        # Darcy is a market vendor, so Darcy should NOT be in target_npcs for a weekday
+        self.assertNotIn("darcy", plan["target_npcs"])
+        self.assertIn("adeline", plan["target_npcs"])
+        # Bag plan should not cover Darcy today
+        for b in plan["bag_plan"]:
+            self.assertNotIn("Darcy", b["all_recipients_today"])
+
+        # BUT focus suggestions MUST include Darcy's Spell Fruit!
+        sugg_ids = [s["item_id"] for s in plan["focus_suggestions"]]
+        self.assertIn("spell_fruit", sugg_ids)
+
+    def test_focus_suggestions_include_already_gifted_npcs(self):
+        """
+        Verify that NPCs already gifted today (can_gift=False) are excluded from
+        today's daily bag loadout, but their unfulfilled gift preferences are still
+        accounted for in focus suggestions.
+        """
+        class MockSave:
+            in_game_date = None
+            def get_npc_gifts_given(self, nid):
+                return set()
+            def is_npc_present_in_town_today(self, nid):
+                return True
+            def can_gift_npc_today(self, nid):
+                return nid != "adeline"  # Adeline already gifted today
+            def get_npc_heart_points(self, nid):
+                return 0.0
+
+        npcs = {
+            "adeline": {"name": "Adeline", "loved": ["golden_cheesecake"], "liked": []},
+            "balor": {"name": "Balor", "loved": ["ruby"], "liked": []},
+        }
+        plan = plan_daily_gift_bag(
+            save=MockSave(),
+            npc_gift_definitions=npcs,
+            item_metadata=self.meta,
+            recipes=self.recipes,
+            mode="auto",
+        )
+        # Adeline cannot be gifted today
+        self.assertNotIn("adeline", plan["target_npcs"])
+        self.assertIn("balor", plan["target_npcs"])
+
+        # But Adeline's Golden Cheesecake blockers (golden_cow_milk, etc.) must still appear in focus suggestions
+        sugg_ids = [s["item_id"] for s in plan["focus_suggestions"]]
+        self.assertIn("golden_cow_milk", sugg_ids)
+
+    def test_focus_suggestions_consistency_weekday_vs_saturday(self):
+        """
+        Verify that focus suggestions return identical rankings and blocker deficits
+        regardless of whether mode='weekday' or mode='saturday' when the underlying
+        game/inventory state is the same.
+        """
+        npcs = {
+            "adeline": {"name": "Adeline", "loved": ["wheat"], "liked": []},
+            "darcy": {"name": "Darcy", "loved": ["spell_fruit"], "liked": []},
+            "hayden": {"name": "Hayden", "loved": ["golden_cow_milk"], "liked": []},
+        }
+        meta = {
+            "wheat": {"display_name": "Wheat"},
+            "spell_fruit": {"display_name": "Spell Fruit"},
+            "golden_cow_milk": {"display_name": "Golden Milk"},
+        }
+        plan_weekday = plan_daily_gift_bag(
+            save=None,
+            npc_gift_definitions=npcs,
+            item_metadata=meta,
+            mode="weekday",
+            recipes={},
+        )
+        plan_saturday = plan_daily_gift_bag(
+            save=None,
+            npc_gift_definitions=npcs,
+            item_metadata=meta,
+            mode="saturday",
+            recipes={},
+        )
+        suggs_w = plan_weekday["focus_suggestions"]
+        suggs_s = plan_saturday["focus_suggestions"]
+        self.assertEqual(len(suggs_w), len(suggs_s))
+        self.assertEqual([s["item_id"] for s in suggs_w], [s["item_id"] for s in suggs_s])
+        self.assertEqual([s["deficit"] for s in suggs_w], [s["deficit"] for s in suggs_s])
+
+    def test_focus_suggestions_respects_exclude_npcs(self):
+        """
+        Verify that explicitly excluded NPCs (via exclude_npcs) are excluded
+        from focus suggestions as well.
+        """
+        npcs = {
+            "adeline": {"name": "Adeline", "loved": ["tea"], "liked": []},
+            "darcy": {"name": "Darcy", "loved": ["spell_fruit"], "liked": []},
+        }
+        meta = {
+            "tea": {"display_name": "Tea"},
+            "spell_fruit": {"display_name": "Spell Fruit"},
+        }
+        plan = plan_daily_gift_bag(
+            save=None,
+            npc_gift_definitions=npcs,
+            item_metadata=meta,
+            exclude_npcs={"darcy"},
+            recipes={},
+        )
+        sugg_ids = [s["item_id"] for s in plan["focus_suggestions"]]
+        self.assertNotIn("spell_fruit", sugg_ids)
+        self.assertIn("tea", sugg_ids)
+
+
 
 class TestAnimalFestivalPlanning(unittest.TestCase):
     """Integration tests for Animal Festival (Winter 10) planning, vendor boost, and CLI banners."""
