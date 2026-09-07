@@ -214,13 +214,37 @@ class SaveData:
         """Returns True if this NPC is a visiting Saturday Market vendor."""
         return npc_id.lower() in SATURDAY_MARKET_VENDORS
 
+    def get_unlocked_npc_ids(self) -> Set[str]:
+        """
+        Returns the set of lowercased NPC IDs present in the save's npcs block.
+        NPCs not present in this set are locked / not yet unlocked in the player's progression.
+        """
+        return {k.lower() for k in self.npcs.keys()}
+
+    def get_unlocked_vendor_ids(self) -> Set[str]:
+        """Returns the set of Saturday Market vendor IDs currently unlocked in this save."""
+        return self.get_unlocked_npc_ids() & SATURDAY_MARKET_VENDORS
+
+    def is_npc_unlocked(self, npc_id: str) -> bool:
+        """
+        Returns True if the given NPC has been unlocked in this save.
+        If self.npcs is empty (e.g. mock or stripped save), defaults to True.
+        """
+        if not self.npcs:
+            return True
+        return npc_id.lower() in self.get_unlocked_npc_ids()
+
     def is_npc_present_in_town_today(self, npc_id: str) -> bool:
         """
         Returns True if the NPC is present in Mistria today.
-        On Saturdays, all 34 NPCs (26 townsfolk + 8 vendors) are in town.
-        On Winter 10 (Animal Festival), 28 NPCs are in town (26 townsfolk + Louis & Merri).
-        On standard weekdays/Sundays, the 8 Saturday Market vendors are off-map in Aldaria.
+        On Saturdays, unlocked NPCs (townsfolk + vendors) are in town.
+        On Winter 10 (Animal Festival), unlocked townsfolk + Louis & Merri (if unlocked) are in town.
+        On standard weekdays/Sundays, visiting vendors are off-map in Aldaria.
+        Locked NPCs (not yet unlocked in player progression) are never present.
         """
+        if self.npcs and not self.is_npc_unlocked(npc_id):
+            return False
+
         if self.in_game_date.is_saturday:
             return True
 
@@ -336,6 +360,7 @@ class SaveData:
         bag_items = len(self.get_bag_items())
         chest_items = len(self.get_chest_items())
         total_items = len(self.get_all_available_items())
+        unlocked_count = len(self.get_unlocked_npc_ids()) or 34
         return (
             f"Save: {self.file_path.name}\n"
             f"Player: {self.player_name} @ {self.farm_name}\n"
@@ -343,7 +368,7 @@ class SaveData:
             f"Playtime: {self.playtime_hours:.1f} hours\n"
             f"Inventory: {self.empty_inventory_slots}/{self.total_inventory_slots} slots empty ({bag_items} unique items in bag)\n"
             f"Storage: {chest_items} unique items in chests across {len(self.get_chests_by_location())} locations (Total available: {total_items} unique)\n"
-            f"NPCs Present Today: {present_count}/34 ({giftable_count} giftable today)"
+            f"NPCs Present Today: {present_count}/{unlocked_count} ({giftable_count} giftable today)"
         )
 
 

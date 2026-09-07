@@ -130,6 +130,7 @@ def create_synthetic_save_entries(
     farm_name: str = "TestFarm",
     giftable_all: bool = True,
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
+    npc_ids: Optional[List[str]] = None,
 ) -> Dict[str, str]:
     """Generates a complete dictionary of raw_entries for a FoM save file."""
     season_idx = {"spring": 0, "summer": 1, "autumn": 2, "winter": 3}.get(season.lower(), 0)
@@ -168,11 +169,12 @@ def create_synthetic_save_entries(
         "luc", "maple", "march", "merri", "nora", "olric", "reina", "ryis", "seridia",
         "stillwell", "taliferro", "terithia", "valen", "vera", "wheedle", "zorel", "caldarus"
     ]
+    target_npc_list = npc_ids if npc_ids is not None else all_34_npc_ids
     if gifted_npcs is None:
         gifted_npcs = {}
 
     is_animal_fest = (season.lower() == "winter" and day == 10)
-    for nid in all_34_npc_ids:
+    for nid in target_npc_list:
         is_vendor = nid in SATURDAY_MARKET_VENDORS
         is_fest_vendor = is_animal_fest and (nid in ("merri", "louis"))
         loc_id = "town" if (day % 7 == 6 or not is_vendor or is_fest_vendor) else "aldaria"
@@ -212,6 +214,7 @@ def create_synthetic_save_file(
     farm_name: str = "TestFarm",
     giftable_all: bool = True,
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
+    npc_ids: Optional[List[str]] = None,
 ) -> Path:
     """Encodes and writes a synthetic binary FoM .sav file to disk."""
     entries = create_synthetic_save_entries(
@@ -224,6 +227,7 @@ def create_synthetic_save_file(
         farm_name=farm_name,
         giftable_all=giftable_all,
         gifted_npcs=gifted_npcs,
+        npc_ids=npc_ids,
     )
     raw = bytearray()
     raw.extend(struct.pack("<Q", len(entries)))
@@ -1678,6 +1682,173 @@ class TestItemLocations(unittest.TestCase):
         )
         suggs = plan.get("focus_suggestions", [])
         self.assertTrue(any(s.get("location_hint") == "Custom Mine Level 42" for s in suggs))
+
+
+class TestProgressionAwareGiftPlanning(unittest.TestCase):
+    """Unit tests for progression-aware Saturday Market vendor and story-gated NPC unlock planning."""
+
+    def setUp(self):
+        import tempfile
+        import shutil
+        self.test_dir = Path(tempfile.mkdtemp())
+
+        # Base 4 vendors + 24 townsfolk (no Caldarus, no Seridia, no upgrade vendors)
+        self.base_townsfolk_ids = [
+            "adeline", "balor", "celine", "dell", "dozy", "eiland", "elsie", "errol",
+            "hayden", "hemlock", "henrietta", "holt", "josephine", "juniper", "landen",
+            "luc", "maple", "march", "nora", "olric", "reina", "ryis", "terithia", "valen"
+        ]
+        self.base_vendor_ids = ["darcy", "louis", "merri", "vera"]
+        self.early_game_npc_ids = self.base_townsfolk_ids + self.base_vendor_ids
+
+        # Full 34 NPC gift definitions
+        self.full_npcs = {}
+        for nid in self.early_game_npc_ids:
+            self.full_npcs[nid] = {
+                "name": nid.capitalize(),
+                "loved": [f"{nid}_loved_gift"],
+                "liked": [f"{nid}_liked_gift"],
+            }
+        # Add locked upgrade vendors
+        for nid in ["taliferro", "wheedle", "stillwell", "zorel"]:
+            self.full_npcs[nid] = {
+                "name": nid.capitalize(),
+                "loved": [f"{nid}_loved_gift"],
+                "liked": [f"{nid}_liked_gift"],
+            }
+        # Add locked story-gated townsfolk
+        for nid in ["caldarus", "seridia"]:
+            self.full_npcs[nid] = {
+                "name": nid.capitalize(),
+                "loved": [f"{nid}_loved_gift"],
+                "liked": [f"{nid}_liked_gift"],
+            }
+
+        self.mock_recipes = {}
+        self.mock_meta = {}
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def test_early_game_save_filters_locked_vendors_and_townsfolk(self):
+        """Verify that early game save only plans for unlocked NPCs, excluding locked vendors & townsfolk."""
+        save_path = self.test_dir / "early_game.sav"
+        create_synthetic_save_file(save_path, day=6, npc_ids=self.early_game_npc_ids)
+        save = parse_save_file(save_path)
+
+        # Confirm save only has 28 NPCs
+        self.assertEqual(len(save.get_unlocked_npc_ids()), 28)
+        self.assertEqual(len(save.get_unlocked_vendor_ids()), 4)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.full_npcs,
+            item_metadata=self.mock_meta,
+            mode="saturday",
+            max_slots=30,
+            recipes=self.mock_recipes,
+        )
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["unlocked_vendors_count"], 4)
+        self.assertEqual(stats["unlocked_townsfolk_count"], 24)
+        self.assertEqual(stats["unlocked_npcs_count"], 28)
+        self.assertEqual(stats["target_npcs_count"], 28)
+
+        # 6 NPCs should be detected as locked (4 vendors + 2 story townsfolk)
+        locked_names = stats["locked_npcs"]
+        self.assertEqual(len(locked_names), 6)
+        for expected in ["Taliferro", "Wheedle", "Stillwell", "Zorel", "Caldarus", "Seridia"]:
+            self.assertIn(expected, locked_names)
+
+        # Ensure no locked NPC is targeted in bag_plan
+        for b in plan["bag_plan"]:
+            for r in b["all_recipients_today"]:
+                self.assertNotIn(r["npc_id"], ["taliferro", "wheedle", "stillwell", "zorel", "caldarus", "seridia"])
+
+    def test_no_save_file_treats_all_as_unlocked(self):
+        """When no save file is provided, all NPCs in definitions are treated as unlocked."""
+        plan = plan_daily_gift_bag(
+            save=None,
+            npc_gift_definitions=self.full_npcs,
+            item_metadata=self.mock_meta,
+            mode="saturday",
+            max_slots=30,
+            recipes=self.mock_recipes,
+        )
+        stats = plan["overall_stats"]
+        self.assertEqual(len(stats["locked_npcs"]), 0)
+        self.assertEqual(stats["target_npcs_count"], 34)
+
+    def test_focus_suggestions_include_locked_npcs(self):
+        """Focus suggestions should remain forward-looking and include gifts for locked NPCs."""
+        save_path = self.test_dir / "early_game_focus.sav"
+        create_synthetic_save_file(save_path, day=6, npc_ids=self.early_game_npc_ids)
+        save = parse_save_file(save_path)
+
+        # Caldarus is locked in this save, but loves 'dragon_statue'
+        custom_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["adeline_loved_gift"],
+                "liked": [],
+            },
+            "caldarus": {
+                "name": "Caldarus",
+                "loved": ["dragon_statue"],
+                "liked": [],
+            },
+        }
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=custom_npcs,
+            item_metadata={"dragon_statue": {"display_name": "Dragon Statue"}},
+            mode="saturday",
+            max_slots=5,
+            recipes={},
+        )
+
+        # Caldarus is locked and not targeted in bag plan
+        self.assertIn("Caldarus", plan["overall_stats"]["locked_npcs"])
+        for b in plan["bag_plan"]:
+            for r in b["all_recipients_today"]:
+                self.assertNotEqual(r["npc_id"], "caldarus")
+
+        # But 'dragon_statue' should be in focus suggestions
+        suggestion_ids = [s["item_id"] for s in plan["focus_suggestions"]]
+        self.assertIn("dragon_statue", suggestion_ids)
+
+    def test_terminal_output_dynamic_counts_and_locked_banner(self):
+        """Verify terminal output shows dynamic counts and the locked NPCs banner."""
+        save_path = self.test_dir / "terminal_progression.sav"
+        create_synthetic_save_file(save_path, day=6, npc_ids=self.early_game_npc_ids)
+        save = parse_save_file(save_path)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.full_npcs,
+            item_metadata=self.mock_meta,
+            mode="saturday",
+            max_slots=10,
+            recipes=self.mock_recipes,
+        )
+
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            print_terminal_plan(save, plan)
+        output = buf.getvalue()
+
+        # Check dynamic counts on Saturday: 28 NPCs (24 townsfolk + 4 visiting vendors)
+        self.assertIn("All 28 NPCs (24 townsfolk + 4 visiting vendors) are in town!", output)
+
+        # Check locked NPCs banner
+        self.assertIn("🔒 NOT YET UNLOCKED (6 NPCs):", output)
+        self.assertIn("Zorel", output)
+        self.assertIn("Caldarus", output)
 
 
 if __name__ == "__main__":

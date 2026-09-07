@@ -36,35 +36,57 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
         print(f"  • Chest Storage: {chest_items} unique items across all farm/world chests")
         print(f"  • Total Available for Gifting/Crafting: {total_avail} unique items")
 
+    # Dynamic NPC counts based on unlocked progression
+    num_vendors = stats.get("unlocked_vendors_count", len([x for x in npc_progress if npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)]))
+    num_townsfolk = stats.get("unlocked_townsfolk_count", len([x for x in npc_progress if not npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)]))
+    num_total = num_vendors + num_townsfolk
+
+    if save is not None and hasattr(save, "get_unlocked_vendor_ids") and hasattr(save, "npcs") and save.npcs:
+        unlocked_vendor_names = sorted([
+            npc_progress[x]["name"] if (x in npc_progress and "name" in npc_progress[x]) else x.capitalize()
+            for x in save.get_unlocked_vendor_ids()
+        ])
+    else:
+        unlocked_vendor_names = sorted([
+            npc_progress[x]["name"] for x in npc_progress
+            if npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)
+        ])
+
     # Market & Festival context banner
     if getattr(date_info, "is_saturday", False) or stats["mode"] in ("saturday", "market"):
         if getattr(date_info, "is_saturday", False):
-            print(f"\n🎉 TODAY IS SATURDAY MARKET DAY! All 34 NPCs (26 townsfolk + 8 visiting vendors) are in town!")
+            print(f"\n🎉 TODAY IS SATURDAY MARKET DAY! All {num_total} NPCs ({num_townsfolk} townsfolk + {num_vendors} visiting vendors) are in town!")
         else:
             days_until = getattr(date_info, "days_until_saturday", 0)
             next_sat = getattr(date_info, "next_saturday_day", 6)
             print(f"\n🎪 PLANNING FOR SATURDAY MARKET (Simulated Day {next_sat}, in {days_until} days):")
-            print(f"  • Includes all 34 NPCs with priority boost on the 8 weekly visiting vendors.")
+            print(f"  • Includes all {num_total} NPCs ({num_townsfolk} townsfolk + {num_vendors} visiting vendors) with priority boost on the {num_vendors} weekly visiting vendors.")
     elif stats["mode"] == "market-only":
         print(f"\n🎪 PLANNING FOR SATURDAY MARKET VENDORS ONLY:")
-        print(f"  • Focuses exclusively on the 8 weekly visiting vendors (Darcy, Louis, Merri, Stillwell, Taliferro, Vera, Wheedle, Zorel).")
+        vendor_names_str = ", ".join(unlocked_vendor_names) if unlocked_vendor_names else "None"
+        print(f"  • Focuses exclusively on the {num_vendors} weekly visiting vendors ({vendor_names_str}).")
     elif getattr(date_info, "is_animal_festival", False) or stats.get("is_animal_festival", False):
         days_until = getattr(date_info, "days_until_saturday", 0)
         next_sat = getattr(date_info, "next_saturday_day", 6)
+        festival_vendors = [
+            npc_name for npc_id in ["merri", "louis"]
+            for npc_name in unlocked_vendor_names if npc_name.lower() == npc_id
+        ]
+        fest_names_str = " & ".join(festival_vendors) if len(festival_vendors) == 2 else (", ".join(festival_vendors) if festival_vendors else "None")
+        fest_total = num_townsfolk + len(festival_vendors)
+        aldaria_vendors = sorted([x for x in unlocked_vendor_names if x.lower() not in ANIMAL_FESTIVAL_ATTENDING_VENDORS])
         print(f"\n🎉 TODAY IS ANIMAL FESTIVAL DAY! (Winter 10)")
-        print(f"  • 28 NPCs present in town (26 permanent townsfolk + visiting contestants Merri & Louis)!")
-        print(f"  • Merri & Louis receive priority boost for this special non-Saturday festival appearance.")
-        aldaria_vendors = sorted([npc_progress[x]["name"] for x in npc_progress if npc_progress[x]["is_vendor"] and x.lower() not in ANIMAL_FESTIVAL_ATTENDING_VENDORS])
-        print(f"  ℹ️  6 Saturday Market vendors remain in Aldaria and return this Saturday (Day {next_sat}, in {days_until} days):")
+        print(f"  • {fest_total} NPCs present in town ({num_townsfolk} permanent townsfolk + visiting contestants {fest_names_str})!")
+        print(f"  • {fest_names_str} receive priority boost for this special non-Saturday festival appearance.")
+        print(f"  ℹ️  {len(aldaria_vendors)} Saturday Market vendors remain in Aldaria and return this Saturday (Day {next_sat}, in {days_until} days):")
         print(f"     {', '.join(aldaria_vendors)}")
     else:
         day_of_week = getattr(date_info, "day_of_week", "Weekday")
         days_until = getattr(date_info, "days_until_saturday", 0)
         next_sat = getattr(date_info, "next_saturday_day", 6)
-        print(f"\n📅 TODAY'S VISITORS ({day_of_week}): 26 Townsfolk in town.")
-        vendor_names = sorted([npc_progress[x]["name"] for x in npc_progress if npc_progress[x]["is_vendor"]])
-        print(f"  ℹ️  8 Saturday Market vendors are visiting Aldaria and return this Saturday (Day {next_sat}, in {days_until} days):")
-        print(f"     {', '.join(vendor_names)}")
+        print(f"\n📅 TODAY'S VISITORS ({day_of_week}): {num_townsfolk} Townsfolk in town.")
+        print(f"  ℹ️  {len(unlocked_vendor_names)} Saturday Market vendors are visiting Aldaria and return this Saturday (Day {next_sat}, in {days_until} days):")
+        print(f"     {', '.join(unlocked_vendor_names)}")
         print(f"  💡 Tip: Run with '--mode saturday' to plan your upcoming Saturday Market shopping list!")
 
     print(f"\n📊 OVERALL COMPLETION PROGRESS:")
@@ -75,6 +97,9 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     print(f"  • Liked Gifts: {stats['game_given_liked']}/{stats['game_total_liked']} ({p_liked:.1f}%)")
     print(f"  • Total Preferences: {stats['game_given_total']}/{stats['game_total_preferences']} ({p_total:.1f}%)")
     print(f"  • Unique Ungifted Items Remaining in Game: {stats['remaining_unique_items']}")
+
+    if stats.get("locked_npcs"):
+        print(f"\n🔒 NOT YET UNLOCKED ({len(stats['locked_npcs'])} NPCs): {', '.join(stats['locked_npcs'])}")
 
     if stats["ungiftable_npcs"]:
         print(f"\n⚠️  ALREADY GIFTED TODAY ({len(stats['ungiftable_npcs'])} NPCs): {', '.join(stats['ungiftable_npcs'])}")

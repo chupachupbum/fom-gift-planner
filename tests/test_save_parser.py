@@ -18,6 +18,10 @@ try:
         InGameDate,
         ANIMAL_FESTIVAL_ATTENDING_VENDORS,
         SATURDAY_MARKET_VENDORS,
+        SATURDAY_MARKET_BASE_VENDORS,
+        SATURDAY_MARKET_UPGRADE_1_VENDORS,
+        SATURDAY_MARKET_UPGRADE_2_VENDORS,
+        STORY_GATED_TOWNSFOLK,
         _extract_slot_item_and_count,
         find_latest_save,
         find_save_files,
@@ -30,6 +34,10 @@ except ImportError:
         InGameDate,
         ANIMAL_FESTIVAL_ATTENDING_VENDORS,
         SATURDAY_MARKET_VENDORS,
+        SATURDAY_MARKET_BASE_VENDORS,
+        SATURDAY_MARKET_UPGRADE_1_VENDORS,
+        SATURDAY_MARKET_UPGRADE_2_VENDORS,
+        STORY_GATED_TOWNSFOLK,
         _extract_slot_item_and_count,
         find_latest_save,
         find_save_files,
@@ -490,6 +498,84 @@ class TestAnimalFestivalCalendarAndPresence(unittest.TestCase):
         self.assertFalse(save.is_npc_present_in_town_today("merri"))
         self.assertFalse(save.is_npc_present_in_town_today("louis"))
         self.assertEqual(len(save.get_present_npcs_today()), 26)
+
+
+
+class TestProgressionAwareNPCUnlocks(unittest.TestCase):
+    """Tests for progression-aware vendor and NPC unlock detection."""
+
+    def test_vendor_tier_constants(self):
+        """Verify the tier breakdown matches game progression: 4 base + 2 upgrade1 + 2 upgrade2."""
+        self.assertEqual(len(SATURDAY_MARKET_BASE_VENDORS), 4)
+        self.assertEqual(SATURDAY_MARKET_BASE_VENDORS, {"darcy", "louis", "merri", "vera"})
+
+        self.assertEqual(len(SATURDAY_MARKET_UPGRADE_1_VENDORS), 2)
+        self.assertEqual(SATURDAY_MARKET_UPGRADE_1_VENDORS, {"taliferro", "wheedle"})
+
+        self.assertEqual(len(SATURDAY_MARKET_UPGRADE_2_VENDORS), 2)
+        self.assertEqual(SATURDAY_MARKET_UPGRADE_2_VENDORS, {"stillwell", "zorel"})
+
+        # Combined must equal all 8 vendors
+        combined = SATURDAY_MARKET_BASE_VENDORS | SATURDAY_MARKET_UPGRADE_1_VENDORS | SATURDAY_MARKET_UPGRADE_2_VENDORS
+        self.assertEqual(combined, SATURDAY_MARKET_VENDORS)
+
+        # Story-gated townsfolk
+        self.assertEqual(STORY_GATED_TOWNSFOLK, {"caldarus", "seridia"})
+
+    def test_get_unlocked_npc_ids_empty_and_populated(self):
+        """Verify get_unlocked_npc_ids extracts keys properly."""
+        # Empty mock save has no NPCs
+        empty_save = _make_mock_savedata()
+        self.assertEqual(empty_save.get_unlocked_npc_ids(), set())
+        self.assertTrue(empty_save.is_npc_unlocked("adeline"))  # Fallback for empty saves
+
+        # Partially populated save: only base vendors + some townsfolk
+        npcs_dict = {
+            "adeline": {"gift_flag": True},
+            "march": {"gift_flag": True},
+            "darcy": {"gift_flag": True},
+            "louis": {"gift_flag": True},
+            "merri": {"gift_flag": True},
+            "vera": {"gift_flag": True},
+        }
+        save = _make_mock_savedata(extra_entries={"npcs": json.dumps(npcs_dict)})
+        unlocked = save.get_unlocked_npc_ids()
+        self.assertEqual(unlocked, {"adeline", "march", "darcy", "louis", "merri", "vera"})
+
+        # Unlocked checks
+        self.assertTrue(save.is_npc_unlocked("darcy"))
+        self.assertTrue(save.is_npc_unlocked("adeline"))
+        self.assertFalse(save.is_npc_unlocked("zorel"))
+        self.assertFalse(save.is_npc_unlocked("caldarus"))
+        self.assertFalse(save.is_npc_unlocked("seridia"))
+
+        # Vendor unlocked checks
+        unlocked_vendors = save.get_unlocked_vendor_ids()
+        self.assertEqual(unlocked_vendors, {"darcy", "louis", "merri", "vera"})
+        self.assertEqual(len(unlocked_vendors), 4)
+
+    def test_locked_npcs_not_present_even_on_saturday(self):
+        """Verify that locked vendors and story-gated townsfolk are never present, even on Saturday."""
+        npcs_dict = {
+            "adeline": {"gift_flag": True, "location_position": {"location_id": "town"}},
+            "darcy": {"gift_flag": True, "location_position": {"location_id": "town"}},
+        }
+        save = _make_mock_savedata(extra_entries={"npcs": json.dumps(npcs_dict)})
+        # Set date to Saturday
+        save.in_game_date = InGameDate(year=1, season="spring", day=6)
+        self.assertTrue(save.in_game_date.is_saturday)
+
+        # Unlocked NPCs are present
+        self.assertTrue(save.is_npc_present_in_town_today("adeline"))
+        self.assertTrue(save.is_npc_present_in_town_today("darcy"))
+
+        # Locked vendor (Zorel) is NOT present even though today is Saturday
+        self.assertFalse(save.is_npc_present_in_town_today("zorel"))
+        self.assertFalse(save.is_npc_present_in_town_today("stillwell"))
+
+        # Locked story-gated townsfolk (Caldarus, Seridia) are NOT present
+        self.assertFalse(save.is_npc_present_in_town_today("caldarus"))
+        self.assertFalse(save.is_npc_present_in_town_today("seridia"))
 
 
 if __name__ == "__main__":

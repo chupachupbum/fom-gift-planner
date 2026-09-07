@@ -28,6 +28,15 @@ SATURDAY_MARKET_VENDORS: Set[str] = {
     "darcy", "louis", "merri", "stillwell", "taliferro", "vera", "wheedle", "zorel"
 }
 
+# Saturday Market Progression Tiers
+# Base market starts with 4 vendors; 2 upgrade missions each add 2 more vendors
+SATURDAY_MARKET_BASE_VENDORS: Set[str] = {"darcy", "louis", "merri", "vera"}
+SATURDAY_MARKET_UPGRADE_1_VENDORS: Set[str] = {"taliferro", "wheedle"}  # Quest: upgrade_the_saturday_market
+SATURDAY_MARKET_UPGRADE_2_VENDORS: Set[str] = {"stillwell", "zorel"}    # Quest: upgrade_the_saturday_market_plaza
+
+# Story-gated permanent townsfolk who unlock through mine story progression
+STORY_GATED_TOWNSFOLK: Set[str] = {"caldarus", "seridia"}
+
 # Visiting vendors who attend the Animal Festival on Winter 10
 ANIMAL_FESTIVAL_ATTENDING_VENDORS: Set[str] = {"louis", "merri"}
 

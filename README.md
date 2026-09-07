@@ -9,10 +9,14 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 ## Key Features
 
 - **Save File Inspection**: Reads uncompressed or compressed binary `.sav` files directly. Detects in-game date, time, season, bag inventory, and all farm/world storage chests.
-- **Saturday Market Awareness**:
-  - Mistria's 8 visiting vendors (*Darcy, Louis, Merri, Stillwell, Taliferro, Vera, Wheedle, Zorel*) only visit town on Saturdays (days 6, 13, 20, 27).
-  - On weekdays, the planner focuses on the 26 townsfolk.
-  - On Saturdays (or with `--mode saturday`), it plans for all 34 NPCs and prioritizes visiting vendors so you never miss their weekly appearance.
+- **Saturday Market & Progression Awareness**:
+  - Mistria's Saturday Market features up to 8 visiting vendors, unlocked as the town progresses:
+    - **Base Market (4 vendors)**: *Darcy, Louis, Merri, Vera*
+    - **Upgrade 1 (`upgrade_the_saturday_market`, +2 vendors)**: *Taliferro, Wheedle*
+    - **Upgrade 2 (`upgrade_the_saturday_market_plaza`, +2 vendors)**: *Stillwell, Zorel*
+  - Story-gated permanent townsfolk (*Caldarus, Seridia*) unlock through mine progression.
+  - When inspecting your save file, the planner detects which vendors and townsfolk you have unlocked, dynamically calculates counts (e.g. 24 townsfolk + 4 vendors), excludes locked characters from today's bag plan, and alerts you to locked NPCs.
+  - Forward-looking **Focus Suggestions** still include pending gifts for locked NPCs so you can prepare rare materials in advance.
 - **Recursive DAG Crafting & Material Deduction**:
   - Evaluates whether unowned items can be crafted or cooked from materials in your chests or bag.
   - Status badges: `📦 HAVE` (in bag/chests) > `✅ CRAFT` (craftable) > `❌ NEED` (need to gather/buy).
@@ -96,7 +100,7 @@ python main.py [OPTIONS]
 | Option | Choices / Default | Description |
 |---|---|---|
 | `--save-file` | *(auto-detect)* | Path to a specific `.sav` file. |
-| `--mode` | `auto`, `saturday`, `market-only`, `townsfolk`, `all` (default: `auto`) | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets the 8 vendors; `townsfolk` targets 26 residents; `all` plans all 34 NPCs. |
+| `--mode` | `auto`, `saturday`, `market-only`, `townsfolk`, `all` (default: `auto`) | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets visiting vendors; `townsfolk` targets permanent residents; `all` plans all eligible NPCs. Respects player unlock progression when save is provided. |
 | `--slots` | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
 | `--item-locations` | Path (default: `data/item_locations.json`) | Path to item locations database. |
 | `--format` | `terminal`, `csv`, `excel`, `all`, `both` (default: `all`) | Output destination format. |

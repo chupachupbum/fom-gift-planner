@@ -342,6 +342,7 @@ def plan_daily_gift_bag(
     target_npcs = set()
     ungiftable_npcs = []
     not_present_npcs = []
+    locked_npcs = []
 
     npc_progress = {}
     total_game_loved = 0
@@ -376,39 +377,50 @@ def plan_daily_gift_bag(
         remaining_loved = all_loved - given_set
         remaining_liked = all_liked - given_set
 
+        # Check unlocked status from save progression
+        is_unlocked = True
+        if save is not None and hasattr(save, "is_npc_unlocked") and hasattr(save, "npcs") and save.npcs:
+            is_unlocked = save.is_npc_unlocked(nid)
+
         # Determine presence based on mode
-        if mode in ("saturday", "market"):
-            is_present = True
-        elif mode == "market-only":
-            is_present = is_vendor
-        elif mode in ("townsfolk", "weekday"):
-            is_present = not is_vendor
-        elif mode == "all":
-            is_present = True
-        else:  # "auto" or "today"
-            is_present = save.is_npc_present_in_town_today(nid) if (save and hasattr(save, "is_npc_present_in_town_today")) else True
-
-        if force_all_npcs:
-            can_gift = True
-        elif mode in ("saturday", "market") and not is_sat:
-            can_gift = True
-        elif save is not None and hasattr(save, "can_gift_npc_today"):
-            can_gift = save.can_gift_npc_today(nid)
+        if not is_unlocked:
+            is_present = False
+            can_gift = False
+            locked_npcs.append(nid)
         else:
-            can_gift = True
+            if mode in ("saturday", "market"):
+                is_present = True
+            elif mode == "market-only":
+                is_present = is_vendor
+            elif mode in ("townsfolk", "weekday"):
+                is_present = not is_vendor
+            elif mode == "all":
+                is_present = True
+            else:  # "auto" or "today"
+                is_present = save.is_npc_present_in_town_today(nid) if (save and hasattr(save, "is_npc_present_in_town_today")) else True
 
-        if not is_present:
-            not_present_npcs.append(nid)
-        elif not can_gift:
-            ungiftable_npcs.append(nid)
-        elif remaining_loved or remaining_liked:
-            target_npcs.add(nid)
+            if force_all_npcs:
+                can_gift = True
+            elif mode in ("saturday", "market") and not is_sat:
+                can_gift = True
+            elif save is not None and hasattr(save, "can_gift_npc_today"):
+                can_gift = save.can_gift_npc_today(nid)
+            else:
+                can_gift = True
+
+            if not is_present:
+                not_present_npcs.append(nid)
+            elif not can_gift:
+                ungiftable_npcs.append(nid)
+            elif remaining_loved or remaining_liked:
+                target_npcs.add(nid)
 
         hp = save.get_npc_heart_points(nid) if (save and hasattr(save, "get_npc_heart_points")) else 0.0
         npc_progress[nid] = {
             "name": npc_name,
             "hp": hp,
             "is_vendor": is_vendor,
+            "is_unlocked": is_unlocked,
             "is_present_today": is_present,
             "can_gift_today": can_gift,
             "gifts_given_count": len(given_set),
@@ -645,12 +657,29 @@ def plan_daily_gift_bag(
     today_liked_count = sum(len(b["liked_recipients_today"]) for b in bag_plan)
     vendors_covered_today = sum(len(b["market_vendors_covered"]) for b in bag_plan)
 
+    if save is not None and hasattr(save, "get_unlocked_npc_ids") and hasattr(save, "npcs") and save.npcs:
+        unlocked_vendor_ids = save.get_unlocked_vendor_ids()
+        unlocked_townsfolk_ids = {k for k in save.get_unlocked_npc_ids() if k not in SATURDAY_MARKET_VENDORS}
+        unlocked_vendors_count = len(unlocked_vendor_ids)
+        unlocked_townsfolk_count = len(unlocked_townsfolk_ids)
+        unlocked_npcs_count = len(save.get_unlocked_npc_ids())
+    else:
+        unlocked_npcs_list = [nid for nid, p in npc_progress.items() if p.get("is_unlocked", True)]
+        unlocked_vendors = [nid for nid in unlocked_npcs_list if npc_progress[nid]["is_vendor"]]
+        unlocked_townsfolk = [nid for nid in unlocked_npcs_list if not npc_progress[nid]["is_vendor"]]
+        unlocked_vendors_count = len(unlocked_vendors)
+        unlocked_townsfolk_count = len(unlocked_townsfolk)
+        unlocked_npcs_count = len(unlocked_npcs_list)
+
     overall_stats = {
         "mode": mode,
         "planning_for_saturday": planning_for_saturday,
         "is_animal_festival": is_animal_fest,
         "target_npcs_count": len(target_npcs),
         "covered_npcs_count": len(covered_npcs),
+        "unlocked_npcs_count": unlocked_npcs_count,
+        "unlocked_vendors_count": unlocked_vendors_count,
+        "unlocked_townsfolk_count": unlocked_townsfolk_count,
         "slots_used": len(bag_plan),
         "max_slots": max_slots,
         "today_loved_completed": today_loved_count,
@@ -666,6 +695,7 @@ def plan_daily_gift_bag(
         "remaining_unique_items": len(all_remaining_items_map),
         "ungiftable_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in ungiftable_npcs if nid in npc_gift_definitions],
         "not_present_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in not_present_npcs if nid in npc_gift_definitions],
+        "locked_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in locked_npcs if nid in npc_gift_definitions],
     }
 
     focus_suggestions = compute_focus_suggestions(

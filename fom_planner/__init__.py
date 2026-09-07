@@ -7,6 +7,10 @@ Fields of Mistria Daily Gift Planner & Progression Optimization Toolkit.
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     SATURDAY_MARKET_VENDORS,
+    SATURDAY_MARKET_BASE_VENDORS,
+    SATURDAY_MARKET_UPGRADE_1_VENDORS,
+    SATURDAY_MARKET_UPGRADE_2_VENDORS,
+    STORY_GATED_TOWNSFOLK,
     AvailabilityTier,
 )
 from fom_planner.crafting import (
@@ -55,6 +59,10 @@ __version__ = "1.2.0"
 __all__ = [
     "ANIMAL_FESTIVAL_ATTENDING_VENDORS",
     "SATURDAY_MARKET_VENDORS",
+    "SATURDAY_MARKET_BASE_VENDORS",
+    "SATURDAY_MARKET_UPGRADE_1_VENDORS",
+    "SATURDAY_MARKET_UPGRADE_2_VENDORS",
+    "STORY_GATED_TOWNSFOLK",
     "AvailabilityTier",
     "CraftingPlan",
     "CraftingStep",
