@@ -719,3 +719,878 @@ def plan_daily_gift_bag(
         "overall_stats": overall_stats,
     }
 
+
+def _normalize_infused_pool(infused_data: Any, infusion_key: str) -> Dict[str, int]:
+    """
+    Defensively normalizes arbitrary infused item structures into a {item_id: count} mapping.
+
+    Supports:
+      1. R1 SaveData format: {"lovable": [{"item_id": ..., "count": ...}], ...}
+      2. Dict mapping: {"lovable": {"apple_pie": 2}, ...}
+      3. Iterables of strings: {"lovable": ["apple_pie", "berry_tart"], ...}
+      4. Flat list of slot dicts: [{"item": {"item_id": ..., "infusion": ...}, "count": ...}, ...]
+      5. Flat list of item dicts: [{"item_id": ..., "infusion": ..., "count": ...}, ...]
+    """
+    if not infused_data:
+        return {}
+
+    pool: Dict[str, int] = {}
+    target_infusions = {"lovable"} if infusion_key == "lovable" else {"likable", "likeable"}
+
+    raw_entries: List[Any] = []
+    if isinstance(infused_data, dict):
+        val = infused_data.get(infusion_key)
+        if val is None and infusion_key == "likable":
+            val = infused_data.get("likeable")
+        elif val is None and infusion_key == "likeable":
+            val = infused_data.get("likable")
+
+        if isinstance(val, dict):
+            for k, cnt_val in val.items():
+                if not k:
+                    continue
+                k_clean = str(k).strip().lower()
+                try:
+                    cnt = int(round(float(cnt_val)))
+                    if cnt > 0:
+                        pool[k_clean] = pool.get(k_clean, 0) + cnt
+                except (ValueError, TypeError, OverflowError):
+                    pass
+            return pool
+        elif isinstance(val, (list, tuple, set)):
+            raw_entries = list(val)
+        elif val is not None:
+            raw_entries = [val]
+    elif isinstance(infused_data, (list, tuple, set)):
+        for entry in infused_data:
+            if not isinstance(entry, dict):
+                continue
+            sub_item = entry.get("item")
+            if isinstance(sub_item, dict):
+                inf = str(sub_item.get("infusion") or "").strip().lower()
+                if inf in target_infusions:
+                    raw_entries.append({
+                        "item_id": sub_item.get("item_id"),
+                        "count": entry.get("count", 1),
+                    })
+            else:
+                inf = str(entry.get("infusion") or "").strip().lower()
+                if inf in target_infusions:
+                    raw_entries.append(entry)
+    else:
+        return {}
+
+    for item in raw_entries:
+        if isinstance(item, dict):
+            iid_raw = item.get("item_id")
+            if not iid_raw:
+                continue
+            iid = str(iid_raw).strip().lower()
+            try:
+                cnt = int(round(float(item.get("count", 1))))
+            except (ValueError, TypeError, OverflowError):
+                cnt = 1
+            if iid and cnt > 0:
+                pool[iid] = pool.get(iid, 0) + cnt
+        elif isinstance(item, (str, bytes)):
+            iid = str(item).strip().lower()
+            if iid:
+                pool[iid] = pool.get(iid, 0) + 1
+
+    return pool
+
+
+def plan_max_relationship(
+    save: Optional[SaveData] = None,
+    npc_gift_definitions: Optional[Dict[str, dict]] = None,
+    item_metadata: Optional[Dict[str, dict]] = None,
+    mode: str = "auto",
+    max_slots: int = 20,
+    exclude_npcs: Optional[Union[Set[str], List[str]]] = None,
+    force_all_npcs: bool = False,
+    inventory: Optional[Dict[str, int]] = None,
+    infused_items: Optional[Any] = None,
+    recipes: Optional[Dict[str, Any]] = None,
+    item_locations: Optional[Dict[str, str]] = None,
+    max_relationship_points: Optional[float] = None,
+    exclude_max_relationship: bool = True,
+) -> dict:
+    """
+    Computes a daily gift assignment to maximize total relationship points earned today.
+
+    Game Mechanics & Relationship Points:
+      Standard Daily Gifting (no birthday multiplier):
+        - Love Gift:              +20 points
+        - Universal Love Gift:    +20 points (infused with 'lovable')
+        - Like Gift:              +10 points
+        - Universal Like Gift:    +10 points (infused with 'likable')
+        - Neutral Gift:           +3 points (omitted to preserve bag slots)
+        - Dislike / Hate:         +0 points (omitted)
+
+    Optimization Algorithm:
+      1. Strict 5-tier Priority Hierarchy:
+           Specific Love (+20) > Universal Love (+20) > Specific Like (+10) > Universal Like (+10) > Skip (+0)
+         Specific gifts are strictly prioritized over universal gifts within the same point tier
+         to preserve globally fungible universal infusion dishes for NPCs lacking specific gifts.
+      2. Greedy Constrained Allocation (MRV - Minimum Remaining Values):
+         NPCs with the fewest available specific candidates in inventory are allocated first.
+         This prevents flexible NPCs with broad tastes from consuming items needed by constrained NPCs.
+      3. Abundance Tie-breaking:
+         When multiple eligible gifts are available for an NPC within a tier, the item with the
+         highest current inventory count is chosen, preserving rarer items.
+         Deterministic tie-breaking is enforced by display name and item ID.
+      4. Exact Inventory Deduction & Infusion Synchronization:
+         Physical inventory is decremented immediately upon each assignment.
+         Infusion pools and physical inventory are synchronized bidirectionally to guarantee that
+         an item stack cannot be double-spent across specific and universal allocations.
+      5. NPC Presence & Festival Logic:
+         Respects day-of-week, Saturday Market vendor availability, Animal Festival (Winter 10),
+         and progression lock states (e.g. story-gated NPCs and market expansion vendors).
+      6. Capacity Budgeting:
+         If the number of distinct items packed exceeds max_slots, items are ranked by total
+         points delivered, vendor coverage, recipient count, and name. Slots beyond max_slots
+         are cleanly truncated and their NPC assignments rolled back.
+
+    Parameters:
+      save: Parsed SaveData instance containing calendar, NPC presence, and inventory states.
+      npc_gift_definitions: Mapping of NPC IDs to preference dicts (with 'loved' and 'liked' sets).
+      item_metadata: Metadata database for display names, prices, tags, descriptions.
+      mode: Target planning mode ('auto', 'saturday', 'market-only', 'townsfolk', 'all').
+      max_slots: Maximum bag slots allocated for daily gifts (default: 20).
+      exclude_npcs: Set or list of NPC IDs to exclude from daily gifting.
+      force_all_npcs: If True, bypasses can_gift_npc_today daily gift flag.
+      inventory: Optional explicit inventory dict {item_id: count} overriding save data.
+      infused_items: Optional explicit infused dishes structure overriding auto-detection.
+      recipes: Recipe dictionary for computing downstream blocker focus suggestions.
+      item_locations: Mapping of item IDs to world acquisition hints.
+
+    Returns:
+      A dictionary compatible with all exporters (terminal, CSV, Excel):
+        - bag_plan: Ordered list of packed item dictionaries up to max_slots.
+        - npc_progress: Progress, assignment, and points per NPC.
+        - covered_npcs: Set of NPC IDs assigned a gift today.
+        - target_npcs: Set of present, eligible NPC IDs targeted today.
+        - remaining_items_map: Downstream mapping of pending items for Excel Sheet 3.
+        - all_remaining_items_map: All pending items across all non-excluded NPCs.
+        - today_remaining_items_map: Pending items relevant to today's target NPCs.
+        - focus_suggestions: List of blocker raw material deficit suggestions.
+        - overall_stats: Comprehensive summary statistics including total_relationship_points.
+        - infused_items: Raw or detected infused items pool.
+    """
+    # 1. Normalize exclude_npcs
+    clean_excluded: Set[str] = set()
+    if exclude_npcs is not None:
+        if isinstance(exclude_npcs, (set, list, tuple)):
+            clean_excluded = {str(x).strip().lower() for x in exclude_npcs if x and str(x).strip()}
+        elif isinstance(exclude_npcs, (str, bytes)):
+            s = str(exclude_npcs).strip().lower()
+            if s:
+                clean_excluded = {s}
+
+    if npc_gift_definitions is None:
+        npc_gift_definitions = {}
+    if item_metadata is None:
+        item_metadata = {}
+    if recipes is None:
+        recipes = load_recipes()
+    if item_locations is None:
+        item_locations = ITEM_LOCATIONS
+
+    # 2. Resolve Regular Inventory Pool
+    current_inventory: Dict[str, int] = {}
+    if inventory is not None:
+        if isinstance(inventory, dict):
+            for k, v in inventory.items():
+                if not k:
+                    continue
+                try:
+                    cnt = int(round(float(v)))
+                    if cnt > 0:
+                        k_clean = str(k).strip().lower()
+                        current_inventory[k_clean] = current_inventory.get(k_clean, 0) + cnt
+                except (ValueError, TypeError, OverflowError):
+                    pass
+    elif save is not None and hasattr(save, "get_all_available_items"):
+        try:
+            raw_items = save.get_all_available_items()
+            if isinstance(raw_items, dict):
+                for k, v in raw_items.items():
+                    if not k:
+                        continue
+                    try:
+                        cnt = int(round(float(v)))
+                        if cnt > 0:
+                            k_clean = str(k).strip().lower()
+                            current_inventory[k_clean] = current_inventory.get(k_clean, 0) + cnt
+                    except (ValueError, TypeError, OverflowError):
+                        pass
+        except Exception:
+            current_inventory = {}
+
+    initial_inventory = dict(current_inventory)
+
+    # 3. Resolve Infused Items Pool
+    if infused_items is None and save is not None and hasattr(save, "get_infused_items"):
+        try:
+            raw_infused = save.get_infused_items()
+        except Exception:
+            raw_infused = None
+    else:
+        raw_infused = infused_items
+
+    lovable_pool = _normalize_infused_pool(raw_infused, "lovable")
+    likable_pool = _normalize_infused_pool(raw_infused, "likable")
+    total_infused_detected = sum(lovable_pool.values()) + sum(likable_pool.values())
+
+    # 4. Calendar, Festival & Saturday Awareness
+    is_sat = False
+    is_animal_fest = False
+    if save is not None and hasattr(save, "in_game_date") and save.in_game_date is not None:
+        is_sat = bool(getattr(save.in_game_date, "is_saturday", False))
+        is_animal_fest = bool(getattr(save.in_game_date, "is_animal_festival", False))
+
+    planning_for_saturday = (mode in ("saturday", "market")) or (mode == "auto" and is_sat)
+
+    # 5. Filter and Classify Target NPCs
+    all_npcs = sorted(npc_gift_definitions.keys())
+    target_npcs: Set[str] = set()
+    ungiftable_npcs: List[str] = []
+    not_present_npcs: List[str] = []
+    locked_npcs: List[str] = []
+    max_relationship_npcs: List[str] = []
+
+    npc_progress: Dict[str, dict] = {}
+    total_game_loved = 0
+    total_game_liked = 0
+    total_given_loved = 0
+    total_given_liked = 0
+
+    for nid in all_npcs:
+        nid_clean = str(nid).strip().lower()
+        if nid_clean in clean_excluded:
+            continue
+
+        g_def = npc_gift_definitions[nid]
+        npc_name = str(g_def.get("name") or nid.replace("_", " ").title())
+        all_loved = {str(x).strip().lower() for x in (g_def.get("loved") or []) if x}
+        all_liked = {str(x).strip().lower() for x in (g_def.get("liked") or []) if x}
+        is_vendor = nid_clean in SATURDAY_MARKET_VENDORS
+
+        total_game_loved += len(all_loved)
+        total_game_liked += len(all_liked)
+
+        if save is not None and hasattr(save, "get_npc_gifts_given"):
+            try:
+                raw_given = save.get_npc_gifts_given(nid)
+                given_set = {str(x).strip().lower() for x in (raw_given or []) if x}
+            except Exception:
+                given_set = set()
+        else:
+            given_set = set()
+
+        given_loved = all_loved & given_set
+        given_liked = all_liked & given_set
+        total_given_loved += len(given_loved)
+        total_given_liked += len(given_liked)
+
+        remaining_loved = all_loved - given_set
+        remaining_liked = all_liked - given_set
+
+        hp = 0.0
+        if save is not None and hasattr(save, "get_npc_heart_points"):
+            try:
+                hp = float(save.get_npc_heart_points(nid_clean))
+            except (ValueError, TypeError):
+                hp = 0.0
+
+        is_max_rel = False
+        if exclude_max_relationship:
+            if save is not None and hasattr(save, "is_npc_max_relationship"):
+                try:
+                    is_max_rel = bool(save.is_npc_max_relationship(nid_clean, max_points=max_relationship_points))
+                except Exception:
+                    is_max_rel = False
+            elif max_relationship_points is not None:
+                is_max_rel = (hp >= max_relationship_points)
+
+        is_unlocked = True
+        if save is not None and hasattr(save, "is_npc_unlocked") and hasattr(save, "npcs") and save.npcs:
+            try:
+                is_unlocked = bool(save.is_npc_unlocked(nid_clean))
+            except Exception:
+                is_unlocked = True
+
+        if not is_unlocked:
+            is_present = False
+            can_gift = False
+            locked_npcs.append(nid)
+        elif is_max_rel:
+            if mode in ("saturday", "market"):
+                is_present = True
+            elif mode == "market-only":
+                is_present = is_vendor
+            elif mode in ("townsfolk", "weekday"):
+                is_present = not is_vendor
+            elif mode == "all":
+                is_present = True
+            else:  # "auto" or "today"
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = True
+
+            can_gift = False
+            max_relationship_npcs.append(nid)
+        else:
+            if mode in ("saturday", "market"):
+                is_present = True
+            elif mode == "market-only":
+                is_present = is_vendor
+            elif mode in ("townsfolk", "weekday"):
+                is_present = not is_vendor
+            elif mode == "all":
+                is_present = True
+            else:  # "auto" or "today"
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = True
+
+            if force_all_npcs:
+                can_gift = True
+            elif mode in ("saturday", "market") and not is_sat:
+                can_gift = True
+            elif save is not None and hasattr(save, "can_gift_npc_today"):
+                try:
+                    can_gift = bool(save.can_gift_npc_today(nid_clean))
+                except Exception:
+                    can_gift = True
+            else:
+                can_gift = True
+
+            if not is_present:
+                not_present_npcs.append(nid)
+            elif not can_gift:
+                ungiftable_npcs.append(nid)
+            else:
+                target_npcs.add(nid)
+
+        npc_progress[nid] = {
+            "name": npc_name,
+            "hp": hp,
+            "is_vendor": is_vendor,
+            "is_unlocked": is_unlocked,
+            "is_max_relationship": is_max_rel,
+            "is_present_today": is_present,
+            "can_gift_today": can_gift,
+            "loved": all_loved,
+            "liked": all_liked,
+            "gifts_given_count": len(given_set),
+            "given_loved_count": len(given_loved),
+            "given_liked_count": len(given_liked),
+            "remaining_loved": remaining_loved,
+            "remaining_liked": remaining_liked,
+            "remaining_loved_count": len(remaining_loved),
+            "remaining_liked_count": len(remaining_liked),
+            "total_remaining": len(remaining_loved) + len(remaining_liked),
+            "pct_loved_done": (len(given_loved) / len(all_loved) * 100.0) if all_loved else 100.0,
+            "pct_total_done": ((len(given_loved) + len(given_liked)) / (len(all_loved) + len(all_liked)) * 100.0) if (all_loved or all_liked) else 100.0,
+            "assigned_item_id": None,
+            "assigned_item_name": None,
+            "assigned_pref_type": None,
+            "assigned_points": 0,
+        }
+
+    # 6. Build remaining item coverage mappings for downstream tools
+    all_remaining_items_map: Dict[str, dict] = {}
+    for nid, p in npc_progress.items():
+        for iid in p["remaining_loved"]:
+            if iid not in all_remaining_items_map:
+                all_remaining_items_map[iid] = {"loved": set(), "liked": set()}
+            all_remaining_items_map[iid]["loved"].add(nid)
+        for iid in p["remaining_liked"]:
+            if iid not in all_remaining_items_map:
+                all_remaining_items_map[iid] = {"loved": set(), "liked": set()}
+            all_remaining_items_map[iid]["liked"].add(nid)
+
+    today_remaining_items_map: Dict[str, dict] = {}
+    for nid in target_npcs:
+        p = npc_progress[nid]
+        for iid in p["remaining_loved"]:
+            if iid not in today_remaining_items_map:
+                today_remaining_items_map[iid] = {"loved": set(), "liked": set()}
+            today_remaining_items_map[iid]["loved"].add(nid)
+        for iid in p["remaining_liked"]:
+            if iid not in today_remaining_items_map:
+                today_remaining_items_map[iid] = {"loved": set(), "liked": set()}
+            today_remaining_items_map[iid]["liked"].add(nid)
+
+    # 7. Allocation Pipeline: Priority Hierarchy with MRV and Abundance Tie-breaking
+    unassigned_npcs = set(target_npcs)
+    crafted_assignments: Set[str] = set()
+
+    def _sync_deduct_specific(item_id: str):
+        current_inventory[item_id] -= 1
+        rem = current_inventory[item_id]
+        if rem <= 0:
+            del current_inventory[item_id]
+
+        if item_id in lovable_pool and lovable_pool[item_id] > rem:
+            if rem <= 0:
+                del lovable_pool[item_id]
+            else:
+                lovable_pool[item_id] = rem
+
+        if item_id in likable_pool and likable_pool[item_id] > rem:
+            if rem <= 0:
+                del likable_pool[item_id]
+            else:
+                likable_pool[item_id] = rem
+
+    def _sync_after_craft(chosen_item: str):
+        for pool in (lovable_pool, likable_pool):
+            for k in list(pool.keys()):
+                cur = current_inventory.get(k, 0)
+                if cur <= 0:
+                    del pool[k]
+                elif pool[k] > cur:
+                    pool[k] = cur
+
+    def _sync_deduct_universal(item_id: str, pool: Dict[str, int], other_pool: Optional[Dict[str, int]] = None):
+        pool[item_id] -= 1
+        if pool[item_id] <= 0:
+            del pool[item_id]
+
+        if item_id in current_inventory:
+            current_inventory[item_id] -= 1
+            rem = current_inventory[item_id]
+            if rem <= 0:
+                del current_inventory[item_id]
+
+            if other_pool is not None and item_id in other_pool and other_pool[item_id] > rem:
+                if rem <= 0:
+                    del other_pool[item_id]
+                else:
+                    other_pool[item_id] = rem
+
+    # Stage 1: Specific Love Gifts (+20)
+    while True:
+        candidates = []
+        for nid in unassigned_npcs:
+            avail = [iid for iid in npc_progress[nid]["loved"] if current_inventory.get(iid, 0) > 0]
+            if avail:
+                is_v = npc_progress[nid]["is_vendor"]
+                is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                candidates.append((
+                    len(avail),
+                    0 if is_boosted else 1,
+                    str(npc_progress[nid]["name"]).lower(),
+                    nid,
+                    avail,
+                ))
+        if not candidates:
+            break
+
+        candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+        _, _, _, best_nid, avail = candidates[0]
+
+        avail.sort(key=lambda iid: (
+            -current_inventory.get(iid, 0),
+            str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+            iid,
+        ))
+        chosen_item = avail[0]
+
+        _sync_deduct_specific(chosen_item)
+
+        meta = item_metadata.get(chosen_item, {})
+        disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+        npc_progress[best_nid]["assigned_item_id"] = chosen_item
+        npc_progress[best_nid]["assigned_item_name"] = disp_name
+        npc_progress[best_nid]["assigned_pref_type"] = "LOVE"
+        npc_progress[best_nid]["assigned_points"] = 20
+        unassigned_npcs.remove(best_nid)
+
+    # Stage 1 (Crafting Sub-pass): Specific Love Gifts (+20) via Crafting
+    if recipes:
+        while True:
+            candidates = []
+            for nid in unassigned_npcs:
+                craftable_avail = [
+                    iid for iid in npc_progress[nid]["loved"]
+                    if _calculate_max_craftable(iid, current_inventory, recipes) > 0
+                ]
+                if craftable_avail:
+                    is_v = npc_progress[nid]["is_vendor"]
+                    is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                    candidates.append((
+                        len(craftable_avail),
+                        0 if is_boosted else 1,
+                        str(npc_progress[nid]["name"]).lower(),
+                        nid,
+                        craftable_avail,
+                    ))
+            if not candidates:
+                break
+
+            candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+            _, _, _, best_nid, craftable_avail = candidates[0]
+
+            craftable_avail.sort(key=lambda iid: (
+                -_calculate_max_craftable(iid, current_inventory, recipes),
+                str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                iid,
+            ))
+            chosen_item = craftable_avail[0]
+
+            current_inventory = deduct_crafting_materials(chosen_item, current_inventory, recipes, count=1)
+            _sync_after_craft(chosen_item)
+
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+            npc_progress[best_nid]["assigned_item_id"] = chosen_item
+            npc_progress[best_nid]["assigned_item_name"] = disp_name
+            npc_progress[best_nid]["assigned_pref_type"] = "LOVE"
+            npc_progress[best_nid]["assigned_points"] = 20
+            crafted_assignments.add(best_nid)
+            unassigned_npcs.remove(best_nid)
+
+    # Stage 2: Universal Love Gifts (+20)
+    if lovable_pool:
+        def univ_love_sort_key(nid):
+            avail_likes = sum(1 for iid in npc_progress[nid]["liked"] if current_inventory.get(iid, 0) > 0)
+            is_v = npc_progress[nid]["is_vendor"]
+            is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+            return (0 if is_boosted else 1, avail_likes, str(npc_progress[nid]["name"]).lower(), nid)
+
+        sorted_unassigned = sorted(list(unassigned_npcs), key=univ_love_sort_key)
+        for nid in sorted_unassigned:
+            if not lovable_pool:
+                break
+            avail_lovable = sorted(
+                list(lovable_pool.keys()),
+                key=lambda iid: (
+                    -lovable_pool[iid],
+                    str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                    iid,
+                ),
+            )
+            chosen_item = avail_lovable[0]
+            _sync_deduct_universal(chosen_item, lovable_pool, likable_pool)
+
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+            npc_progress[nid]["assigned_item_id"] = chosen_item
+            npc_progress[nid]["assigned_item_name"] = disp_name
+            npc_progress[nid]["assigned_pref_type"] = "UNIV_LOVE"
+            npc_progress[nid]["assigned_points"] = 20
+            unassigned_npcs.remove(nid)
+
+    # Stage 3: Specific Like Gifts (+10)
+    while True:
+        candidates = []
+        for nid in unassigned_npcs:
+            avail = [iid for iid in npc_progress[nid]["liked"] if current_inventory.get(iid, 0) > 0]
+            if avail:
+                is_v = npc_progress[nid]["is_vendor"]
+                is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                candidates.append((
+                    len(avail),
+                    0 if is_boosted else 1,
+                    str(npc_progress[nid]["name"]).lower(),
+                    nid,
+                    avail,
+                ))
+        if not candidates:
+            break
+
+        candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+        _, _, _, best_nid, avail = candidates[0]
+
+        avail.sort(key=lambda iid: (
+            -current_inventory.get(iid, 0),
+            str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+            iid,
+        ))
+        chosen_item = avail[0]
+
+        _sync_deduct_specific(chosen_item)
+
+        meta = item_metadata.get(chosen_item, {})
+        disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+        npc_progress[best_nid]["assigned_item_id"] = chosen_item
+        npc_progress[best_nid]["assigned_item_name"] = disp_name
+        npc_progress[best_nid]["assigned_pref_type"] = "LIKE"
+        npc_progress[best_nid]["assigned_points"] = 10
+        unassigned_npcs.remove(best_nid)
+
+    # Stage 3 (Crafting Sub-pass): Specific Like Gifts (+10) via Crafting
+    if recipes:
+        while True:
+            candidates = []
+            for nid in unassigned_npcs:
+                craftable_avail = [
+                    iid for iid in npc_progress[nid]["liked"]
+                    if _calculate_max_craftable(iid, current_inventory, recipes) > 0
+                ]
+                if craftable_avail:
+                    is_v = npc_progress[nid]["is_vendor"]
+                    is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                    candidates.append((
+                        len(craftable_avail),
+                        0 if is_boosted else 1,
+                        str(npc_progress[nid]["name"]).lower(),
+                        nid,
+                        craftable_avail,
+                    ))
+            if not candidates:
+                break
+
+            candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+            _, _, _, best_nid, craftable_avail = candidates[0]
+
+            craftable_avail.sort(key=lambda iid: (
+                -_calculate_max_craftable(iid, current_inventory, recipes),
+                str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                iid,
+            ))
+            chosen_item = craftable_avail[0]
+
+            current_inventory = deduct_crafting_materials(chosen_item, current_inventory, recipes, count=1)
+            _sync_after_craft(chosen_item)
+
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+            npc_progress[best_nid]["assigned_item_id"] = chosen_item
+            npc_progress[best_nid]["assigned_item_name"] = disp_name
+            npc_progress[best_nid]["assigned_pref_type"] = "LIKE"
+            npc_progress[best_nid]["assigned_points"] = 10
+            crafted_assignments.add(best_nid)
+            unassigned_npcs.remove(best_nid)
+
+    # Stage 4: Universal Like Gifts (+10)
+    if likable_pool:
+        def univ_like_sort_key(nid):
+            is_v = npc_progress[nid]["is_vendor"]
+            is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+            return (0 if is_boosted else 1, str(npc_progress[nid]["name"]).lower(), nid)
+
+        sorted_unassigned = sorted(list(unassigned_npcs), key=univ_like_sort_key)
+        for nid in sorted_unassigned:
+            if not likable_pool:
+                break
+            avail_likable = sorted(
+                list(likable_pool.keys()),
+                key=lambda iid: (
+                    -likable_pool[iid],
+                    str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                    iid,
+                ),
+            )
+            chosen_item = avail_likable[0]
+            _sync_deduct_universal(chosen_item, likable_pool, lovable_pool)
+
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+
+            npc_progress[nid]["assigned_item_id"] = chosen_item
+            npc_progress[nid]["assigned_item_name"] = disp_name
+            npc_progress[nid]["assigned_pref_type"] = "UNIV_LIKE"
+            npc_progress[nid]["assigned_points"] = 10
+            unassigned_npcs.remove(nid)
+
+    # Stage 5: Skip (remaining NPCs in unassigned_npcs get 0 points)
+
+    # 8. Aggregate Assigned Items into Bag Plan Slots
+    items_to_recipients: Dict[str, List[dict]] = {}
+    for nid in target_npcs:
+        p = npc_progress[nid]
+        item_id = p.get("assigned_item_id")
+        if item_id:
+            if item_id not in items_to_recipients:
+                items_to_recipients[item_id] = []
+            items_to_recipients[item_id].append({
+                "npc_id": nid,
+                "name": p["name"],
+                "pref": p["assigned_pref_type"],
+                "pref_tier": p["assigned_pref_type"],
+                "is_vendor": p["is_vendor"],
+                "points": p["assigned_points"],
+            })
+
+    def _item_pack_sort_key(iid: str):
+        recips = items_to_recipients[iid]
+        tot_pts = sum(r["points"] for r in recips)
+        vendor_hits = sum(1 for r in recips if r["is_vendor"])
+        meta = item_metadata.get(iid, {})
+        disp_name = str(meta.get("display_name") or iid).lower()
+        return (-tot_pts, -vendor_hits, -len(recips), disp_name, iid)
+
+    sorted_items = sorted(items_to_recipients.keys(), key=_item_pack_sort_key)
+
+    effective_max_slots = max(0, int(max_slots))
+    packed_items = sorted_items[:effective_max_slots]
+    reverted_items = set(sorted_items[effective_max_slots:])
+
+    for rev_iid in reverted_items:
+        for r in items_to_recipients[rev_iid]:
+            rev_nid = r["npc_id"]
+            npc_progress[rev_nid]["assigned_item_id"] = None
+            npc_progress[rev_nid]["assigned_item_name"] = None
+            npc_progress[rev_nid]["assigned_pref_type"] = None
+            npc_progress[rev_nid]["assigned_points"] = 0
+
+    covered_npcs: Set[str] = set()
+    bag_plan: List[Dict[str, Any]] = []
+
+    for slot_num, iid in enumerate(packed_items, start=1):
+        recipients = items_to_recipients[iid]
+        meta = item_metadata.get(iid, {})
+        disp_name = str(meta.get("display_name") or iid.replace("_", " ").title())
+        tag_list = meta.get("tags", [])
+        tags_str = ", ".join(tag_list) if isinstance(tag_list, list) else str(tag_list)
+
+        loved_recips = [r["name"] for r in recipients if r["pref"] in ("LOVE", "UNIV_LOVE")]
+        liked_recips = [r["name"] for r in recipients if r["pref"] in ("LIKE", "UNIV_LIKE")]
+        vendor_recips = [r["name"] for r in recipients if r["is_vendor"]]
+
+        all_pot_loved = sorted([npc_progress[x]["name"] for x in all_remaining_items_map.get(iid, {}).get("loved", set()) if x in npc_progress])
+        all_pot_liked = sorted([npc_progress[x]["name"] for x in all_remaining_items_map.get(iid, {}).get("liked", set()) if x in npc_progress])
+
+        crafted_count = sum(1 for r in recipients if r["npc_id"] in crafted_assignments)
+        total_qty = len(recipients)
+        owned_count = total_qty - crafted_count
+
+        if crafted_count == 0:
+            status_str = "HAVE"
+            tier = AvailabilityTier.HAVE
+            status_badge = "📦 HAVE"
+            crafting_chain = ""
+            plan = None
+            max_craft = 0
+            raw_mats = {}
+        else:
+            status_str = "CRAFT"
+            tier = AvailabilityTier.CRAFT
+            if owned_count > 0:
+                status_badge = f"🔨 HAVE ({owned_count}) + CRAFT ({crafted_count})"
+            else:
+                status_badge = "🔨 CRAFT"
+
+            plan = evaluate_craftability(iid, initial_inventory, recipes, count_needed=total_qty)
+            crafting_chain = plan.chain_summary if plan is not None else ""
+            max_craft = plan.max_craftable if plan is not None else 0
+            raw_mats = plan.raw_materials_needed if plan is not None else {}
+
+        bag_plan.append({
+            "slot": slot_num,
+            "item_id": iid,
+            "item_name": disp_name,
+            "quantity_to_pack": total_qty,
+            "status": status_str,
+            "availability_tier": int(tier),
+            "status_badge": status_badge,
+            "crafting_chain": crafting_chain,
+            "crafting_plan": plan,
+            "max_craftable": max_craft,
+            "raw_materials_needed": raw_mats,
+            "loved_recipients_today": loved_recips,
+            "liked_recipients_today": liked_recips,
+            "all_recipients_today": recipients,
+            "market_vendors_covered": vendor_recips,
+            "all_potential_loved": all_pot_loved,
+            "all_potential_liked": all_pot_liked,
+            "bin_price": meta.get("bin_price", ""),
+            "store_price": meta.get("store_price", ""),
+            "tags": tags_str,
+            "description": meta.get("description", ""),
+        })
+        covered_npcs.update(r["npc_id"] for r in recipients)
+
+    # 9. Compute Overall Statistics & Total Points
+    today_loved_count = sum(len(b["loved_recipients_today"]) for b in bag_plan)
+    today_liked_count = sum(len(b["liked_recipients_today"]) for b in bag_plan)
+    vendors_covered_today = sum(len(b["market_vendors_covered"]) for b in bag_plan)
+    total_relationship_points = sum(
+        p["assigned_points"] for p in npc_progress.values() if p.get("assigned_item_id")
+    )
+
+    if save is not None and hasattr(save, "get_unlocked_npc_ids") and hasattr(save, "npcs") and save.npcs:
+        try:
+            unlocked_vendor_ids = save.get_unlocked_vendor_ids()
+            unlocked_townsfolk_ids = {k for k in save.get_unlocked_npc_ids() if k not in SATURDAY_MARKET_VENDORS}
+            unlocked_vendors_count = len(unlocked_vendor_ids)
+            unlocked_townsfolk_count = len(unlocked_townsfolk_ids)
+            unlocked_npcs_count = len(save.get_unlocked_npc_ids())
+        except Exception:
+            unlocked_vendors_count = 0
+            unlocked_townsfolk_count = 0
+            unlocked_npcs_count = 0
+    else:
+        unlocked_npcs_list = [nid for nid, p in npc_progress.items() if p.get("is_unlocked", True)]
+        unlocked_vendors = [nid for nid in unlocked_npcs_list if npc_progress[nid]["is_vendor"]]
+        unlocked_townsfolk = [nid for nid in unlocked_npcs_list if not npc_progress[nid]["is_vendor"]]
+        unlocked_vendors_count = len(unlocked_vendors)
+        unlocked_townsfolk_count = len(unlocked_townsfolk)
+        unlocked_npcs_count = len(unlocked_npcs_list)
+
+    overall_stats = {
+        "strategy": "max-relationship",
+        "total_relationship_points": total_relationship_points,
+        "mode": mode,
+        "planning_for_saturday": planning_for_saturday,
+        "is_animal_festival": is_animal_fest,
+        "target_npcs_count": len(target_npcs),
+        "covered_npcs_count": len(covered_npcs),
+        "unlocked_npcs_count": unlocked_npcs_count,
+        "unlocked_vendors_count": unlocked_vendors_count,
+        "unlocked_townsfolk_count": unlocked_townsfolk_count,
+        "slots_used": len(bag_plan),
+        "max_slots": max_slots,
+        "today_loved_completed": today_loved_count,
+        "today_liked_completed": today_liked_count,
+        "today_total_completed": today_loved_count + today_liked_count,
+        "vendors_covered_today": vendors_covered_today,
+        "game_total_loved": total_game_loved,
+        "game_total_liked": total_game_liked,
+        "game_total_preferences": total_game_loved + total_game_liked,
+        "game_given_loved": total_given_loved,
+        "game_given_liked": total_given_liked,
+        "game_given_total": total_given_loved + total_given_liked,
+        "remaining_unique_items": len(all_remaining_items_map),
+        "ungiftable_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in ungiftable_npcs if nid in npc_gift_definitions],
+        "not_present_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in not_present_npcs if nid in npc_gift_definitions],
+        "locked_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in locked_npcs if nid in npc_gift_definitions],
+        "max_relationship_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in max_relationship_npcs if nid in npc_gift_definitions],
+        "max_relationship_npcs_count": len(max_relationship_npcs),
+        "infused_items_detected": total_infused_detected,
+    }
+
+    focus_suggestions = compute_focus_suggestions(
+        remaining_items_map=all_remaining_items_map,
+        inventory=initial_inventory,
+        recipes=recipes,
+        item_metadata=item_metadata,
+        top_n=5,
+        item_locations=item_locations,
+    )
+
+    return {
+        "bag_plan": bag_plan,
+        "npc_progress": npc_progress,
+        "covered_npcs": covered_npcs,
+        "target_npcs": target_npcs,
+        "remaining_items_map": all_remaining_items_map,
+        "all_remaining_items_map": all_remaining_items_map,
+        "today_remaining_items_map": today_remaining_items_map,
+        "focus_suggestions": focus_suggestions,
+        "overall_stats": overall_stats,
+        "infused_items": raw_infused,
+    }
+
+

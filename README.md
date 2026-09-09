@@ -8,6 +8,15 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 
 ## Key Features
 
+- **Dual Planning Strategies (`--strategy`)**:
+  - **Journal Completion (`journal`, default)**: Prioritizes discovering and checking off remaining unrecorded gift preferences in your journal.
+  - **Max Relationship (`max-relationship`)**: Maximizes daily relationship points (+20 for Loved, +10 for Liked) across all available characters using a strict 5-tier priority hierarchy and Most-Constrained Variable (MRV) greedy allocation to prevent item starvation.
+- **Cooking Perk Infused Items Detection**:
+  - Scans both player backpack and all farm/world storage chests for cooking perk infused dishes (`lovable` and `likable`).
+  - Lovable dishes act as universal loves (+20 pts) and likable dishes act as universal likes (+10 pts) for any eligible character.
+- **Max Relationship Cap & Auto-Exclusion**:
+  - Detects characters who have reached maximum affection (default: 1,755 heart points / 10 hearts).
+  - Automatically excludes maxed NPCs from the daily gift loadout to conserve items and inventory slots, with configurable thresholds (`--max-relationship-points`) and optional override (`--no-exclude-max-relationship`).
 - **Save File Inspection**: Reads uncompressed or compressed binary `.sav` files directly. Detects in-game date, time, season, bag inventory, and all farm/world storage chests.
 - **Saturday Market & Progression Awareness**:
   - Mistria's Saturday Market features up to 8 visiting vendors, unlocked as the town progresses:
@@ -100,8 +109,11 @@ python main.py [OPTIONS]
 | Option | Choices / Default | Description |
 |---|---|---|
 | `--save-file` | *(auto-detect)* | Path to a specific `.sav` file. |
+| `--strategy` | `journal`, `max-relationship` (default: `journal`) | Optimization strategy: `journal` targets unrecorded preferences; `max-relationship` maximizes daily friendship points gained across all characters. |
 | `--mode` | `auto`, `saturday`, `market-only`, `townsfolk`, `all` (default: `auto`) | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets visiting vendors; `townsfolk` targets permanent residents; `all` plans all eligible NPCs. Respects player unlock progression when save is provided. |
 | `--slots` | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
+| `--max-relationship-points` | Float (default: `1755.0`) | Affection/heart points threshold to consider an NPC maxed out. |
+| `--no-exclude-max-relationship` | Flag | Include characters in the gift plan even if they have reached max relationship. |
 | `--item-locations` | Path (default: `data/item_locations.json`) | Path to item locations database. |
 | `--format` | `terminal`, `csv`, `excel`, `all`, `both` (default: `all`) | Output destination format. |
 | `--output-dir` | Path (default: `exports`) | Output directory for CSV and Excel files. |
@@ -114,6 +126,12 @@ python main.py [OPTIONS]
 ### Examples
 
 ```bash
+# Maximize daily friendship points across all available NPCs
+python main.py --strategy max-relationship --format terminal
+
+# Plan Saturday Market with 22 bag slots under max-relationship strategy
+python main.py --strategy max-relationship --mode saturday --slots 22
+
 # Plan Saturday Market with 15 bag slots and output to terminal
 python main.py --mode saturday --slots 15 --format terminal
 
@@ -157,12 +175,12 @@ fom-gift-planner/
 │   ├── parser.py             # Binary save decompressor & parser
 │   ├── crafting.py           # Recursive DAG recipe calculator & material deduction
 │   ├── data_loader.py        # Database loaders (locations, recipes, metadata, prefs)
-│   ├── optimizer.py          # Greedy set-cover solver & focus suggestions
+│   ├── optimizer.py          # Greedy set-cover & max-relationship solvers, focus suggestions
 │   ├── rankings.py           # Gift popularity ranking builder
 │   ├── cli.py                # Unified CLI parser & execution dispatch
 │   └── exporters/
 │       ├── __init__.py       # Exporters package
-│       ├── terminal.py       # Terminal UI formatting
+│       ├── terminal.py       # Terminal UI formatting (banners, badges, impact summary)
 │       ├── csv_export.py     # CSV exporters
 │       └── excel_export.py   # Multi-sheet openpyxl Excel exporter
 │
@@ -178,9 +196,13 @@ fom-gift-planner/
 ├── samples/
 │   └── sample_save.sav       # Sample save file for quick testing
 ├── exports/                  # Directory where CSV/Excel exports are saved
-└── tests/                    # Unit & regression test suite (124 tests)
-    ├── test_gift_planner.py
+└── tests/                    # Unit & regression test suite (327 tests)
+    ├── test_cli.py
     ├── test_crafting_calculator.py
+    ├── test_exporters.py
+    ├── test_gift_planner.py
+    ├── test_infused_items.py
+    ├── test_max_relationship.py
     └── test_save_parser.py
 ```
 
@@ -188,7 +210,7 @@ fom-gift-planner/
 
 ## Running the Test Suite
 
-Run the full automated test suite (124 tests):
+Run the full automated test suite (327 tests):
 
 ```bash
 python -m unittest discover -s tests

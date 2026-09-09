@@ -57,6 +57,7 @@ try:
     )
     from gift_planner import (
         plan_daily_gift_bag,
+        plan_max_relationship,
         print_terminal_plan,
         export_plan_to_csv,
         export_plan_to_excel,
@@ -92,6 +93,7 @@ except ImportError:
     )
     from scripts.gift_planner import (
         plan_daily_gift_bag,
+        plan_max_relationship,
         print_terminal_plan,
         export_plan_to_csv,
         export_plan_to_excel,
@@ -109,13 +111,20 @@ if OPENPYXL_AVAILABLE:
 # SYNTHETIC TEST FIXTURE GENERATORS
 # ==============================================================================
 
-def create_mock_slot(item_id: Optional[str], count: int) -> Dict[str, Any]:
-    """Creates a standard FoM inventory slot dictionary."""
+def create_mock_slot(
+    item_id: Optional[str],
+    count: int,
+    infusion: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Creates a standard FoM inventory slot dictionary with optional cooking perk infusion."""
     if item_id is None or count <= 0:
         return {"count": 0, "item": None, "required_tags": []}
+    item_dict: Dict[str, Any] = {"item_id": str(item_id)}
+    if infusion is not None:
+        item_dict["infusion"] = str(infusion)
     return {
         "count": float(count),
-        "item": {"item_id": str(item_id)},
+        "item": item_dict,
         "required_tags": []
     }
 
@@ -131,6 +140,7 @@ def create_synthetic_save_entries(
     giftable_all: bool = True,
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
     npc_ids: Optional[List[str]] = None,
+    bag_slots: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, str]:
     """Generates a complete dictionary of raw_entries for a FoM save file."""
     season_idx = {"spring": 0, "summer": 1, "autumn": 2, "winter": 3}.get(season.lower(), 0)
@@ -148,17 +158,22 @@ def create_synthetic_save_entries(
     }
     entries["header"] = json.dumps(header_data)
 
-    bag_slots = []
-    if bag_items:
-        for iid, cnt in bag_items.items():
-            bag_slots.append(create_mock_slot(iid, cnt))
-    while len(bag_slots) < 30:
-        bag_slots.append(create_mock_slot(None, 0))
+    if bag_slots is not None:
+        bag_slots_to_use = [dict(s) for s in bag_slots]
+        while len(bag_slots_to_use) < 30:
+            bag_slots_to_use.append(create_mock_slot(None, 0))
+    else:
+        bag_slots_to_use = []
+        if bag_items:
+            for iid, cnt in bag_items.items():
+                bag_slots_to_use.append(create_mock_slot(iid, cnt))
+        while len(bag_slots_to_use) < 30:
+            bag_slots_to_use.append(create_mock_slot(None, 0))
 
     player_data = {
         "name": player_name,
         "farm_name": farm_name,
-        "inventory": bag_slots,
+        "inventory": bag_slots_to_use,
     }
     entries["player"] = json.dumps(player_data)
 
@@ -215,6 +230,7 @@ def create_synthetic_save_file(
     giftable_all: bool = True,
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
     npc_ids: Optional[List[str]] = None,
+    bag_slots: Optional[List[Dict[str, Any]]] = None,
 ) -> Path:
     """Encodes and writes a synthetic binary FoM .sav file to disk."""
     entries = create_synthetic_save_entries(
@@ -228,6 +244,7 @@ def create_synthetic_save_file(
         giftable_all=giftable_all,
         gifted_npcs=gifted_npcs,
         npc_ids=npc_ids,
+        bag_slots=bag_slots,
     )
     raw = bytearray()
     raw.extend(struct.pack("<Q", len(entries)))
@@ -1851,8 +1868,1328 @@ class TestProgressionAwareGiftPlanning(unittest.TestCase):
         self.assertIn("Caldarus", output)
 
 
+# ==============================================================================
+# MAX-RELATIONSHIP STRATEGY & INFUSED ITEM TEST SUITE (Milestone 4, Requirement R5)
+# ==============================================================================
+
+class TestMaxRelationshipStrategy(unittest.TestCase):
+    """
+    Comprehensive test suite for the max-relationship gift planning strategy and
+    cooking-perk infused item detection (Milestone 4, Requirement R5).
+    """
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.work_dir = Path(self.temp_dir.name)
+        self.mock_recipes = get_mock_recipes()
+        self.mock_npcs = get_mock_npcs()
+        self.mock_meta = get_mock_meta()
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    # ==========================================================================
+    # SCENARIO 1: Infused item detection from bag inventory (lovable/likable)
+    # ==========================================================================
+
+    def test_get_infused_items_bag_scenario_1(self):
+        """
+        Scenario 1: Infused item detection from bag inventory (lovable/likable).
+        Verifies that SaveData.get_infused_items() extracts lovable and likable items
+        from the player bag inventory, aggregates duplicate stacks within the bag,
+        records location as 'bag', and ignores non-infused items.
+        """
+        save_path = self.work_dir / "scenario_1_bag_infused.sav"
+        custom_bag_slots = [
+            create_mock_slot("apple_pie", 2, infusion="lovable"),
+            create_mock_slot("vegetable_soup", 1, infusion="likable"),
+            create_mock_slot("strawberry", 5, infusion=None),  # Normal item without infusion
+            create_mock_slot("apple_pie", 3, infusion="lovable"),  # Duplicate stack in bag
+        ]
+        create_synthetic_save_file(save_path, bag_slots=custom_bag_slots)
+        save = parse_save_file(save_path)
+
+        infused = save.get_infused_items()
+
+        # 1. Structure validation
+        self.assertIsInstance(infused, dict)
+        self.assertIn("lovable", infused)
+        self.assertIn("likable", infused)
+
+        # 2. Lovable dishes: apple_pie stacks aggregated (2 + 3 = 5)
+        self.assertEqual(len(infused["lovable"]), 1)
+        self.assertEqual(infused["lovable"][0]["item_id"], "apple_pie")
+        self.assertEqual(infused["lovable"][0]["count"], 5)
+        self.assertEqual(infused["lovable"][0]["location"], "bag")
+
+        # 3. Likable dishes: vegetable_soup
+        self.assertEqual(len(infused["likable"]), 1)
+        self.assertEqual(infused["likable"][0]["item_id"], "vegetable_soup")
+        self.assertEqual(infused["likable"][0]["count"], 1)
+        self.assertEqual(infused["likable"][0]["location"], "bag")
+
+        # 4. Non-infused items are excluded
+        lovable_ids = [x["item_id"] for x in infused["lovable"]]
+        likable_ids = [x["item_id"] for x in infused["likable"]]
+        self.assertNotIn("strawberry", lovable_ids)
+        self.assertNotIn("strawberry", likable_ids)
+
+    # ==========================================================================
+    # SCENARIO 2: Infused item detection from chest inventories across locations
+    # ==========================================================================
+
+    def test_get_infused_items_chests_across_locations_scenario_2(self):
+        """
+        Scenario 2: Infused item detection from chest inventories across locations.
+        Verifies that SaveData.get_infused_items() scans chests across multiple location keys,
+        aggregates duplicate stacks within the same location, keeps separate entries for distinct
+        locations, ignores non-location keys, and sorts deterministically by (item_id, location).
+        """
+        save_path = self.work_dir / "scenario_2_chests_infused.sav"
+        chests = {
+            "farm": [
+                [
+                    create_mock_slot("berry_tart", 3, infusion="lovable"),
+                    create_mock_slot("wood", 50),
+                ],
+                [
+                    create_mock_slot("berry_tart", 2, infusion="lovable"),  # 2nd chest in farm
+                ],
+            ],
+            "farm_house": [
+                [
+                    create_mock_slot("bread", 2, infusion="likable"),
+                ],
+            ],
+            "mines": [
+                [
+                    create_mock_slot("berry_tart", 4, infusion="lovable"),
+                    create_mock_slot("iron_ore", 10),
+                ],
+            ],
+        }
+        create_synthetic_save_file(save_path, chests_by_location=chests)
+        save = parse_save_file(save_path)
+
+        infused = save.get_infused_items()
+
+        # 1. Structure validation
+        self.assertIsInstance(infused, dict)
+        self.assertIn("lovable", infused)
+        self.assertIn("likable", infused)
+
+        # 2. Lovable dishes across locations
+        # "farm": 3 + 2 = 5 berry_tart; "mines": 4 berry_tart
+        self.assertEqual(len(infused["lovable"]), 2)
+        # Deterministic sorting: ("berry_tart", "farm") before ("berry_tart", "mines")
+        self.assertEqual(
+            infused["lovable"][0],
+            {"item_id": "berry_tart", "count": 5, "location": "farm"},
+        )
+        self.assertEqual(
+            infused["lovable"][1],
+            {"item_id": "berry_tart", "count": 4, "location": "mines"},
+        )
+
+        # 3. Likable dishes: farm_house has 2 bread
+        self.assertEqual(len(infused["likable"]), 1)
+        self.assertEqual(
+            infused["likable"][0],
+            {"item_id": "bread", "count": 2, "location": "farm_house"},
+        )
+
+        # 4. Total counts across storage
+        total_lovable = sum(x["count"] for x in infused["lovable"])
+        total_likable = sum(x["count"] for x in infused["likable"])
+        self.assertEqual(total_lovable, 9)
+        self.assertEqual(total_likable, 2)
+
+        # 5. Non-infused materials excluded
+        all_detected_ids = [x["item_id"] for x in infused["lovable"] + infused["likable"]]
+        self.assertNotIn("wood", all_detected_ids)
+        self.assertNotIn("iron_ore", all_detected_ids)
+
+    # ==========================================================================
+    # SCENARIO 3: No infused items edge case
+    # ==========================================================================
+
+    def test_get_infused_items_empty_edge_case_scenario_3(self):
+        """
+        Scenario 3: No infused items edge case.
+        Verifies that SaveData.get_infused_items() returns clean empty lists without errors
+        when a save file has zero infused items. Also verifies that plan_max_relationship()
+        handles the empty infusion structure cleanly without crashing.
+        """
+        save_path = self.work_dir / "scenario_3_no_infusions.sav"
+        bag = {"strawberry": 5, "egg": 10}
+        chests = {
+            "farm": [[create_mock_slot("corn", 8)]],
+        }
+        create_synthetic_save_file(save_path, bag_items=bag, chests_by_location=chests)
+        save = parse_save_file(save_path)
+
+        infused = save.get_infused_items()
+
+        # 1. Structure must contain guaranteed keys with empty lists
+        self.assertEqual(infused, {"lovable": [], "likable": []})
+
+        # 2. Verify optimizer execution with zero infused items
+        plan = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+            max_slots=10,
+            force_all_npcs=True,
+        )
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["strategy"], "max-relationship")
+        self.assertEqual(stats["infused_items_detected"], 0)
+        # Normal gifts still assigned according to inventory
+        self.assertGreaterEqual(stats["covered_npcs_count"], 1)
+        self.assertGreaterEqual(stats["total_relationship_points"], 10)
+
+    # ==========================================================================
+    # SCENARIO 4: Basic love gift assignment (+20 pts)
+    # ==========================================================================
+
+    def test_plan_max_rel_basic_love_assignment_scenario_4(self):
+        """
+        Scenario 4: Basic love gift assignment (+20 pts).
+        Verifies that plan_max_relationship() prioritizes loved gifts (+20 pts each)
+        for eligible present NPCs over like gifts, correctly tags preference type
+        as 'LOVE', awards 20 points per recipient, and sums total relationship points.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["strawberry"],  # 10 available, but loved item (+20) must be picked
+            },
+            "march": {
+                "name": "March",
+                "loved": ["deluxe_sandwich"],
+                "liked": ["bread"],
+            },
+        }
+        inv = {
+            "golden_cheesecake": 1,
+            "strawberry": 10,
+            "deluxe_sandwich": 1,
+            "bread": 5,
+        }
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv,
+            force_all_npcs=True,
+        )
+
+        stats = plan["overall_stats"]
+        progress = plan["npc_progress"]
+        bag_plan = plan["bag_plan"]
+
+        # 1. Overall stats assertions
+        self.assertEqual(stats["strategy"], "max-relationship")
+        self.assertEqual(stats["covered_npcs_count"], 2)
+        self.assertEqual(stats["target_npcs_count"], 2)
+        self.assertEqual(stats["today_loved_completed"], 2)
+        self.assertEqual(stats["today_liked_completed"], 0)
+        self.assertEqual(stats["total_relationship_points"], 40)  # 2 x 20 pts
+
+        # 2. Adeline received golden_cheesecake (loved), NOT strawberry (liked)
+        self.assertEqual(progress["adeline"]["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(progress["adeline"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["adeline"]["assigned_points"], 20)
+
+        # 3. March received deluxe_sandwich (loved)
+        self.assertEqual(progress["march"]["assigned_item_id"], "deluxe_sandwich")
+        self.assertEqual(progress["march"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["march"]["assigned_points"], 20)
+
+        # 4. Bag plan slots verification
+        packed_item_ids = {b["item_id"] for b in bag_plan}
+        self.assertEqual(packed_item_ids, {"golden_cheesecake", "deluxe_sandwich"})
+        for b in bag_plan:
+            self.assertEqual(b["status"], "HAVE")
+            self.assertEqual(b["status_badge"], "📦 HAVE")
+            for recip in b["all_recipients_today"]:
+                self.assertEqual(recip["pref"], "LOVE")
+                self.assertEqual(recip["points"], 20)
+
+    # ==========================================================================
+    # SCENARIO 5: Most abundant love gift selection
+    # ==========================================================================
+
+    def test_plan_max_rel_most_abundant_love_selection_scenario_5(self):
+        """
+        Scenario 5: Most abundant love gift selection.
+        Verifies that when an NPC loves multiple items present in inventory,
+        plan_max_relationship() prioritizes the candidate with the highest inventory count.
+        Also verifies the symmetric case and deterministic tie-breaking.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake", "strawberry_shortcake"],
+                "liked": ["strawberry"],
+            }
+        }
+
+        # Case A: strawberry_shortcake is more abundant (8 vs 2)
+        inv_a = {"golden_cheesecake": 2, "strawberry_shortcake": 8}
+        plan_a = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv_a,
+            force_all_npcs=True,
+        )
+        self.assertEqual(
+            plan_a["npc_progress"]["adeline"]["assigned_item_id"],
+            "strawberry_shortcake",
+            "Should pick strawberry_shortcake because count 8 > count 2",
+        )
+        self.assertEqual(plan_a["npc_progress"]["adeline"]["assigned_points"], 20)
+
+        # Case B: golden_cheesecake is more abundant (10 vs 1)
+        inv_b = {"golden_cheesecake": 10, "strawberry_shortcake": 1}
+        plan_b = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv_b,
+            force_all_npcs=True,
+        )
+        self.assertEqual(
+            plan_b["npc_progress"]["adeline"]["assigned_item_id"],
+            "golden_cheesecake",
+            "Should pick golden_cheesecake because count 10 > count 1",
+        )
+        self.assertEqual(plan_b["npc_progress"]["adeline"]["assigned_points"], 20)
+
+        # Case C: Equal abundance tie-breaker (5 vs 5)
+        # "Golden Cheesecake" ('g') precedes "Strawberry Shortcake" ('s') alphabetically
+        inv_c = {"golden_cheesecake": 5, "strawberry_shortcake": 5}
+        plan_c = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv_c,
+            force_all_npcs=True,
+        )
+        self.assertEqual(
+            plan_c["npc_progress"]["adeline"]["assigned_item_id"],
+            "golden_cheesecake",
+            "Should tie-break deterministically by display name",
+        )
+
+    # ==========================================================================
+    # SCENARIO 6: Universal love fallback when no specific love gift available
+    # ==========================================================================
+
+    def test_plan_max_rel_universal_love_fallback_scenario_6(self):
+        """
+        Scenario 6: Universal love fallback when no specific love gift available.
+        Verifies that when an NPC has no specific love gift available in physical inventory,
+        but a cooking-infused lovable dish exists, plan_max_relationship() allocates the
+        universal love dish (+20 pts) even if multiple specific like gifts are present in inventory.
+        Also tests integration with synthetic save containing lovable dishes in chests.
+        """
+        # Part 1: Direct inventory & infused_items call
+        custom_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["strawberry"],
+            }
+        }
+        inventory = {"strawberry": 10}
+        infused_items = {
+            "lovable": [{"item_id": "apple_pie", "count": 1, "location": "bag"}],
+            "likable": [],
+        }
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused_items,
+            mode="all",
+        )
+
+        p = plan["npc_progress"]["adeline"]
+        # Must assign Universal Love dish (apple_pie), NOT specific like (strawberry)
+        self.assertEqual(p["assigned_item_id"], "apple_pie")
+        self.assertEqual(p["assigned_pref_type"], "UNIV_LOVE")
+        self.assertEqual(p["assigned_points"], 20)
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["total_relationship_points"], 20)
+        self.assertEqual(stats["today_loved_completed"], 1)
+        self.assertEqual(stats["today_liked_completed"], 0)
+        self.assertEqual(stats["covered_npcs_count"], 1)
+
+        # Verify bag plan slot structure
+        self.assertEqual(len(plan["bag_plan"]), 1)
+        bag_slot = plan["bag_plan"][0]
+        self.assertEqual(bag_slot["item_id"], "apple_pie")
+        self.assertEqual(bag_slot["quantity_to_pack"], 1)
+        self.assertIn("Adeline", bag_slot["loved_recipients_today"])
+        self.assertNotIn("Adeline", bag_slot["liked_recipients_today"])
+        self.assertEqual(bag_slot["all_recipients_today"][0]["pref"], "UNIV_LOVE")
+        self.assertEqual(bag_slot["all_recipients_today"][0]["pref_tier"], "UNIV_LOVE")
+        self.assertEqual(bag_slot["all_recipients_today"][0]["points"], 20)
+
+        # Part 2: Integration variant reading lovable dish from save chests
+        save_path = self.work_dir / "scenario6_fallback.sav"
+        chests = {
+            "farm": [[
+                create_mock_slot("apple_pie", 1, infusion="lovable")
+            ]]
+        }
+        create_synthetic_save_file(
+            save_path,
+            bag_items={"strawberry": 5},
+            chests_by_location=chests,
+            day=6,
+        )
+        save = parse_save_file(save_path)
+
+        plan_save = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            mode="all",
+        )
+        p_save = plan_save["npc_progress"]["adeline"]
+        self.assertEqual(p_save["assigned_item_id"], "apple_pie")
+        self.assertEqual(p_save["assigned_pref_type"], "UNIV_LOVE")
+        self.assertEqual(p_save["assigned_points"], 20)
+        self.assertEqual(plan_save["overall_stats"]["total_relationship_points"], 20)
+
+    # ==========================================================================
+    # SCENARIO 7: Like gift fallback when no love available
+    # ==========================================================================
+
+    def test_plan_max_rel_like_gift_fallback_scenario_7(self):
+        """
+        Scenario 7: Like gift fallback when no love available.
+        Verifies that when no specific love and no universal love are available,
+        the planner falls back to a specific liked gift (+10 pts).
+        Also verifies specific like is prioritized over universal like to preserve universal pool.
+        """
+        custom_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["strawberry"],
+            }
+        }
+        # Part 1: Basic like gift fallback
+        inventory = {"strawberry": 5, "stone": 100}
+        infused_items = {"lovable": [], "likable": []}
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused_items,
+            mode="all",
+        )
+
+        p = plan["npc_progress"]["adeline"]
+        self.assertEqual(p["assigned_item_id"], "strawberry")
+        self.assertEqual(p["assigned_pref_type"], "LIKE")
+        self.assertEqual(p["assigned_points"], 10)
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["total_relationship_points"], 10)
+        self.assertEqual(stats["today_loved_completed"], 0)
+        self.assertEqual(stats["today_liked_completed"], 1)
+        self.assertEqual(stats["today_total_completed"], 1)
+
+        # Bag slot verification
+        self.assertEqual(len(plan["bag_plan"]), 1)
+        bag_slot = plan["bag_plan"][0]
+        self.assertEqual(bag_slot["item_id"], "strawberry")
+        self.assertEqual(bag_slot["quantity_to_pack"], 1)
+        self.assertIn("Adeline", bag_slot["liked_recipients_today"])
+        self.assertNotIn("Adeline", bag_slot["loved_recipients_today"])
+        self.assertEqual(bag_slot["all_recipients_today"][0]["pref"], "LIKE")
+        self.assertEqual(bag_slot["all_recipients_today"][0]["points"], 10)
+
+        # Part 2: Specific like is prioritized over universal like (even when universal like is 5x more abundant)
+        inventory = {"strawberry": 1, "stone": 100}
+        infused_items_with_likable = {
+            "lovable": [],
+            "likable": [{"item_id": "vegetable_soup", "count": 5, "location": "bag"}],
+        }
+        plan_preservation = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused_items_with_likable,
+            mode="all",
+        )
+        p_pres = plan_preservation["npc_progress"]["adeline"]
+        self.assertEqual(p_pres["assigned_item_id"], "strawberry")
+        self.assertEqual(p_pres["assigned_pref_type"], "LIKE")
+        self.assertEqual(p_pres["assigned_points"], 10)
+
+    # ==========================================================================
+    # SCENARIO 8: Universal like fallback as last resort
+    # ==========================================================================
+
+    def test_plan_max_rel_universal_like_fallback_scenario_8(self):
+        """
+        Scenario 8: Universal like fallback as last resort.
+        Verifies that when an NPC has no specific love, universal love, or specific like available,
+        the planner assigns a universal like dish (+10 pts) as a last resort, strictly avoiding
+        neutral items. Also verifies that when universal like pool is exhausted, remaining NPCs are skipped.
+        """
+        # Part 1: Universal like fallback avoids neutral items
+        custom_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["cornmeal"],
+            }
+        }
+        # Inventory contains only neutral items (stone, wood); loved/liked items are absent (0)
+        inventory = {"stone": 50, "wood": 50}
+        infused_items = {
+            "lovable": [],
+            "likable": [{"item_id": "vegetable_soup", "count": 1, "location": "farm"}],
+        }
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused_items,
+            mode="all",
+        )
+
+        p = plan["npc_progress"]["adeline"]
+        self.assertEqual(p["assigned_item_id"], "vegetable_soup")
+        self.assertEqual(p["assigned_pref_type"], "UNIV_LIKE")
+        self.assertEqual(p["assigned_points"], 10)
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["total_relationship_points"], 10)
+        self.assertEqual(stats["today_loved_completed"], 0)
+        self.assertEqual(stats["today_liked_completed"], 1)
+        self.assertEqual(stats["covered_npcs_count"], 1)
+
+        # Bag slot verification: universal like dish is packed; neutral items are NOT packed
+        self.assertEqual(len(plan["bag_plan"]), 1)
+        bag_slot = plan["bag_plan"][0]
+        self.assertEqual(bag_slot["item_id"], "vegetable_soup")
+        self.assertIn("Adeline", bag_slot["liked_recipients_today"])
+        self.assertEqual(bag_slot["all_recipients_today"][0]["pref"], "UNIV_LIKE")
+        self.assertEqual(bag_slot["all_recipients_today"][0]["pref_tier"], "UNIV_LIKE")
+
+        # Part 2: Universal like exhaustion skips remaining NPCs
+        custom_two_npcs = {
+            "adeline": {"name": "Adeline", "loved": ["absent_love"], "liked": ["absent_like"]},
+            "balor": {"name": "Balor", "loved": ["absent_love"], "liked": ["absent_like"]},
+        }
+        plan_exhaust = plan_max_relationship(
+            npc_gift_definitions=custom_two_npcs,
+            inventory={"stone": 100},
+            infused_items={"lovable": [], "likable": [{"item_id": "vegetable_soup", "count": 1}]},
+            mode="all",
+        )
+        self.assertEqual(plan_exhaust["overall_stats"]["covered_npcs_count"], 1)
+        self.assertEqual(plan_exhaust["overall_stats"]["target_npcs_count"], 2)
+        self.assertEqual(plan_exhaust["overall_stats"]["total_relationship_points"], 10)
+        assigned_items = [p_exp["assigned_item_id"] for p_exp in plan_exhaust["npc_progress"].values()]
+        self.assertIn("vegetable_soup", assigned_items)
+        self.assertIn(None, assigned_items)
+
+    # ==========================================================================
+    # SCENARIO 9: Full priority hierarchy verification
+    # ==========================================================================
+
+    def test_plan_max_rel_full_priority_hierarchy_scenario_9(self):
+        """
+        Scenario 9: Full priority hierarchy verification.
+        Verifies the full 5-tier priority hierarchy:
+        Specific Love (+20) > Universal Love (+20) > Specific Like (+10) > Universal Like (+10) > Skip (+0).
+        Tests both concurrent multi-NPC allocation and sequential downgrade for a single NPC.
+        """
+        # Part 1: Concurrent multi-NPC plan with exact mathematical relationship score validation
+        custom_npcs = {
+            "npc_love": {"name": "1_NPC_Love", "loved": ["item_love"], "liked": ["item_like"]},
+            "npc_univ_love": {"name": "2_NPC_UnivLove", "loved": ["absent_a"], "liked": []},
+            "npc_like": {"name": "3_NPC_Like", "loved": ["absent_b"], "liked": ["item_like"]},
+            "npc_univ_like": {"name": "4_NPC_UnivLike", "loved": ["absent_c"], "liked": ["absent_d"]},
+            "npc_skip": {"name": "5_NPC_Skip", "loved": ["absent_e"], "liked": ["absent_f"]},
+        }
+        inventory = {
+            "item_love": 1,
+            "item_like": 1,
+            "neutral_stone": 50,
+        }
+        infused_items = {
+            "lovable": [{"item_id": "dish_love", "count": 1}],
+            "likable": [{"item_id": "dish_like", "count": 1}],
+        }
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused_items,
+            mode="all",
+        )
+
+        progress = plan["npc_progress"]
+
+        # 1. Specific Love (+20)
+        self.assertEqual(progress["npc_love"]["assigned_item_id"], "item_love")
+        self.assertEqual(progress["npc_love"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["npc_love"]["assigned_points"], 20)
+
+        # 2. Universal Love (+20)
+        self.assertEqual(progress["npc_univ_love"]["assigned_item_id"], "dish_love")
+        self.assertEqual(progress["npc_univ_love"]["assigned_pref_type"], "UNIV_LOVE")
+        self.assertEqual(progress["npc_univ_love"]["assigned_points"], 20)
+
+        # 3. Specific Like (+10)
+        self.assertEqual(progress["npc_like"]["assigned_item_id"], "item_like")
+        self.assertEqual(progress["npc_like"]["assigned_pref_type"], "LIKE")
+        self.assertEqual(progress["npc_like"]["assigned_points"], 10)
+
+        # 4. Universal Like (+10)
+        self.assertEqual(progress["npc_univ_like"]["assigned_item_id"], "dish_like")
+        self.assertEqual(progress["npc_univ_like"]["assigned_pref_type"], "UNIV_LIKE")
+        self.assertEqual(progress["npc_univ_like"]["assigned_points"], 10)
+
+        # 5. Skip (+0)
+        self.assertIsNone(progress["npc_skip"]["assigned_item_id"])
+        self.assertIsNone(progress["npc_skip"]["assigned_pref_type"])
+        self.assertEqual(progress["npc_skip"]["assigned_points"], 0)
+
+        # Overall summary mathematical verification: 20 + 20 + 10 + 10 + 0 = 60
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["total_relationship_points"], 60)
+        self.assertEqual(stats["today_loved_completed"], 2)
+        self.assertEqual(stats["today_liked_completed"], 2)
+        self.assertEqual(stats["today_total_completed"], 4)
+        self.assertEqual(stats["covered_npcs_count"], 4)
+        self.assertEqual(stats["target_npcs_count"], 5)
+        self.assertEqual(len(plan["bag_plan"]), 4)
+
+        # Part 2: Sequential step-by-step downgrade for a single NPC
+        single_npc = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake"],
+                "liked": ["strawberry"],
+            }
+        }
+        # Step 1: All available -> Specific Love
+        p1 = plan_max_relationship(
+            npc_gift_definitions=single_npc,
+            inventory={"golden_cheesecake": 1, "strawberry": 1, "stone": 10},
+            infused_items={"lovable": [{"item_id": "apple_pie", "count": 1}], "likable": [{"item_id": "soup", "count": 1}]},
+            mode="all",
+        )["npc_progress"]["adeline"]
+        self.assertEqual(p1["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(p1["assigned_pref_type"], "LOVE")
+        self.assertEqual(p1["assigned_points"], 20)
+
+        # Step 2: Specific Love removed -> Universal Love
+        p2 = plan_max_relationship(
+            npc_gift_definitions=single_npc,
+            inventory={"strawberry": 1, "stone": 10},
+            infused_items={"lovable": [{"item_id": "apple_pie", "count": 1}], "likable": [{"item_id": "soup", "count": 1}]},
+            mode="all",
+        )["npc_progress"]["adeline"]
+        self.assertEqual(p2["assigned_item_id"], "apple_pie")
+        self.assertEqual(p2["assigned_pref_type"], "UNIV_LOVE")
+        self.assertEqual(p2["assigned_points"], 20)
+
+        # Step 3: Universal Love removed -> Specific Like
+        p3 = plan_max_relationship(
+            npc_gift_definitions=single_npc,
+            inventory={"strawberry": 1, "stone": 10},
+            infused_items={"lovable": [], "likable": [{"item_id": "soup", "count": 1}]},
+            mode="all",
+        )["npc_progress"]["adeline"]
+        self.assertEqual(p3["assigned_item_id"], "strawberry")
+        self.assertEqual(p3["assigned_pref_type"], "LIKE")
+        self.assertEqual(p3["assigned_points"], 10)
+
+        # Step 4: Specific Like removed -> Universal Like
+        p4 = plan_max_relationship(
+            npc_gift_definitions=single_npc,
+            inventory={"stone": 10},
+            infused_items={"lovable": [], "likable": [{"item_id": "soup", "count": 1}]},
+            mode="all",
+        )["npc_progress"]["adeline"]
+        self.assertEqual(p4["assigned_item_id"], "soup")
+        self.assertEqual(p4["assigned_pref_type"], "UNIV_LIKE")
+        self.assertEqual(p4["assigned_points"], 10)
+
+        # Step 5: Universal Like removed -> Skipped (+0 pts)
+        p5 = plan_max_relationship(
+            npc_gift_definitions=single_npc,
+            inventory={"stone": 10},
+            infused_items={"lovable": [], "likable": []},
+            mode="all",
+        )["npc_progress"]["adeline"]
+        self.assertIsNone(p5["assigned_item_id"])
+        self.assertIsNone(p5["assigned_pref_type"])
+        self.assertEqual(p5["assigned_points"], 0)
+
+    # ==========================================================================
+    # SCENARIO 10: Shared inventory constraint
+    # ==========================================================================
+
+    def test_plan_max_rel_shared_inventory_deduction_scenario_10(self):
+        """
+        Scenario 10: Shared inventory constraint.
+        Verifies that when multiple NPCs love the same item, inventory is deducted correctly
+        after each assignment, unallocated NPCs fall back or are skipped, and cross-pool
+        synchronization prevents double spending.
+        """
+        # Part 1: 3 NPCs love golden_cheesecake, 2 in inventory, 3rd falls back to like
+        custom_npcs = {
+            "adeline": {"name": "Adeline", "loved": ["golden_cheesecake"], "liked": []},
+            "balor": {"name": "Balor", "loved": ["golden_cheesecake"], "liked": []},
+            "celine": {"name": "Celine", "loved": ["golden_cheesecake"], "liked": ["strawberry"]},
+        }
+        inventory = {"golden_cheesecake": 2, "strawberry": 5}
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            mode="all",
+        )
+
+        progress = plan["npc_progress"]
+        self.assertEqual(progress["adeline"]["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(progress["adeline"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["adeline"]["assigned_points"], 20)
+
+        self.assertEqual(progress["balor"]["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(progress["balor"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["balor"]["assigned_points"], 20)
+
+        self.assertEqual(progress["celine"]["assigned_item_id"], "strawberry")
+        self.assertEqual(progress["celine"]["assigned_pref_type"], "LIKE")
+        self.assertEqual(progress["celine"]["assigned_points"], 10)
+
+        stats = plan["overall_stats"]
+        self.assertEqual(stats["total_relationship_points"], 50)
+        self.assertEqual(stats["today_loved_completed"], 2)
+        self.assertEqual(stats["today_liked_completed"], 1)
+        self.assertEqual(stats["covered_npcs_count"], 3)
+
+        # Exactly 2 packed for cheesecake, 1 for strawberry
+        self.assertEqual(len(plan["bag_plan"]), 2)
+        cheesecake_slot = next(b for b in plan["bag_plan"] if b["item_id"] == "golden_cheesecake")
+        strawberry_slot = next(b for b in plan["bag_plan"] if b["item_id"] == "strawberry")
+        self.assertEqual(cheesecake_slot["quantity_to_pack"], 2)
+        self.assertCountEqual(cheesecake_slot["loved_recipients_today"], ["Adeline", "Balor"])
+        self.assertEqual(strawberry_slot["quantity_to_pack"], 1)
+        self.assertEqual(strawberry_slot["liked_recipients_today"], ["Celine"])
+
+        # Part 2: Strict exhaustion without fallback (3rd NPC skipped)
+        strict_npcs = {
+            "adeline": {"name": "Adeline", "loved": ["golden_cheesecake"], "liked": []},
+            "balor": {"name": "Balor", "loved": ["golden_cheesecake"], "liked": []},
+            "darcy": {"name": "Darcy", "loved": ["golden_cheesecake"], "liked": []},
+        }
+        plan_strict = plan_max_relationship(
+            npc_gift_definitions=strict_npcs,
+            item_metadata=self.mock_meta,
+            inventory={"golden_cheesecake": 2},
+            mode="all",
+        )
+        assigned_items = [p_s["assigned_item_id"] for p_s in plan_strict["npc_progress"].values()]
+        self.assertEqual(assigned_items.count("golden_cheesecake"), 2)
+        self.assertEqual(assigned_items.count(None), 1)
+        self.assertEqual(plan_strict["overall_stats"]["total_relationship_points"], 40)
+        self.assertEqual(plan_strict["overall_stats"]["covered_npcs_count"], 2)
+        self.assertEqual(plan_strict["overall_stats"]["target_npcs_count"], 3)
+
+        # Part 3: Cross-pool synchronization deduction
+        sync_npcs = {
+            "npc_specific": {"name": "NPC1", "loved": ["apple_pie"], "liked": []},
+            "npc_univ1": {"name": "NPC2", "loved": ["absent"], "liked": []},
+            "npc_univ2": {"name": "NPC3", "loved": ["absent"], "liked": []},
+        }
+        plan_sync = plan_max_relationship(
+            npc_gift_definitions=sync_npcs,
+            inventory={"apple_pie": 2},
+            infused_items={"lovable": [{"item_id": "apple_pie", "count": 2}], "likable": []},
+            mode="all",
+        )
+        self.assertEqual(plan_sync["npc_progress"]["npc_specific"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(plan_sync["npc_progress"]["npc_univ1"]["assigned_pref_type"], "UNIV_LOVE")
+        self.assertIsNone(plan_sync["npc_progress"]["npc_univ2"]["assigned_pref_type"])
+        apple_slot = plan_sync["bag_plan"][0]
+        self.assertEqual(apple_slot["item_id"], "apple_pie")
+        self.assertEqual(apple_slot["quantity_to_pack"], 2)
+        self.assertEqual(plan_sync["overall_stats"]["total_relationship_points"], 40)
+
+    # ==========================================================================
+    # SCENARIO 11: Greedy most-constrained-first allocation (MRV)
+    # ==========================================================================
+
+    def test_plan_max_rel_greedy_mrv_allocation_scenario_11(self):
+        """
+        Scenario 11: Greedy most-constrained-first allocation (MRV).
+        Constrained NPCs with fewer gift alternatives are allocated shared items
+        before flexible NPCs, overriding alphabetical tie-breaking.
+        """
+        # "Zoe" is alphabetically last but has only 1 love option (constrained).
+        # "Aaron" is alphabetically first but has 2 love options (flexible).
+        custom_npcs = {
+            "zoe": {
+                "name": "Zoe",
+                "loved": ["golden_cheesecake"],
+                "liked": [],
+            },
+            "aaron": {
+                "name": "Aaron",
+                "loved": ["golden_cheesecake", "strawberry_shortcake"],
+                "liked": [],
+            },
+        }
+        # Shared item: golden_cheesecake (1). Alternative: strawberry_shortcake (1).
+        inv = {"golden_cheesecake": 1, "strawberry_shortcake": 1}
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=custom_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv,
+        )
+
+        # Zoe (constrained, 1 candidate) must receive golden_cheesecake
+        self.assertEqual(plan["npc_progress"]["zoe"]["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(plan["npc_progress"]["zoe"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(plan["npc_progress"]["zoe"]["assigned_points"], 20)
+
+        # Aaron (flexible, 2 candidates) must receive alternative strawberry_shortcake
+        self.assertEqual(plan["npc_progress"]["aaron"]["assigned_item_id"], "strawberry_shortcake")
+        self.assertEqual(plan["npc_progress"]["aaron"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(plan["npc_progress"]["aaron"]["assigned_points"], 20)
+
+        # Both covered, total 40 points
+        self.assertEqual(plan["overall_stats"]["today_loved_completed"], 2)
+        self.assertEqual(plan["overall_stats"]["today_liked_completed"], 0)
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 2)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 40)
+
+    # ==========================================================================
+    # SCENARIO 12: Empty inventory edge case
+    # ==========================================================================
+
+    def test_plan_max_rel_empty_inventory_edge_case_scenario_12(self):
+        """
+        Scenario 12: Empty inventory edge case.
+        Verifies that planner handles completely empty inventory without crashing.
+        Expects empty bag plan, 0 covered NPCs, and 0 relationship points.
+        """
+        plan = plan_max_relationship(
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            inventory={},
+            infused_items={},
+        )
+
+        self.assertEqual(len(plan["bag_plan"]), 0)
+        self.assertEqual(plan["covered_npcs"], set())
+        self.assertEqual(plan["overall_stats"]["slots_used"], 0)
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 0)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 0)
+        self.assertEqual(plan["overall_stats"]["today_loved_completed"], 0)
+        self.assertEqual(plan["overall_stats"]["today_liked_completed"], 0)
+
+        # All NPCs unassigned
+        for nid, prog in plan["npc_progress"].items():
+            self.assertIsNone(prog["assigned_item_id"])
+            self.assertEqual(prog["assigned_points"], 0)
+            self.assertIsNone(prog["assigned_pref_type"])
+
+        # downstream maps and focus suggestions must still be valid
+        self.assertIsInstance(plan["remaining_items_map"], dict)
+        self.assertIsInstance(plan["focus_suggestions"], list)
+
+    # ==========================================================================
+    # SCENARIO 13: No giftable NPCs edge case
+    # ==========================================================================
+
+    def test_plan_max_rel_no_giftable_npcs_edge_case_scenario_13(self):
+        """
+        Scenario 13: No giftable NPCs edge case.
+        Verifies planner behavior when all NPCs have already received gifts today.
+        Expects target_npcs to be empty, bag_plan empty, and 0 points awarded.
+        Also verifies force_all_npcs=True bypasses this restriction.
+        """
+        save_path = self.work_dir / "all_gifted.sav"
+        create_synthetic_save_file(
+            save_path,
+            bag_items={"golden_cheesecake": 5, "strawberry": 10},
+            giftable_all=False,  # Sets gift_flag=False for all NPCs
+        )
+        save = parse_save_file(save_path)
+
+        plan = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+        )
+
+        self.assertEqual(plan["target_npcs"], set())
+        self.assertEqual(plan["covered_npcs"], set())
+        self.assertEqual(len(plan["bag_plan"]), 0)
+        self.assertEqual(plan["overall_stats"]["target_npcs_count"], 0)
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 0)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 0)
+        self.assertTrue(len(plan["overall_stats"]["ungiftable_npcs"]) > 0)
+
+        # Verify force_all_npcs=True bypasses this restriction
+        plan_forced = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            force_all_npcs=True,
+        )
+        self.assertTrue(len(plan_forced["target_npcs"]) > 0)
+        self.assertTrue(plan_forced["overall_stats"]["total_relationship_points"] > 0)
+
+    # ==========================================================================
+    # SCENARIO 14: Total relationship points calculation
+    # ==========================================================================
+
+    def test_plan_max_rel_total_relationship_points_calculation_scenario_14(self):
+        """
+        Scenario 14: Total relationship points calculation.
+        Verifies exact mathematical sum of relationship points across all tiers:
+        Specific Love (+20), Universal Love (+20), Specific Like (+10), Universal Like (+10),
+        and Skipped (+0).
+        """
+        hetero_npcs = {
+            "npc_love": {"name": "Alice", "loved": ["deluxe_sandwich"], "liked": []},
+            "npc_univ_love": {"name": "Bob", "loved": ["unobtainium_1"], "liked": []},
+            "npc_like": {"name": "Charlie", "loved": ["unobtainium_2"], "liked": ["strawberry"]},
+            "npc_univ_like": {"name": "David", "loved": ["unobtainium_3"], "liked": ["unobtainium_4"]},
+            "npc_skip": {"name": "Eve", "loved": ["unobtainium_5"], "liked": ["unobtainium_6"]},
+        }
+        inv = {"deluxe_sandwich": 1, "strawberry": 5}
+        infused = {
+            "lovable": [{"item_id": "apple_pie", "count": 1}],
+            "likable": [{"item_id": "vegetable_soup", "count": 1}],
+        }
+
+        plan = plan_max_relationship(
+            npc_gift_definitions=hetero_npcs,
+            item_metadata=self.mock_meta,
+            inventory=inv,
+            infused_items=infused,
+        )
+
+        # Alice: Specific Love (+20)
+        self.assertEqual(plan["npc_progress"]["npc_love"]["assigned_pref_type"], "LOVE")
+        self.assertEqual(plan["npc_progress"]["npc_love"]["assigned_points"], 20)
+
+        # Bob: Universal Love (+20)
+        self.assertEqual(plan["npc_progress"]["npc_univ_love"]["assigned_pref_type"], "UNIV_LOVE")
+        self.assertEqual(plan["npc_progress"]["npc_univ_love"]["assigned_points"], 20)
+
+        # Charlie: Specific Like (+10)
+        self.assertEqual(plan["npc_progress"]["npc_like"]["assigned_pref_type"], "LIKE")
+        self.assertEqual(plan["npc_progress"]["npc_like"]["assigned_points"], 10)
+
+        # David: Universal Like (+10)
+        self.assertEqual(plan["npc_progress"]["npc_univ_like"]["assigned_pref_type"], "UNIV_LIKE")
+        self.assertEqual(plan["npc_progress"]["npc_univ_like"]["assigned_points"], 10)
+
+        # Eve: Skipped (+0)
+        self.assertIsNone(plan["npc_progress"]["npc_skip"]["assigned_item_id"])
+        self.assertEqual(plan["npc_progress"]["npc_skip"]["assigned_points"], 0)
+
+        # Exact mathematical sum: 20 + 20 + 10 + 10 + 0 = 60 points
+        self.assertEqual(plan["overall_stats"]["today_loved_completed"], 2)
+        self.assertEqual(plan["overall_stats"]["today_liked_completed"], 2)
+        self.assertEqual(plan["overall_stats"]["today_total_completed"], 4)
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 4)
+        self.assertEqual(plan["overall_stats"]["target_npcs_count"], 5)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 60)
+
+    # ==========================================================================
+    # SCENARIO 15: Saturday Market vendor inclusion
+    # ==========================================================================
+
+    def test_plan_max_rel_saturday_market_vendor_inclusion_scenario_15(self):
+        """
+        Scenario 15: Saturday Market vendor inclusion.
+        Verifies Saturday Market vendors are targeted on Saturdays (Day 6)
+        and excluded on weekdays (Day 3) in auto mode. Also verifies mode='saturday' override.
+        """
+        sat_path = self.work_dir / "saturday_market.sav"
+        wed_path = self.work_dir / "weekday.sav"
+        create_synthetic_save_file(sat_path, day=6, bag_items={"golden_cheesecake": 5})
+        create_synthetic_save_file(wed_path, day=3, bag_items={"golden_cheesecake": 5})
+
+        save_sat = parse_save_file(sat_path)
+        save_wed = parse_save_file(wed_path)
+
+        # On Saturday in auto mode: Darcy (market vendor) is present and giftable
+        plan_sat = plan_max_relationship(
+            save=save_sat,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+        )
+        self.assertIn("darcy", plan_sat["target_npcs"])
+        self.assertIn("darcy", plan_sat["covered_npcs"])
+        self.assertEqual(plan_sat["npc_progress"]["darcy"]["assigned_item_id"], "golden_cheesecake")
+        self.assertTrue(plan_sat["overall_stats"]["planning_for_saturday"])
+        self.assertGreaterEqual(plan_sat["overall_stats"]["vendors_covered_today"], 1)
+
+        # On Wednesday in auto mode: Darcy is absent from town
+        plan_wed = plan_max_relationship(
+            save=save_wed,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            mode="auto",
+        )
+        self.assertNotIn("darcy", plan_wed["target_npcs"])
+        self.assertNotIn("darcy", plan_wed["covered_npcs"])
+        self.assertFalse(plan_wed["overall_stats"]["planning_for_saturday"])
+        self.assertEqual(plan_wed["overall_stats"]["vendors_covered_today"], 0)
+        self.assertIn("Darcy", plan_wed["overall_stats"]["not_present_npcs"])
+
+        # Mode override: mode="saturday" on Wednesday forces vendor presence
+        plan_override = plan_max_relationship(
+            save=save_wed,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            mode="saturday",
+        )
+        self.assertIn("darcy", plan_override["target_npcs"])
+        self.assertGreaterEqual(plan_override["overall_stats"]["vendors_covered_today"], 1)
+
+    # ==========================================================================
+    # PLUS: Package __init__.py Export Verification Test
+    # ==========================================================================
+
+    def test_plan_max_rel_package_init_exports(self):
+        """
+        Plus: Package __init__.py and gift_planner.py export verification.
+        Verifies plan_max_relationship is properly exported in __all__ and callable
+        from both fom_planner package and the root gift_planner module.
+        """
+        import fom_planner
+        import gift_planner
+
+        # Verify fom_planner package export
+        self.assertTrue(hasattr(fom_planner, "plan_max_relationship"))
+        self.assertIn("plan_max_relationship", fom_planner.__all__)
+        self.assertTrue(callable(fom_planner.plan_max_relationship))
+
+        # Verify backward-compatibility root module export
+        self.assertTrue(hasattr(gift_planner, "plan_max_relationship"))
+        self.assertIn("plan_max_relationship", gift_planner.__all__)
+        self.assertTrue(callable(gift_planner.plan_max_relationship))
+
+        # Verify both refer to the identical function object in memory
+        self.assertIs(fom_planner.plan_max_relationship, gift_planner.plan_max_relationship)
+
+    # ==========================================================================
+    # SCENARIOS 12-18: Crafting Integration Tests for Max-Relationship Strategy
+    # ==========================================================================
+
+    def test_plan_max_rel_basic_crafting_assignment(self):
+        """
+        Scenario 12: Basic crafting assignment (+20 pts).
+        Verifies that when an NPC loves an item with 0 in stock, but craftable
+        from ingredients, plan_max_relationship assigns it with LOVE pref tier,
+        awards 20 points, sets CRAFT status and '🔨 CRAFT' badge in the bag plan.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],
+                "liked": [],
+            }
+        }
+        # Bread requires 2 flour (mock_recipes)
+        inventory = {"flour": 2}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        progress = plan["npc_progress"]["adeline"]
+        self.assertEqual(progress["assigned_item_id"], "bread")
+        self.assertEqual(progress["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["assigned_points"], 20)
+
+        bag = plan["bag_plan"]
+        self.assertEqual(len(bag), 1)
+        self.assertEqual(bag[0]["item_id"], "bread")
+        self.assertEqual(bag[0]["quantity_to_pack"], 1)
+        self.assertEqual(bag[0]["status"], "CRAFT")
+        self.assertEqual(bag[0]["availability_tier"], int(AvailabilityTier.CRAFT))
+        self.assertEqual(bag[0]["status_badge"], "🔨 CRAFT")
+        self.assertTrue(len(bag[0]["crafting_chain"]) > 0)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 20)
+
+    def test_plan_max_rel_have_preferred_over_craft(self):
+        """
+        Scenario 13: HAVE preferred over CRAFT within the same tier.
+        When an NPC loves both an in-stock item and a craftable item, the planner
+        must assign the in-stock item to preserve materials.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["golden_cheesecake", "bread"],
+                "liked": [],
+            }
+        }
+        # 1 golden_cheesecake in stock, plus 10 flour (enough to craft 5 bread)
+        inventory = {"golden_cheesecake": 1, "flour": 10}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        progress = plan["npc_progress"]["adeline"]
+        self.assertEqual(progress["assigned_item_id"], "golden_cheesecake")
+        self.assertEqual(progress["assigned_pref_type"], "LOVE")
+        self.assertEqual(progress["assigned_points"], 20)
+
+        bag = plan["bag_plan"]
+        self.assertEqual(len(bag), 1)
+        self.assertEqual(bag[0]["item_id"], "golden_cheesecake")
+        self.assertEqual(bag[0]["status"], "HAVE")
+        self.assertEqual(bag[0]["status_badge"], "📦 HAVE")
+
+    def test_plan_max_rel_shared_ingredient_deduction(self):
+        """
+        Scenario 14: Shared ingredient deduction across multiple craft assignments.
+        Adeline loves bread (needs 2 flour), March loves strawberry_shortcake (needs 1 flour).
+        With only 2 flour available, only one NPC can receive their crafted love gift.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],
+                "liked": [],
+            },
+            "march": {
+                "name": "March",
+                "loved": ["strawberry_shortcake"],
+                "liked": [],
+            },
+        }
+        # 2 flour, 10 strawberries, 10 sugar
+        inventory = {"flour": 2, "strawberry": 10, "sugar": 10}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        stats = plan["overall_stats"]
+        # Exactly 1 NPC covered, not both
+        self.assertEqual(stats["covered_npcs_count"], 1)
+        self.assertEqual(stats["total_relationship_points"], 20)
+
+        adeline_assigned = plan["npc_progress"]["adeline"]["assigned_item_id"]
+        march_assigned = plan["npc_progress"]["march"]["assigned_item_id"]
+        # One got assigned, the other is None
+        self.assertTrue((adeline_assigned is not None) ^ (march_assigned is not None))
+
+    def test_plan_max_rel_mrv_ordering_with_crafting(self):
+        """
+        Scenario 15: Minimum Remaining Values (MRV) ordering during crafting sub-pass.
+        Constrained NPC has 1 craftable option (cornmeal), Flexible NPC has 2 (bread, cornmeal).
+        MRV must allocate the constrained option to Constrained NPC first, allowing both to be covered.
+        """
+        npcs = {
+            "constrained": {
+                "name": "Constrained NPC",
+                "loved": ["cornmeal"],
+                "liked": [],
+            },
+            "flexible": {
+                "name": "Flexible NPC",
+                "loved": ["bread", "cornmeal"],
+                "liked": [],
+            },
+        }
+        # Enough materials for 1 cornmeal (1 corn) and 1 bread (2 flour)
+        inventory = {"corn": 1, "flour": 2}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        progress = plan["npc_progress"]
+        self.assertEqual(progress["constrained"]["assigned_item_id"], "cornmeal")
+        self.assertEqual(progress["flexible"]["assigned_item_id"], "bread")
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 2)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 40)
+
+    def test_plan_max_rel_infusion_pool_sync_after_crafting(self):
+        """
+        Scenario 16: Infusion pool synchronization after crafting.
+        When ingredients are consumed to craft a specific gift, any overlapping counts
+        in the lovable/likable infusion pools must be clamped down so they cannot be
+        double-spent in subsequent universal gift stages.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],  # Needs 2 flour
+                "liked": [],
+            },
+            "balor": {
+                "name": "Balor",
+                "loved": ["rare_gem"],  # Absent
+                "liked": [],
+            },
+        }
+        # 2 flour in physical inventory, which was also marked as lovable infusion
+        inventory = {"flour": 2}
+        infused = {
+            "lovable": [{"item_id": "flour", "count": 2, "location": "bag"}],
+            "likable": [],
+        }
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            infused_items=infused,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        # Adeline crafts bread, consuming the 2 flour
+        self.assertEqual(plan["npc_progress"]["adeline"]["assigned_item_id"], "bread")
+        # Balor cannot receive the consumed flour as a universal love gift
+        self.assertIsNone(plan["npc_progress"]["balor"]["assigned_item_id"])
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 1)
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 20)
+
+    def test_plan_max_rel_bag_plan_craft_badge(self):
+        """
+        Scenario 17: Bag plan crafting metadata and badges.
+        Verifies CRAFT items receive the '🔨 CRAFT' badge, detailed crafting chain,
+        and max_craftable metadata, while HAVE items keep '📦 HAVE' and empty chain.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],
+                "liked": [],
+            },
+            "march": {
+                "name": "March",
+                "loved": ["strawberry"],
+                "liked": [],
+            },
+        }
+        # 5 strawberries in stock (HAVE), 2 flour for bread (CRAFT)
+        inventory = {"strawberry": 5, "flour": 2}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        bag = plan["bag_plan"]
+        self.assertEqual(len(bag), 2)
+        slot_by_id = {b["item_id"]: b for b in bag}
+
+        # Strawberry slot (in stock)
+        self.assertEqual(slot_by_id["strawberry"]["status"], "HAVE")
+        self.assertEqual(slot_by_id["strawberry"]["status_badge"], "📦 HAVE")
+        self.assertEqual(slot_by_id["strawberry"]["crafting_chain"], "")
+
+        # Bread slot (crafted)
+        self.assertEqual(slot_by_id["bread"]["status"], "CRAFT")
+        self.assertEqual(slot_by_id["bread"]["status_badge"], "🔨 CRAFT")
+        self.assertIn("Flour", slot_by_id["bread"]["crafting_chain"])
+        self.assertGreaterEqual(slot_by_id["bread"]["max_craftable"], 1)
+
+    def test_plan_max_rel_mixed_have_and_craft_same_item(self):
+        """
+        Scenario 18: Mixed HAVE + CRAFT for the same item across multiple NPCs.
+        Verifies that when 3 NPCs love the same item, and the player has 1 in stock
+        plus materials to craft 2 more, all 3 NPCs receive the item, and the bag plan
+        displays the composite '🔨 HAVE (1) + CRAFT (2)' status badge.
+        """
+        npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],
+                "liked": [],
+            },
+            "march": {
+                "name": "March",
+                "loved": ["bread"],
+                "liked": [],
+            },
+            "balor": {
+                "name": "Balor",
+                "loved": ["bread"],
+                "liked": [],
+            },
+        }
+        # 1 bread in stock, plus 4 flour (enough to craft 2 bread)
+        inventory = {"bread": 1, "flour": 4}
+        plan = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            item_metadata=self.mock_meta,
+            inventory=inventory,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        # All 3 NPCs receive bread (+20 pts each, 60 pts total)
+        self.assertEqual(plan["npc_progress"]["adeline"]["assigned_item_id"], "bread")
+        self.assertEqual(plan["npc_progress"]["march"]["assigned_item_id"], "bread")
+        self.assertEqual(plan["npc_progress"]["balor"]["assigned_item_id"], "bread")
+        self.assertEqual(plan["overall_stats"]["total_relationship_points"], 60)
+        self.assertEqual(plan["overall_stats"]["covered_npcs_count"], 3)
+
+        # Exactly 1 bag slot with composite badge
+        bag = plan["bag_plan"]
+        self.assertEqual(len(bag), 1)
+        self.assertEqual(bag[0]["item_id"], "bread")
+        self.assertEqual(bag[0]["quantity_to_pack"], 3)
+        self.assertEqual(bag[0]["status"], "CRAFT")
+        self.assertEqual(bag[0]["status_badge"], "🔨 HAVE (1) + CRAFT (2)")
+        self.assertEqual(len(bag[0]["all_recipients_today"]), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

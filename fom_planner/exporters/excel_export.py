@@ -134,15 +134,15 @@ def export_plan_to_excel(
             b["item_name"],
             b["item_id"],
             b.get("crafting_chain", "") or "—",
-            ", ".join(b["market_vendors_covered"]) or "—",
-            ", ".join(b["loved_recipients_today"]),
-            ", ".join(b["liked_recipients_today"]),
-            ", ".join(b["all_potential_loved"]),
-            ", ".join(b["all_potential_liked"]),
-            b["bin_price"],
-            b["store_price"],
-            b["tags"],
-            b["description"]
+            ", ".join(b.get("market_vendors_covered", [])) or "—",
+            ", ".join(b.get("loved_recipients_today", [])) if isinstance(b.get("loved_recipients_today"), (list, tuple, set)) else str(b.get("loved_recipients_today", "")),
+            ", ".join(b.get("liked_recipients_today", [])) if isinstance(b.get("liked_recipients_today"), (list, tuple, set)) else str(b.get("liked_recipients_today", "")),
+            ", ".join(b.get("all_potential_loved", [])) if isinstance(b.get("all_potential_loved"), (list, tuple, set)) else str(b.get("all_potential_loved", "")),
+            ", ".join(b.get("all_potential_liked", [])) if isinstance(b.get("all_potential_liked"), (list, tuple, set)) else str(b.get("all_potential_liked", "")),
+            b.get("bin_price", 0),
+            b.get("store_price", 0),
+            ", ".join(b.get("tags", [])) if isinstance(b.get("tags"), (list, tuple, set)) else str(b.get("tags", "")),
+            b.get("description", "")
         ])
 
     style_sheet_table(ws1, headers1, rows1, numeric_cols=[1, 2, 12, 13], center_cols=[1, 2, 3], styles=styles)
@@ -159,8 +159,10 @@ def export_plan_to_excel(
     for nid in sorted(npc_gift_definitions.keys(), key=lambda x: npc_gift_definitions[x].get("name", x)):
         p = npc_progress[nid]
         category = "Saturday Market Vendor" if p["is_vendor"] else "Townsfolk"
-        present_str = "Yes (In Town)" if p["is_present_today"] else "No (Visiting Aldaria)"
-        gifted_today_str = "No (Eligible)" if p["can_gift_today"] else "YES (Already Gifted)"
+        if p.get("is_max_relationship"):
+            gifted_today_str = "MAX (Max Relationship)"
+        else:
+            gifted_today_str = "No (Eligible)" if p["can_gift_today"] else "YES (Already Gifted)"
         rows2.append([
             p["name"],
             category,
@@ -249,12 +251,13 @@ def export_plan_to_excel(
     for g in npc_gift_definitions.values():
         all_game_items.update(g.get("loved", []))
         all_game_items.update(g.get("liked", []))
+    all_game_items.update(b["item_id"] for b in bag_plan)
 
     today_assignments = {}
     for b in bag_plan:
         iid = b["item_id"]
         for r in b["all_recipients_today"]:
-            today_assignments[(iid, r["npc_id"])] = "PACK (LOVE)" if r["pref"] == "LOVE" else "PACK (LIKE)"
+            today_assignments[(iid, r["npc_id"])] = "PACK (LOVE)" if r.get("pref") in ("LOVE", "UNIV_LOVE") else "PACK (LIKE)"
 
     sorted_all_items = sorted(list(all_game_items), key=lambda x: item_metadata.get(x, {}).get("display_name", x).lower())
 

@@ -11,6 +11,7 @@ from pathlib import Path
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     DAYS_OF_WEEK,
+    DEFAULT_MAX_RELATIONSHIP_POINTS,
     DEFAULT_SAVE_DIRS,
     FESTIVAL_CALENDAR,
     NON_LOCATION_KEYS,
@@ -33,6 +34,7 @@ from fom_planner.parser import (
 
 __all__ = [
     "DEFAULT_SAVE_DIRS",
+    "DEFAULT_MAX_RELATIONSHIP_POINTS",
     "NON_LOCATION_KEYS",
     "SATURDAY_MARKET_VENDORS",
     "SATURDAY_MARKET_BASE_VENDORS",

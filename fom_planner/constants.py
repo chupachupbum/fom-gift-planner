@@ -53,6 +53,9 @@ DAYS_OF_WEEK: List[str] = [
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 ]
 
+# Default maximum relationship threshold (heart points / affection for 10 hearts in Fields of Mistria)
+DEFAULT_MAX_RELATIONSHIP_POINTS: float = 1755.0
+
 
 class AvailabilityTier(IntEnum):
     """

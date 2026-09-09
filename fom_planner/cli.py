@@ -32,7 +32,7 @@ from fom_planner.exporters.csv_export import export_plan_to_csv, export_to_csv
 from fom_planner.exporters.excel_export import export_plan_to_excel, export_to_excel
 from fom_planner.exporters.terminal import print_terminal_plan
 from fom_planner.models import InGameDate, SaveData
-from fom_planner.optimizer import plan_daily_gift_bag
+from fom_planner.optimizer import plan_daily_gift_bag, plan_max_relationship
 from fom_planner.parser import find_latest_save, parse_save_file
 from fom_planner.rankings import build_ranked_rows
 
@@ -68,6 +68,16 @@ def build_planner_parser() -> argparse.ArgumentParser:
         choices=["auto", "today", "saturday", "market-only", "townsfolk", "weekday", "all"],
         default="auto",
         help="Planning mode: 'auto' (use save day), 'saturday' (simulate Saturday Market), 'market-only' (8 vendors only), 'townsfolk' (26 townsfolk only), 'weekday' (26 townsfolk only), 'all' (all 34 NPCs). Default: auto"
+    )
+    parser.add_argument(
+        "--strategy",
+        choices=["journal", "max-relationship"],
+        default="journal",
+        help=(
+            "Planning strategy: 'journal' (maximize journal preference discovery and completion, "
+            "ignoring already-given gifts) or 'max-relationship' (maximize total daily relationship "
+            "points earned with 1 gift per NPC, using universal/infused dish fallbacks). Default: journal"
+        ),
     )
     parser.add_argument(
         "--slots",
@@ -133,6 +143,17 @@ def build_planner_parser() -> argparse.ArgumentParser:
         "--force-all-npcs",
         action="store_true",
         help="Force planning for all NPCs, even if save indicates they were already gifted today"
+    )
+    parser.add_argument(
+        "--max-relationship-points",
+        type=float,
+        default=None,
+        help="Points threshold to consider an NPC at max relationship (default: 1755.0 from constants)"
+    )
+    parser.add_argument(
+        "--no-exclude-max-relationship",
+        action="store_true",
+        help="Do not exclude NPCs at max relationship from the max-relationship planning strategy"
     )
     parser.add_argument(
         "--csv-name",
@@ -236,20 +257,39 @@ def run_planner(args=None):
     excluded = set([x.strip().lower() for x in args.exclude_npcs.split(",") if x.strip()])
 
     # 6. Plan daily gift bag
-    plan_results = plan_daily_gift_bag(
-        save=save,
-        npc_gift_definitions=npcs_def,
-        item_metadata=metadata,
-        mode=effective_mode,
-        max_slots=args.slots,
-        loved_weight=args.loved_weight,
-        liked_weight=args.liked_weight,
-        vendor_boost=args.vendor_boost,
-        exclude_npcs=excluded,
-        force_all_npcs=args.force_all_npcs,
-        recipes=recipes,
-        item_locations=item_locations,
-    )
+    if getattr(args, "strategy", "journal") == "max-relationship":
+        from fom_planner.optimizer import plan_max_relationship
+
+        infused_items = save.get_infused_items() if (save is not None and hasattr(save, "get_infused_items")) else None
+        plan_results = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=npcs_def,
+            item_metadata=metadata,
+            mode=effective_mode,
+            max_slots=args.slots,
+            exclude_npcs=excluded,
+            force_all_npcs=args.force_all_npcs,
+            infused_items=infused_items,
+            recipes=recipes,
+            item_locations=item_locations,
+            max_relationship_points=getattr(args, "max_relationship_points", None),
+            exclude_max_relationship=not getattr(args, "no_exclude_max_relationship", False),
+        )
+    else:
+        plan_results = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=npcs_def,
+            item_metadata=metadata,
+            mode=effective_mode,
+            max_slots=args.slots,
+            loved_weight=args.loved_weight,
+            liked_weight=args.liked_weight,
+            vendor_boost=args.vendor_boost,
+            exclude_npcs=excluded,
+            force_all_npcs=args.force_all_npcs,
+            recipes=recipes,
+            item_locations=item_locations,
+        )
 
     # 7. Output
     if args.format in ("all", "terminal"):

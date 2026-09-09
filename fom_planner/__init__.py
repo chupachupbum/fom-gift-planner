@@ -6,6 +6,7 @@ Fields of Mistria Daily Gift Planner & Progression Optimization Toolkit.
 
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
+    DEFAULT_MAX_RELATIONSHIP_POINTS,
     SATURDAY_MARKET_VENDORS,
     SATURDAY_MARKET_BASE_VENDORS,
     SATURDAY_MARKET_UPGRADE_1_VENDORS,
@@ -45,6 +46,7 @@ from fom_planner.optimizer import (
     ITEM_LOCATIONS,
     compute_focus_suggestions,
     plan_daily_gift_bag,
+    plan_max_relationship,
     resolve_root_raw_materials,
 )
 from fom_planner.parser import (
@@ -58,6 +60,7 @@ __version__ = "1.2.0"
 
 __all__ = [
     "ANIMAL_FESTIVAL_ATTENDING_VENDORS",
+    "DEFAULT_MAX_RELATIONSHIP_POINTS",
     "SATURDAY_MARKET_VENDORS",
     "SATURDAY_MARKET_BASE_VENDORS",
     "SATURDAY_MARKET_UPGRADE_1_VENDORS",
@@ -84,6 +87,7 @@ __all__ = [
     "resolve_root_raw_materials",
     "compute_focus_suggestions",
     "plan_daily_gift_bag",
+    "plan_max_relationship",
     "print_terminal_plan",
     "export_plan_to_csv",
     "export_to_csv",

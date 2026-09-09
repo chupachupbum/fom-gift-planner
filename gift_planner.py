@@ -14,6 +14,7 @@ from fom_planner.optimizer import (
     ITEM_LOCATIONS,
     compute_focus_suggestions,
     plan_daily_gift_bag,
+    plan_max_relationship,
     resolve_root_raw_materials,
 )
 
@@ -23,6 +24,7 @@ __all__ = [
     "resolve_root_raw_materials",
     "compute_focus_suggestions",
     "plan_daily_gift_bag",
+    "plan_max_relationship",
     "print_terminal_plan",
     "export_plan_to_csv",
     "export_plan_to_excel",

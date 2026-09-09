@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     DAYS_OF_WEEK,
+    DEFAULT_MAX_RELATIONSHIP_POINTS,
     FESTIVAL_CALENDAR,
     NON_LOCATION_KEYS,
     SATURDAY_MARKET_VENDORS,
@@ -44,6 +45,52 @@ def _extract_slot_item_and_count(slot: Any) -> Tuple[Optional[str], int]:
     if count <= 0:
         return None, 0
     return item_id, count
+
+
+def _extract_slot_item_count_and_infusion(
+    slot: Any,
+) -> Tuple[Optional[str], int, Optional[str]]:
+    """
+    Safely extracts item_id, positive integer count, and normalized infusion ('lovable' or 'likable')
+    from an inventory slot dict.
+    Returns (None, 0, None) for empty/null slots, missing item_ids, non-positive counts, or corrupt data.
+    """
+    if not isinstance(slot, dict):
+        return None, 0, None
+
+    item = slot.get("item")
+    if not isinstance(item, dict):
+        return None, 0, None
+
+    item_id = item.get("item_id")
+    if not item_id or not isinstance(item_id, str):
+        return None, 0, None
+    norm_item_id = item_id.strip().lower()
+    if not norm_item_id:
+        return None, 0, None
+
+    count_val = slot.get("count", 0)
+    if isinstance(count_val, bool):
+        return None, 0, None
+
+    try:
+        count = int(round(float(count_val)))
+    except (ValueError, TypeError, OverflowError):
+        count = 0
+
+    if count <= 0:
+        return None, 0, None
+
+    raw_infusion = item.get("infusion")
+    infusion = None
+    if isinstance(raw_infusion, str) and not isinstance(raw_infusion, bool):
+        norm_infusion = raw_infusion.strip().lower()
+        if norm_infusion == "lovable":
+            infusion = "lovable"
+        elif norm_infusion in ("likable", "likeable"):
+            infusion = "likable"
+
+    return norm_item_id, count, infusion
 
 
 @dataclass
@@ -187,17 +234,71 @@ class SaveData:
         return empty
 
     def get_npc_heart_points(self, npc_id: str) -> float:
-        npc = self.npcs.get(npc_id, {})
-        return float(npc.get("heart_points", 0.0))
+        npc = self.npcs.get(npc_id)
+        if not npc:
+            npc = self.npcs.get(npc_id.lower(), {})
+        val = npc.get("heart_points")
+        if val is None:
+            val = npc.get("affection", 0.0)
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return 0.0
 
     def get_npc_gifts_given(self, npc_id: str) -> Set[str]:
         """Returns the set of item IDs that have already been given to this NPC."""
-        npc = self.npcs.get(npc_id, {})
-        return set(npc.get("gifts_given", []))
+        npc = self.npcs.get(npc_id)
+        if not npc:
+            npc = self.npcs.get(npc_id.lower(), {})
+        given = npc.get("gifts_given")
+        if given is None:
+            given = npc.get("gift_history", [])
+        return set(given)
+
+    def is_npc_max_relationship(self, npc_id: str, max_points: Optional[float] = None) -> bool:
+        """
+        Returns True if the NPC in this save file has reached maximum relationship.
+        Checks:
+          1. Explicit save flags (e.g. 'is_max_relationship', 'max_relationship',
+             'is_max_hearts', 'max_hearts', 'is_capped', 'capped', 'heart_cap').
+          2. Whether heart_points or affection is >= max_points (defaults to DEFAULT_MAX_RELATIONSHIP_POINTS).
+        """
+        if not self.npcs:
+            return False
+        npc = self.npcs.get(npc_id)
+        if not npc:
+            npc = self.npcs.get(npc_id.lower(), {})
+        if not npc or not isinstance(npc, dict):
+            return False
+
+        for flag in (
+            "is_max_relationship",
+            "max_relationship",
+            "is_max_hearts",
+            "max_hearts",
+            "is_capped",
+            "capped",
+            "heart_cap",
+        ):
+            if bool(npc.get(flag)):
+                return True
+
+        threshold = max_points if max_points is not None else DEFAULT_MAX_RELATIONSHIP_POINTS
+        hp = self.get_npc_heart_points(npc_id)
+        return hp >= threshold
+
+    def get_max_relationship_npc_ids(self, max_points: Optional[float] = None) -> Set[str]:
+        """Returns the set of lowercased NPC IDs currently at max relationship in this save."""
+        return {
+            nid.lower() for nid in self.npcs.keys()
+            if self.is_npc_max_relationship(nid, max_points=max_points)
+        }
 
     def get_npc_known_preferences(self, npc_id: str) -> Set[str]:
         """Returns the set of item IDs whose gift preferences are recorded in the player's journal."""
-        npc = self.npcs.get(npc_id, {})
+        npc = self.npcs.get(npc_id)
+        if not npc:
+            npc = self.npcs.get(npc_id.lower(), {})
         return set(npc.get("known_gift_preferences", []))
 
     def can_gift_npc_today(self, npc_id: str) -> bool:
@@ -352,6 +453,95 @@ class SaveData:
                 if isinstance(invs, list) and invs:
                     loc_map[key] = invs
         return loc_map
+
+    def get_infused_items(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Scans both player bag inventory and all chest inventories across locations
+        for items with 'infusion' field set to 'lovable' or 'likable'.
+
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: Guaranteed keys 'lovable' and 'likable'.
+            Each value is a list of dictionaries:
+                {"item_id": str, "count": int, "location": str}
+            All items in a single stack share the same infusion.
+            Duplicate stacks of the same item within the same location are aggregated (counts summed).
+            Identical items in distinct locations remain separate entries.
+            Lists are sorted deterministically by (item_id, location).
+        """
+        agg: Dict[Tuple[str, str, str], int] = {}
+
+        # 1. Player bag inventory (location: "bag")
+        bag_slots: List[Any] = []
+        try:
+            inv = self.inventory
+            if isinstance(inv, list):
+                bag_slots = inv
+        except Exception:
+            pass
+        if not bag_slots and isinstance(getattr(self, "player", None), dict):
+            inv = self.player.get("inventory")
+            if isinstance(inv, list):
+                bag_slots = inv
+
+        for slot in bag_slots:
+            item_id, count, infusion = _extract_slot_item_count_and_infusion(slot)
+            if infusion in ("lovable", "likable") and item_id and count > 0:
+                key = (infusion, item_id, "bag")
+                agg[key] = agg.get(key, 0) + count
+
+        # 2. Chest inventories across all world locations in raw_entries
+        entries = self.raw_entries if isinstance(self.raw_entries, dict) else {}
+        for loc_key, val_str in entries.items():
+            if not isinstance(loc_key, str):
+                continue
+            loc_clean = loc_key.strip()
+            if loc_clean.lower() in NON_LOCATION_KEYS:
+                continue
+
+            if isinstance(val_str, dict):
+                loc_data = val_str
+            elif isinstance(val_str, str):
+                try:
+                    loc_data = json.loads(val_str)
+                except Exception:
+                    continue
+            else:
+                continue
+
+            if not isinstance(loc_data, dict):
+                continue
+
+            inventories = loc_data.get("inventories")
+            if not isinstance(inventories, list):
+                continue
+
+            for chest in inventories:
+                if not isinstance(chest, list):
+                    continue
+                for slot in chest:
+                    item_id, count, infusion = _extract_slot_item_count_and_infusion(slot)
+                    if infusion in ("lovable", "likable") and item_id and count > 0:
+                        key = (infusion, item_id, loc_clean)
+                        agg[key] = agg.get(key, 0) + count
+
+        # 3. Assemble structured return dictionary
+        result: Dict[str, List[Dict[str, Any]]] = {
+            "lovable": [],
+            "likable": [],
+        }
+
+        for (infusion, item_id, location), total_count in agg.items():
+            result[infusion].append({
+                "item_id": item_id,
+                "count": total_count,
+                "location": location,
+            })
+
+        # 4. Deterministic sorting by (item_id, location)
+        result["lovable"].sort(key=lambda x: (x["item_id"], x["location"]))
+        result["likable"].sort(key=lambda x: (x["item_id"], x["location"]))
+
+        return result
 
     def summary(self) -> str:
         date = self.in_game_date
