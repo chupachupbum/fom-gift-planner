@@ -17,6 +17,7 @@ from fom_planner.constants import (
 from fom_planner.crafting import (
     deduct_crafting_materials,
     evaluate_craftability,
+    filter_recipes_by_unlocks,
     format_crafting_chain,
     load_recipes,
 )
@@ -75,6 +76,7 @@ __all__ = [
     "find_save_files",
     "find_latest_save",
     "load_recipes",
+    "filter_recipes_by_unlocks",
     "evaluate_craftability",
     "deduct_crafting_materials",
     "format_crafting_chain",

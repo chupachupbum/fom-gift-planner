@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fom-gift-planner"
+version = "1.2.0"
+description = "Fields of Mistria Daily Gift Bag Planner & Rankings Analyzer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Minh" }
+]
+keywords = ["fields-of-mistria", "gift-planner", "game-tools"]
+dependencies = []
+
+[project.optional-dependencies]
+excel = [
+    "openpyxl>=3.1.0",
+]
+
+[project.scripts]
+fom-planner = "fom_planner.cli:main"
+gift-planner = "fom_planner.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "openpyxl>=3.1.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["fom_planner"]
+
+[tool.uv]
+default-groups = ["dev"]

@@ -228,21 +228,33 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
 
     # Focus Suggestions Section
     focus_suggestions = plan_results.get("focus_suggestions")
+    sort_mode = plan_results.get("focus_sort")
     if focus_suggestions is None:
         inv = save.get_all_available_items() if (save and hasattr(save, "get_all_available_items")) else {}
         focus_suggestions = compute_focus_suggestions(
             remaining_items_map=plan_results.get("all_remaining_items_map") or plan_results.get("remaining_items_map", {}),
             inventory=inv,
+            focus_sort=sort_mode or "impact",
         )
 
-    print(f"\n💡 FOCUS SUGGESTIONS (Top Blocker Items):")
+    sort_suffix = ""
+    if sort_mode == "deficit":
+        sort_suffix = " — Sorted by Deficit"
+    elif sort_mode == "quick-wins":
+        sort_suffix = " — Sorted by Quick Wins"
+    elif sort_mode == "impact":
+        sort_suffix = " — Sorted by Impact"
+
+    print(f"\n💡 FOCUS SUGGESTIONS (Top Blocker Items{sort_suffix}):")
     print("━" * 86)
     if not focus_suggestions:
         print("  🎉 All required materials and gifts are currently in your inventory!")
     else:
         for s in focus_suggestions:
             loc_str = f"  ({s['location_hint']})" if s.get("location_hint") else ""
-            print(f"  {s['rank']}. {s['item_name']} — Need {s['deficit']} more{loc_str}")
+            pairs = s.get("blocked_pairs")
+            pair_str = f" (blocks {pairs} gift{'s' if pairs != 1 else ''})" if pairs is not None else ""
+            print(f"  {s['rank']}. {s['item_name']} — Need {s['deficit']} more{pair_str}{loc_str}")
     print("━" * 86)
     print("═" * 86 + "\n")
 

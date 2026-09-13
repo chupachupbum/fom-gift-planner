@@ -159,6 +159,7 @@ def export_plan_to_excel(
     for nid in sorted(npc_gift_definitions.keys(), key=lambda x: npc_gift_definitions[x].get("name", x)):
         p = npc_progress[nid]
         category = "Saturday Market Vendor" if p["is_vendor"] else "Townsfolk"
+        present_str = "Yes (In Town)" if p.get("is_present_today", True) else "No (Visiting Aldaria)"
         if p.get("is_max_relationship"):
             gifted_today_str = "MAX (Max Relationship)"
         else:

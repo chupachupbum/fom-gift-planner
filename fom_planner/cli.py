@@ -21,7 +21,7 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
         pass
 
 from fom_planner.constants import ANIMAL_FESTIVAL_ATTENDING_VENDORS
-from fom_planner.crafting import load_recipes
+from fom_planner.crafting import filter_recipes_by_unlocks, load_recipes
 from fom_planner.data_loader import (
     load_item_locations,
     load_item_metadata,
@@ -156,6 +156,15 @@ def build_planner_parser() -> argparse.ArgumentParser:
         help="Do not exclude NPCs at max relationship from the max-relationship planning strategy"
     )
     parser.add_argument(
+        "--focus-sort",
+        choices=["impact", "deficit", "quick-wins"],
+        default="impact",
+        help=(
+            "Sorting criteria for focus suggestions: 'impact' (most blocked NPC gifts first, default), "
+            "'deficit' (largest item shortage count first), or 'quick-wins' (items closest to completion first)."
+        ),
+    )
+    parser.add_argument(
         "--csv-name",
         default="daily_gift_bag_plan.csv",
         help="Filename for CSV export (default: daily_gift_bag_plan.csv)"
@@ -211,7 +220,16 @@ def run_planner(args=None):
         print("Note: No save file found or specified. Planning with empty starting inventory.")
 
     # 2. Load recipes and locations database
-    recipes = load_recipes(str(recipes_path))
+    all_recipes = load_recipes(str(recipes_path))
+    recipes = all_recipes
+    if save is not None and hasattr(save, "get_unlocked_recipe_ids"):
+        unlocked = save.get_unlocked_recipe_ids()
+        if unlocked is not None:
+            full_count = len(all_recipes)
+            recipes = filter_recipes_by_unlocks(all_recipes, unlocked)
+            filtered_count = full_count - len(recipes)
+            if filtered_count > 0:
+                print(f"Filtered {filtered_count} locked recipe(s) — {len(recipes)}/{full_count} recipes available.")
     item_locations = load_item_locations(str(item_locations_path))
 
     # 3. Load gift definitions & metadata
@@ -257,6 +275,7 @@ def run_planner(args=None):
     excluded = set([x.strip().lower() for x in args.exclude_npcs.split(",") if x.strip()])
 
     # 6. Plan daily gift bag
+    focus_sort = getattr(args, "focus_sort", "impact")
     if getattr(args, "strategy", "journal") == "max-relationship":
         from fom_planner.optimizer import plan_max_relationship
 
@@ -271,9 +290,11 @@ def run_planner(args=None):
             force_all_npcs=args.force_all_npcs,
             infused_items=infused_items,
             recipes=recipes,
+            all_recipes=all_recipes,
             item_locations=item_locations,
             max_relationship_points=getattr(args, "max_relationship_points", None),
             exclude_max_relationship=not getattr(args, "no_exclude_max_relationship", False),
+            focus_sort=focus_sort,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -288,7 +309,9 @@ def run_planner(args=None):
             exclude_npcs=excluded,
             force_all_npcs=args.force_all_npcs,
             recipes=recipes,
+            all_recipes=all_recipes,
             item_locations=item_locations,
+            focus_sort=focus_sort,
         )
 
     # 7. Output

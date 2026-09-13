@@ -11,6 +11,7 @@ from fom_planner.crafting import (
     _craft_item,
     deduct_crafting_materials,
     evaluate_craftability,
+    filter_recipes_by_unlocks,
     format_crafting_chain,
     load_recipes,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "CraftingStep",
     "CraftingPlan",
     "load_recipes",
+    "filter_recipes_by_unlocks",
     "_craft_item",
     "_calculate_max_craftable",
     "format_crafting_chain",

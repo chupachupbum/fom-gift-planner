@@ -921,6 +921,79 @@ class TestFocusSuggestions(unittest.TestCase):
         self.assertEqual(suggestions[0]["item_name"], "Apple")
         self.assertEqual(suggestions[1]["item_name"], "Ruby")
 
+    def test_focus_ranking_sort_by_deficit(self):
+        """focus_sort='deficit' ranks largest missing quantity first."""
+        remaining_map = {
+            "apple": {"loved": {"npc1", "npc2", "npc3", "npc4", "npc5"}, "liked": set()},  # 5 pairs, deficit = 5
+            "ruby": {"loved": {"npc1"}, "liked": set()},                                   # 1 pair, demand = 1
+            "stone": {"loved": {"npc6"}, "liked": set()},                                  # 1 pair
+        }
+        # Suppose stone recipe needs 20 raw stone
+        recipes = {
+            "stone": {"category": "crafting", "ingredients": [{"item_id": "stone_raw", "count": 20}]}
+        }
+        meta = {
+            "apple": {"display_name": "Apple"},
+            "stone_raw": {"display_name": "Raw Stone"},
+        }
+        # Under impact (default): Apple has 5 blocked pairs, stone_raw has 1 blocked pair
+        s_impact = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            inventory={},
+            recipes=recipes,
+            item_metadata=meta,
+            focus_sort="impact",
+        )
+        self.assertEqual(s_impact[0]["item_id"], "apple")
+        self.assertEqual(s_impact[1]["item_id"], "stone_raw")
+
+        # Under deficit: stone_raw has deficit 20, Apple has deficit 5
+        s_deficit = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            inventory={},
+            recipes=recipes,
+            item_metadata=meta,
+            focus_sort="deficit",
+        )
+        self.assertEqual(s_deficit[0]["item_id"], "stone_raw")
+        self.assertEqual(s_deficit[0]["deficit"], 20)
+        self.assertEqual(s_deficit[1]["item_id"], "apple")
+        self.assertEqual(s_deficit[1]["deficit"], 5)
+
+    def test_focus_ranking_sort_by_quick_wins(self):
+        """focus_sort='quick-wins' ranks smallest deficit (closest to completion) first."""
+        remaining_map = {
+            "apple": {"loved": {"npc1", "npc2", "npc3", "npc4", "npc5"}, "liked": set()},  # deficit = 5
+            "ruby": {"loved": {"npc1"}, "liked": set()},                                   # deficit = 1
+        }
+        s_quick = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            inventory={},
+            recipes={},
+            item_metadata=self.meta,
+            focus_sort="quick-wins",
+        )
+        # Ruby has deficit 1, Apple has deficit 5 -> Ruby ranks first
+        self.assertEqual(s_quick[0]["item_id"], "ruby")
+        self.assertEqual(s_quick[0]["deficit"], 1)
+        self.assertEqual(s_quick[1]["item_id"], "apple")
+        self.assertEqual(s_quick[1]["deficit"], 5)
+
+    def test_focus_ranking_invalid_sort_fallback(self):
+        """Unrecognized focus_sort gracefully falls back to default impact ranking."""
+        remaining_map = {
+            "apple": {"loved": {"npc1", "npc2"}, "liked": set()},  # 2 pairs, deficit = 2
+            "ruby": {"loved": {"npc3"}, "liked": set()},           # 1 pair, deficit = 1
+        }
+        s_fallback = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            inventory={},
+            recipes={},
+            focus_sort="non_existent_mode",
+        )
+        self.assertEqual(s_fallback[0]["item_id"], "apple")
+        self.assertEqual(s_fallback[1]["item_id"], "ruby")
+
     def test_focus_inventory_deduction(self):
         """Player inventory reduces deficit; items with deficit <= 0 are excluded."""
         remaining_map = {
@@ -1100,7 +1173,42 @@ class TestFocusSuggestions(unittest.TestCase):
         self.assertIn("FOCUS SUGGESTIONS", output)
         self.assertIn("Golden Milk", output)
         self.assertIn("Need 8 more", output)
+        self.assertIn("blocks 5 gifts", output)
         self.assertIn("Ranch (Cows with high happiness)", output)
+
+    def test_terminal_output_focus_suggestions_sort_header(self):
+        """print_terminal_plan includes sort mode suffix in header and handles singular block count."""
+        plan_results = {
+            "overall_stats": {
+                "mode": "auto", "max_slots": 20, "covered_npcs_count": 0, "target_npcs_count": 0,
+                "today_loved_completed": 0, "today_liked_completed": 0, "vendors_covered_today": 0,
+                "game_total_loved": 0, "game_total_liked": 0, "game_total_preferences": 0,
+                "game_given_loved": 0, "game_given_liked": 0, "game_given_total": 0,
+                "remaining_unique_items": 1, "ungiftable_npcs": [], "not_present_npcs": [],
+            },
+            "bag_plan": [],
+            "npc_progress": {},
+            "focus_sort": "deficit",
+            "focus_suggestions": [
+                {
+                    "rank": 1, "item_id": "ruby", "item_name": "Ruby",
+                    "blocked_pairs": 1, "demand": 2, "inventory": 0, "deficit": 2,
+                    "location_hint": "Mines",
+                }
+            ],
+            "remaining_items_map": {},
+        }
+        buf = io.StringIO()
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = buf
+            print_terminal_plan(save=None, plan_results=plan_results)
+        finally:
+            sys.stdout = old_stdout
+
+        output = buf.getvalue()
+        self.assertIn("Sorted by Deficit", output)
+        self.assertIn("blocks 1 gift", output)
 
     def test_terminal_output_congratulations_when_no_deficit(self):
         """print_terminal_plan outputs a congratulations message when focus_suggestions is empty."""
@@ -3185,6 +3293,152 @@ class TestMaxRelationshipStrategy(unittest.TestCase):
         self.assertEqual(bag[0]["status"], "CRAFT")
         self.assertEqual(bag[0]["status_badge"], "🔨 HAVE (1) + CRAFT (2)")
         self.assertEqual(len(bag[0]["all_recipients_today"]), 3)
+
+
+class TestSaveRecipeUnlocksIntegration(unittest.TestCase):
+    """Integration tests verifying that plan_daily_gift_bag and plan_max_relationship
+    respect the player's recipe_unlocks when a save file is provided."""
+
+    def setUp(self):
+        self.mock_recipes = {
+            "bread": {
+                "item_id": "bread",
+                "display_name": "Bread",
+                "source": "cooking",
+                "ingredients": [{"item_id": "flour", "count": 2}],
+            },
+            "flour": {
+                "item_id": "flour",
+                "display_name": "Flour",
+                "source": "milling",
+                "ingredients": [{"item_id": "wheat", "count": 1}],
+            },
+        }
+        self.mock_npcs = {
+            "adeline": {
+                "name": "Adeline",
+                "loved": ["bread"],
+                "liked": [],
+            }
+        }
+        self.mock_meta = {
+            "bread": {"display_name": "Bread", "bin_price": 50, "store_price": 100},
+            "flour": {"display_name": "Flour", "bin_price": 20, "store_price": 40},
+        }
+
+    def test_plan_daily_gift_bag_with_unlocked_recipe(self):
+        """When player has the recipe unlocked, bread can be crafted and packed."""
+        save_entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "inventory": [{"item": {"item_id": "flour"}, "count": 10}],
+                "recipe_unlocks": ["bread"],
+            }),
+            "npcs": json.dumps({"adeline": {"gift_flag": True}}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+        self.assertEqual(len(plan["bag_plan"]), 1)
+        self.assertEqual(plan["bag_plan"][0]["item_id"], "bread")
+        self.assertEqual(plan["bag_plan"][0]["status"], "CRAFT")
+
+    def test_plan_daily_gift_bag_with_locked_recipe(self):
+        """When player does NOT have the recipe unlocked, bread is not craftable and cannot be packed as CRAFT."""
+        save_entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "inventory": [{"item": {"item_id": "flour"}, "count": 10}],
+                "recipe_unlocks": ["cookies"],
+            }),
+            "npcs": json.dumps({"adeline": {"gift_flag": True}}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+        for slot in plan["bag_plan"]:
+            self.assertNotEqual(slot["status"], "CRAFT")
+
+    def test_plan_max_relationship_with_locked_recipe(self):
+        """In max-relationship strategy, locked recipes are excluded from craftable candidates."""
+        save_entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "inventory": [{"item": {"item_id": "flour"}, "count": 10}],
+                "recipe_unlocks": ["some_other_recipe"],
+            }),
+            "npcs": json.dumps({"adeline": {"gift_flag": True, "affection": 50.0}}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        plan = plan_max_relationship(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+        self.assertEqual(len(plan["bag_plan"]), 0)
+        self.assertIsNone(plan["npc_progress"]["adeline"]["assigned_item_id"])
+
+    def test_fallback_when_recipe_unlocks_missing(self):
+        """When recipe_unlocks is missing from save (e.g. mock save), all recipes remain available."""
+        save_entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "inventory": [{"item": {"item_id": "flour"}, "count": 10}],
+            }),
+            "npcs": json.dumps({"adeline": {"gift_flag": True}}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+        self.assertEqual(len(plan["bag_plan"]), 1)
+        self.assertEqual(plan["bag_plan"][0]["item_id"], "bread")
+        self.assertEqual(plan["bag_plan"][0]["status"], "CRAFT")
+
+    def test_focus_suggestions_decomposes_locked_recipes_to_raw_materials(self):
+        """Focus suggestions uses canonical full recipe database to decompose locked recipes into raw ingredients."""
+        # Player has no flour in inventory, and does not have the 'bread' recipe unlocked.
+        save_entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "inventory": [],
+                "recipe_unlocks": ["cookies"],  # bread is locked
+            }),
+            "npcs": json.dumps({"adeline": {"gift_flag": True}}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            all_recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+        # Bread cannot be crafted today
+        for slot in plan["bag_plan"]:
+            self.assertNotEqual(slot["status"], "CRAFT")
+
+        # But focus suggestions decomposes Bread down to its root ingredient (wheat via flour, or flour)
+        focus_ids = [s["item_id"] for s in plan["focus_suggestions"]]
+        self.assertIn("wheat", focus_ids)
+        self.assertNotIn("bread", focus_ids)
 
 
 if __name__ == "__main__":

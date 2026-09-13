@@ -18,6 +18,7 @@ from fom_planner.crafting import (
     _calculate_max_craftable,
     deduct_crafting_materials,
     evaluate_craftability,
+    filter_recipes_by_unlocks,
     load_recipes,
 )
 from fom_planner.data_loader import load_item_locations
@@ -83,6 +84,7 @@ def compute_focus_suggestions(
     item_metadata: Optional[Dict[str, dict]] = None,
     top_n: int = 5,
     item_locations: Optional[Dict[str, str]] = None,
+    focus_sort: str = "impact",
 ) -> List[Dict[str, Any]]:
     """
     Computes a ranked list of top insufficient items (raw materials and direct gifts)
@@ -98,9 +100,16 @@ def compute_focus_suggestions(
            Rice Stalk, Cheese/Butter for Milk) converting their surplus towards root raw material inventory.
       4. Subtracts player's effective inventory pool to find deficit = demand - inventory.
       5. Identifies items where deficit > 0.
-      6. Ranks by: (1) blocked NPC-gift pairs count descending,
-                   (2) deficit count descending (tiebreaker),
-                   (3) display name ascending (tiebreaker).
+      6. Ranks by configured focus_sort mode:
+         - 'impact' (default): (1) blocked NPC-gift pairs count descending,
+                               (2) deficit count descending (tiebreaker),
+                               (3) display name ascending (tiebreaker).
+         - 'deficit': (1) deficit count descending,
+                      (2) blocked NPC-gift pairs count descending (tiebreaker),
+                      (3) display name ascending (tiebreaker).
+         - 'quick-wins': (1) deficit count ascending,
+                         (2) blocked NPC-gift pairs count descending (tiebreaker),
+                         (3) display name ascending (tiebreaker).
       7. Returns top N items with 1-based rank, deficit, and location hints.
     """
     if top_n <= 0:
@@ -244,8 +253,17 @@ def compute_focus_suggestions(
                 "location_hint": location,
             })
 
-    # Sort by: (1) blocked NPC-gift pairs descending, (2) deficit descending, (3) name ascending
-    suggestions.sort(key=lambda x: (-x["blocked_pairs"], -x["deficit"], str(x["item_name"]).lower()))
+    # Sort based on configured focus_sort mode
+    clean_sort = str(focus_sort or "impact").strip().lower()
+    if clean_sort == "deficit":
+        # (1) deficit descending, (2) blocked pairs descending, (3) name ascending
+        suggestions.sort(key=lambda x: (-x["deficit"], -x["blocked_pairs"], str(x["item_name"]).lower()))
+    elif clean_sort == "quick-wins":
+        # (1) deficit ascending, (2) blocked pairs descending, (3) name ascending
+        suggestions.sort(key=lambda x: (x["deficit"], -x["blocked_pairs"], str(x["item_name"]).lower()))
+    else:
+        # Default: 'impact' -> (1) blocked pairs descending, (2) deficit descending, (3) name ascending
+        suggestions.sort(key=lambda x: (-x["blocked_pairs"], -x["deficit"], str(x["item_name"]).lower()))
 
     # Assign 1-indexed ranks and trim to top_n
     result: List[Dict[str, Any]] = []
@@ -269,7 +287,9 @@ def plan_daily_gift_bag(
     force_all_npcs: bool = False,
     inventory: Optional[Dict[str, int]] = None,
     recipes: Optional[Dict[str, Any]] = None,
+    all_recipes: Optional[Dict[str, Any]] = None,
     item_locations: Optional[Dict[str, str]] = None,
+    focus_sort: str = "impact",
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -298,6 +318,13 @@ def plan_daily_gift_bag(
         item_metadata = {}
     if recipes is None:
         recipes = load_recipes()
+    if all_recipes is None:
+        loaded = load_recipes()
+        all_recipes = loaded if loaded else dict(recipes)
+    if save is not None and hasattr(save, "get_unlocked_recipe_ids"):
+        unlocked = save.get_unlocked_recipe_ids()
+        if unlocked is not None:
+            recipes = filter_recipes_by_unlocks(recipes, unlocked)
 
     # Determine current inventory pool (merging bag + chests or using explicit inventory)
     if inventory is not None:
@@ -701,10 +728,11 @@ def plan_daily_gift_bag(
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
-        recipes=recipes,
+        recipes=all_recipes,
         item_metadata=item_metadata,
-        top_n=5,
+        top_n=10,
         item_locations=item_locations,
+        focus_sort=focus_sort,
     )
 
     return {
@@ -716,6 +744,7 @@ def plan_daily_gift_bag(
         "all_remaining_items_map": all_remaining_items_map,
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
+        "focus_sort": focus_sort,
         "overall_stats": overall_stats,
     }
 
@@ -811,9 +840,11 @@ def plan_max_relationship(
     inventory: Optional[Dict[str, int]] = None,
     infused_items: Optional[Any] = None,
     recipes: Optional[Dict[str, Any]] = None,
+    all_recipes: Optional[Dict[str, Any]] = None,
     item_locations: Optional[Dict[str, str]] = None,
     max_relationship_points: Optional[float] = None,
     exclude_max_relationship: bool = True,
+    focus_sort: str = "impact",
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -893,6 +924,13 @@ def plan_max_relationship(
         item_metadata = {}
     if recipes is None:
         recipes = load_recipes()
+    if all_recipes is None:
+        loaded = load_recipes()
+        all_recipes = loaded if loaded else dict(recipes)
+    if save is not None and hasattr(save, "get_unlocked_recipe_ids"):
+        unlocked = save.get_unlocked_recipe_ids()
+        if unlocked is not None:
+            recipes = filter_recipes_by_unlocks(recipes, unlocked)
     if item_locations is None:
         item_locations = ITEM_LOCATIONS
 
@@ -1574,10 +1612,11 @@ def plan_max_relationship(
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
-        recipes=recipes,
+        recipes=all_recipes,
         item_metadata=item_metadata,
         top_n=5,
         item_locations=item_locations,
+        focus_sort=focus_sort,
     )
 
     return {
@@ -1589,6 +1628,7 @@ def plan_max_relationship(
         "all_remaining_items_map": all_remaining_items_map,
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
+        "focus_sort": focus_sort,
         "overall_stats": overall_stats,
         "infused_items": raw_infused,
     }

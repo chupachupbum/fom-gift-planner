@@ -55,6 +55,20 @@ class TestCliParserAndOptions(unittest.TestCase):
         self.assertEqual(args_custom.max_relationship_points, 1500.0)
         self.assertTrue(args_custom.no_exclude_max_relationship)
 
+    def test_cli_parser_focus_sort_defaults_to_impact(self):
+        args = self.parser.parse_args([])
+        self.assertEqual(args.focus_sort, "impact")
+
+    def test_cli_parser_focus_sort_accepts_valid_choices(self):
+        for choice in ["impact", "deficit", "quick-wins"]:
+            args = self.parser.parse_args(["--focus-sort", choice])
+            self.assertEqual(args.focus_sort, choice)
+
+    def test_cli_parser_rejects_invalid_focus_sort(self):
+        with self.assertRaises(SystemExit) as cm:
+            self.parser.parse_args(["--focus-sort", "invalid_sort"])
+        self.assertEqual(cm.exception.code, 2)
+
 
 class TestCliExecutionDispatch(unittest.TestCase):
     """Tests for run_planner() dispatch based on --strategy."""
@@ -81,11 +95,12 @@ class TestCliExecutionDispatch(unittest.TestCase):
         }
 
         parser = build_planner_parser()
-        args = parser.parse_args(["--format", "terminal"])
+        args = parser.parse_args(["--format", "terminal", "--focus-sort", "deficit"])
         with patch("fom_planner.exporters.terminal.print_terminal_plan"):
             run_planner(args)
 
         mock_plan_daily.assert_called_once()
+        self.assertEqual(mock_plan_daily.call_args.kwargs.get("focus_sort"), "deficit")
 
     @patch("fom_planner.optimizer.plan_max_relationship")
     @patch("fom_planner.cli.load_npc_preferences_from_json")
@@ -111,11 +126,12 @@ class TestCliExecutionDispatch(unittest.TestCase):
         }
 
         parser = build_planner_parser()
-        args = parser.parse_args(["--strategy", "max-relationship", "--format", "terminal"])
+        args = parser.parse_args(["--strategy", "max-relationship", "--format", "terminal", "--focus-sort", "quick-wins"])
         with patch("fom_planner.exporters.terminal.print_terminal_plan"):
             run_planner(args)
 
         mock_plan_max_rel.assert_called_once()
+        self.assertEqual(mock_plan_max_rel.call_args.kwargs.get("focus_sort"), "quick-wins")
 
 
 if __name__ == "__main__":

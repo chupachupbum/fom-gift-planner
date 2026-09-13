@@ -30,7 +30,12 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
   - Evaluates whether unowned items can be crafted or cooked from materials in your chests or bag.
   - Status badges: `📦 HAVE` (in bag/chests) > `✅ CRAFT` (craftable) > `❌ NEED` (need to gather/buy).
   - Dynamically deducts shared ingredients (e.g. flour, milk, sugar) so recipes never double-count materials.
-- **Focus Suggestions**: Pinpoints top blocker raw materials (crops, animal products, forageables) to help guide your daily farming and gathering tasks.
+- **Configurable Focus Suggestions (`--focus-sort`)**:
+  - Pinpoints top blocker raw materials (crops, animal products, forageables) to guide your daily farming and gathering tasks.
+  - Supports 3 ranking criteria:
+    - `impact` (default): Prioritizes items gating the highest number of NPC gifts across town.
+    - `deficit`: Prioritizes items with the largest overall deficit/shortage in your storage.
+    - `quick-wins`: Prioritizes items closest to completion (smallest deficit first) for immediate gift unlocks.
 - **Zero Mandatory Dependencies**: Runs entirely on Python's standard library. Optional Excel export via `openpyxl`.
 - **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 438+ giftable items by popularity across the 34 NPCs.
 
@@ -38,10 +43,16 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 
 ## Requirements
 
-- **Python 3.10 or newer** (built-in standard library is all that's required).
-- *(Optional)* `openpyxl` if you want to export `.xlsx` Excel spreadsheets:
+- **Python 3.10 or newer** (built-in standard library is all that's required for core features).
+- Recommended: **[uv](https://docs.astral.sh/uv/)** for fast, reproducible dependency and environment management.
+  ```bash
+  # Install dependencies and sync environment (includes dev tools and optional Excel support)
+  uv sync
+  ```
+- *(Alternative via pip)* `openpyxl` if you want to export `.xlsx` Excel spreadsheets:
   ```bash
   pip install -r requirements.txt
+  # or: pip install -e ".[excel]"
   ```
 
 ---
@@ -53,29 +64,32 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 You don't even need the game installed to try it out! A realistic sample save file is included in `samples/`:
 
 ```bash
-# Run daily planner on sample save
-python main.py --save-file samples/sample_save.sav --format terminal
+# Run daily planner on sample save (using uv or python)
+uv run fom-planner --save-file samples/sample_save.sav --format terminal
+# or: python main.py --save-file samples/sample_save.sav --format terminal
 
 # Simulate Saturday Market planning
-python main.py --save-file samples/sample_save.sav --mode saturday
+uv run fom-planner --save-file samples/sample_save.sav --mode saturday
+# or: python main.py --save-file samples/sample_save.sav --mode saturday
 
 # Export gift rankings table to terminal or CSV
-python main.py rankings --format terminal --top 10
-python main.py rankings --format csv
+uv run fom-planner rankings --format terminal --top 10
+uv run fom-planner rankings --format csv
 ```
 
 ### 2. Run with Your Own Game Save
 
-By default, running `python main.py` automatically detects your most recent Fields of Mistria save file on Windows or Linux/Steam Deck!
+By default, running `uv run fom-planner` or `python main.py` automatically detects your most recent Fields of Mistria save file on Windows or Linux/Steam Deck!
 
 ```bash
-python main.py
+uv run fom-planner
+# or: python main.py
 ```
 
 Or specify your save file manually:
 
 ```bash
-python main.py --save-file "path/to/your/save.sav"
+uv run fom-planner --save-file "path/to/your/save.sav"
 ```
 
 ---
@@ -122,12 +136,19 @@ python main.py [OPTIONS]
 | `--vendor-boost`| Float (default: `1.5`) | Score multiplier for Saturday Market vendors on Saturdays. |
 | `--force-all-npcs`| Flag | Plan gifts for all NPCs even if already gifted today. |
 | `--exclude-npcs`| Comma-separated string | Exclude specific NPCs by ID (e.g. `--exclude-npcs adeline,march`). |
+| `--focus-sort` | `impact`, `deficit`, `quick-wins` (default: `impact`) | Ranking criteria for focus suggestions: `impact` (most blocked gifts first), `deficit` (largest missing count first), or `quick-wins` (closest to completion first). |
 
 ### Examples
 
 ```bash
 # Maximize daily friendship points across all available NPCs
 python main.py --strategy max-relationship --format terminal
+
+# Rank focus suggestions by largest shortage count (deficit)
+python main.py --focus-sort deficit
+
+# Rank focus suggestions by quick wins (smallest deficit first)
+python main.py --focus-sort quick-wins
 
 # Plan Saturday Market with 22 bag slots under max-relationship strategy
 python main.py --strategy max-relationship --mode saturday --slots 22
@@ -165,6 +186,8 @@ Options:
 ```
 fom-gift-planner/
 ├── README.md                 # Project documentation
+├── pyproject.toml            # Project metadata, dependencies, and CLI entry points
+├── uv.lock                   # Deterministic lockfile for uv
 ├── requirements.txt          # Optional dependencies (openpyxl)
 ├── main.py                   # Primary unified CLI entry point
 │
@@ -210,8 +233,13 @@ fom-gift-planner/
 
 ## Running the Test Suite
 
-Run the full automated test suite (327 tests):
+Run the full automated test suite (350 tests):
 
 ```bash
+# With uv (recommended)
+uv run pytest
+# or: uv run python -m unittest discover -s tests
+
+# With standard Python
 python -m unittest discover -s tests
 ```

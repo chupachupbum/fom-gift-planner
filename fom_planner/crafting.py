@@ -3,6 +3,7 @@ crafting.py
 
 Recursive DAG crafting calculator and inventory deduction engine:
 - load_recipes
+- filter_recipes_by_unlocks
 - evaluate_craftability
 - deduct_crafting_materials
 - format_crafting_chain
@@ -46,6 +47,32 @@ def load_recipes(recipes_path: Optional[Union[Path, str]] = None) -> Dict[str, A
     except Exception:
         return {}
     return {}
+
+
+def filter_recipes_by_unlocks(
+    recipes: Dict[str, Any],
+    unlocked_ids: Set[str],
+) -> Dict[str, Any]:
+    """
+    Filters recipes to only those the player has unlocked.
+    Milling recipes (source == 'milling') are always kept, regardless of unlocks.
+    """
+    if not recipes:
+        return {}
+    if not unlocked_ids:
+        norm_unlocked = set()
+    else:
+        norm_unlocked = {str(x).strip().lower() for x in unlocked_ids if x}
+
+    filtered = {}
+    for rid, rdata in recipes.items():
+        if not rid:
+            continue
+        rid_clean = str(rid).strip().lower()
+        is_milling = isinstance(rdata, dict) and str(rdata.get("source", "")).strip().lower() == "milling"
+        if is_milling or rid_clean in norm_unlocked:
+            filtered[rid] = rdata
+    return filtered
 
 
 def _craft_item(

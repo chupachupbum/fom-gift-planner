@@ -335,6 +335,19 @@ class SaveData:
             return True
         return npc_id.lower() in self.get_unlocked_npc_ids()
 
+    def get_unlocked_recipe_ids(self) -> Optional[Set[str]]:
+        """
+        Returns the set of lowercased recipe IDs the player has unlocked in this save file,
+        or None if recipe unlock data is not present or empty.
+        """
+        if not hasattr(self, "player") or not isinstance(self.player, dict):
+            return None
+        unlocks = self.player.get("recipe_unlocks")
+        if not unlocks or not isinstance(unlocks, list):
+            return None
+        result = {str(r).strip().lower() for r in unlocks if r and isinstance(r, str)}
+        return result if result else None
+
     def is_npc_present_in_town_today(self, npc_id: str) -> bool:
         """
         Returns True if the NPC is present in Mistria today.

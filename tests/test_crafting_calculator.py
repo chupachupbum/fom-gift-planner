@@ -21,6 +21,7 @@ try:
         CraftingStep,
         deduct_crafting_materials,
         evaluate_craftability,
+        filter_recipes_by_unlocks,
         format_crafting_chain,
         load_recipes,
     )
@@ -31,9 +32,11 @@ except ImportError:
         CraftingStep,
         deduct_crafting_materials,
         evaluate_craftability,
+        filter_recipes_by_unlocks,
         format_crafting_chain,
         load_recipes,
     )
+from fom_planner.models import SaveData
 
 
 def get_mock_recipes() -> Dict[str, Any]:
@@ -602,6 +605,148 @@ class TestRealRecipeDatabase(unittest.TestCase):
         plan = evaluate_craftability("blackberry_jam", inventory, real_recipes)
         self.assertEqual(plan.status, AvailabilityTier.CRAFT)
         self.assertEqual(plan.max_craftable, 2)
+
+
+class TestFilterRecipesByUnlocks(unittest.TestCase):
+    """Unit tests validating filter_recipes_by_unlocks behavior."""
+
+    def setUp(self):
+        self.sample_recipes = {
+            "blackberry_jam": {
+                "item_id": "blackberry_jam",
+                "display_name": "Blackberry Jam",
+                "source": "cooking",
+                "ingredients": [{"item_id": "blackberry", "count": 6}],
+            },
+            "strawberry_shortcake": {
+                "item_id": "strawberry_shortcake",
+                "display_name": "Strawberry Shortcake",
+                "source": "cooking",
+                "ingredients": [{"item_id": "strawberry", "count": 2}],
+            },
+            "flour": {
+                "item_id": "flour",
+                "display_name": "Flour",
+                "source": "milling",
+                "ingredients": [{"item_id": "wheat", "count": 1}],
+            },
+            "sugar": {
+                "item_id": "sugar",
+                "display_name": "Sugar",
+                "source": "milling",
+                "ingredients": [{"item_id": "sugarcane", "count": 1}],
+            },
+        }
+
+    def test_filter_keeps_unlocked_cooking_recipes(self):
+        """Cooking recipes in unlocked_ids are preserved."""
+        unlocked = {"blackberry_jam"}
+        filtered = filter_recipes_by_unlocks(self.sample_recipes, unlocked)
+        self.assertIn("blackberry_jam", filtered)
+        self.assertNotIn("strawberry_shortcake", filtered)
+
+    def test_filter_always_keeps_milling_recipes(self):
+        """Milling recipes are always kept even if not in unlocked_ids."""
+        unlocked = {"strawberry_shortcake"}
+        filtered = filter_recipes_by_unlocks(self.sample_recipes, unlocked)
+        self.assertIn("flour", filtered)
+        self.assertIn("sugar", filtered)
+        self.assertIn("strawberry_shortcake", filtered)
+        self.assertNotIn("blackberry_jam", filtered)
+
+    def test_filter_empty_unlocked_ids_keeps_only_milling(self):
+        """If unlocked_ids is empty, only milling recipes remain."""
+        filtered = filter_recipes_by_unlocks(self.sample_recipes, set())
+        self.assertEqual(set(filtered.keys()), {"flour", "sugar"})
+
+    def test_filter_empty_recipes_returns_empty_dict(self):
+        """If recipes dict is empty, returns empty dict."""
+        self.assertEqual(filter_recipes_by_unlocks({}, {"flour"}), {})
+
+    def test_filter_case_insensitivity_and_whitespace(self):
+        """Recipe IDs and unlocked IDs are matched case-insensitively with whitespace stripped."""
+        unlocked = {"  BLACKBERRY_JAM  "}
+        filtered = filter_recipes_by_unlocks(self.sample_recipes, unlocked)
+        self.assertIn("blackberry_jam", filtered)
+
+
+class TestSaveDataRecipeUnlocks(unittest.TestCase):
+    """Unit tests validating SaveData.get_unlocked_recipe_ids."""
+
+    def test_get_unlocked_recipe_ids_present(self):
+        """Returns set of lowercased recipe IDs when recipe_unlocks is populated."""
+        entries = {
+            "player": json.dumps({
+                "name": "Hero",
+                "recipe_unlocks": ["Apple_Pie", "Bread", "FLOUR", "  Berry_Tart  "]
+            })
+        }
+        save = SaveData(Path("test.sav"), entries)
+        unlocks = save.get_unlocked_recipe_ids()
+        self.assertIsNotNone(unlocks)
+        self.assertEqual(unlocks, {"apple_pie", "bread", "flour", "berry_tart"})
+
+    def test_get_unlocked_recipe_ids_missing_field(self):
+        """Returns None when player block does not have recipe_unlocks."""
+        entries = {
+            "player": json.dumps({"name": "Hero", "inventory": []})
+        }
+        save = SaveData(Path("test.sav"), entries)
+        self.assertIsNone(save.get_unlocked_recipe_ids())
+
+    def test_get_unlocked_recipe_ids_empty_list(self):
+        """Returns None when recipe_unlocks is an empty list."""
+        entries = {
+            "player": json.dumps({"name": "Hero", "recipe_unlocks": []})
+        }
+        save = SaveData(Path("test.sav"), entries)
+        self.assertIsNone(save.get_unlocked_recipe_ids())
+
+    def test_get_unlocked_recipe_ids_no_player_block(self):
+        """Returns None when player block is missing or empty."""
+        save = SaveData(Path("test.sav"), {})
+        self.assertIsNone(save.get_unlocked_recipe_ids())
+
+
+class TestCraftabilityWithUnlockedRecipes(unittest.TestCase):
+    """Tests evaluate_craftability with filtered recipe sets."""
+
+    def test_locked_recipe_cannot_be_crafted_even_with_ingredients(self):
+        """When a recipe is excluded from recipes dict, evaluate_craftability returns UNAVAILABLE."""
+        full_recipes = {
+            "apple_pie": {
+                "item_id": "apple_pie",
+                "display_name": "Apple Pie",
+                "source": "cooking",
+                "ingredients": [{"item_id": "apple", "count": 2}],
+            }
+        }
+        inventory = {"apple": 10}
+
+        # With full recipes, it is craftable
+        plan_unlocked = evaluate_craftability("apple_pie", inventory, full_recipes)
+        self.assertEqual(plan_unlocked.status, AvailabilityTier.CRAFT)
+
+        # When filtered out (locked), player cannot craft it
+        filtered_recipes = filter_recipes_by_unlocks(full_recipes, set())
+        plan_locked = evaluate_craftability("apple_pie", inventory, filtered_recipes)
+        self.assertEqual(plan_locked.status, AvailabilityTier.UNAVAILABLE)
+
+    def test_owned_item_still_have_even_if_recipe_locked(self):
+        """If player owns the finished item, it is HAVE regardless of recipe unlocks."""
+        full_recipes = {
+            "apple_pie": {
+                "item_id": "apple_pie",
+                "display_name": "Apple Pie",
+                "source": "cooking",
+                "ingredients": [{"item_id": "apple", "count": 2}],
+            }
+        }
+        inventory = {"apple_pie": 3}
+        filtered_recipes = filter_recipes_by_unlocks(full_recipes, set())
+        plan = evaluate_craftability("apple_pie", inventory, filtered_recipes)
+        self.assertEqual(plan.status, AvailabilityTier.HAVE)
+        self.assertEqual(plan.max_craftable, 3)
 
 
 if __name__ == "__main__":
