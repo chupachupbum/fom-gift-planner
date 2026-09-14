@@ -26,6 +26,7 @@ from fom_planner.data_loader import (
     load_item_metadata,
     load_npc_preferences_from_fiddle,
     load_npc_preferences_from_json,
+    load_recipe_sources,
 )
 from fom_planner.exporters import (
     OPENPYXL_AVAILABLE,
@@ -45,6 +46,7 @@ from fom_planner.models import (
 )
 from fom_planner.optimizer import (
     ITEM_LOCATIONS,
+    compute_focus_recipes,
     compute_focus_suggestions,
     plan_daily_gift_bag,
     plan_max_relationship,
@@ -81,6 +83,7 @@ __all__ = [
     "deduct_crafting_materials",
     "format_crafting_chain",
     "load_item_locations",
+    "load_recipe_sources",
     "load_item_metadata",
     "load_npc_preferences_from_fiddle",
     "load_npc_preferences_from_json",
@@ -88,6 +91,7 @@ __all__ = [
     "ITEM_LOCATIONS",
     "resolve_root_raw_materials",
     "compute_focus_suggestions",
+    "compute_focus_recipes",
     "plan_daily_gift_bag",
     "plan_max_relationship",
     "print_terminal_plan",

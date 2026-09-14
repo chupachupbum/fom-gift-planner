@@ -54,6 +54,38 @@ def load_item_locations(locations_path: Optional[Union[str, Path]] = None) -> Di
     return {}
 
 
+def load_recipe_sources(sources_path: Optional[Union[str, Path]] = None) -> Dict[str, str]:
+    """
+    Loads cooking recipe unlock sources from JSON database file.
+    If sources_path is not specified, defaults to 'data/recipe_sources.json'
+    relative to the repository root.
+    Gracefully returns {} if path is None, file does not exist, or parsing fails.
+    """
+    if sources_path is None:
+        root_path = Path(__file__).resolve().parent.parent / "data" / "recipe_sources.json"
+        script_path = Path(__file__).resolve().parent / "data" / "recipe_sources.json"
+        if root_path.exists():
+            target = root_path
+        elif script_path.exists():
+            target = script_path
+        else:
+            target = Path("data/recipe_sources.json")
+    else:
+        target = Path(sources_path)
+
+    if not target.exists() or not target.is_file():
+        return {}
+
+    try:
+        with open(target, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return {str(k).strip().lower(): str(v).strip() for k, v in data.items()}
+    except Exception:
+        return {}
+    return {}
+
+
 def load_npc_preferences_from_fiddle(fiddle_dir: Path) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Parses NPC TOML files from assets/fiddle/npcs/*.toml.

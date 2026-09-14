@@ -27,6 +27,7 @@ from fom_planner.data_loader import (
     load_item_metadata,
     load_npc_preferences_from_fiddle,
     load_npc_preferences_from_json,
+    load_recipe_sources,
 )
 from fom_planner.exporters.csv_export import export_plan_to_csv, export_to_csv
 from fom_planner.exporters.excel_export import export_plan_to_excel, export_to_excel
@@ -104,6 +105,11 @@ def build_planner_parser() -> argparse.ArgumentParser:
         "--item-locations",
         default="data/item_locations.json",
         help="Path to item_locations.json database (default: data/item_locations.json)"
+    )
+    parser.add_argument(
+        "--recipe-sources",
+        default="data/recipe_sources.json",
+        help="Path to recipe_sources.json database (default: data/recipe_sources.json)"
     )
     parser.add_argument(
         "--output-dir",
@@ -188,6 +194,7 @@ def run_planner(args=None):
     output_dir = (repo_root / args.output_dir).resolve() if not Path(args.output_dir).is_absolute() else Path(args.output_dir)
     recipes_path = (repo_root / args.recipes).resolve() if not Path(args.recipes).is_absolute() else Path(args.recipes)
     item_locations_path = (repo_root / args.item_locations).resolve() if not Path(args.item_locations).is_absolute() else Path(args.item_locations)
+    recipe_sources_path = (repo_root / args.recipe_sources).resolve() if not Path(args.recipe_sources).is_absolute() else Path(args.recipe_sources)
 
     # 1. Resolve save file
     save_path = None
@@ -231,6 +238,7 @@ def run_planner(args=None):
             if filtered_count > 0:
                 print(f"Filtered {filtered_count} locked recipe(s) — {len(recipes)}/{full_count} recipes available.")
     item_locations = load_item_locations(str(item_locations_path))
+    recipe_sources = load_recipe_sources(str(recipe_sources_path))
 
     # 3. Load gift definitions & metadata
     npcs_def = None
@@ -295,6 +303,7 @@ def run_planner(args=None):
             max_relationship_points=getattr(args, "max_relationship_points", None),
             exclude_max_relationship=not getattr(args, "no_exclude_max_relationship", False),
             focus_sort=focus_sort,
+            recipe_sources=recipe_sources,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -312,6 +321,7 @@ def run_planner(args=None):
             all_recipes=all_recipes,
             item_locations=item_locations,
             focus_sort=focus_sort,
+            recipe_sources=recipe_sources,
         )
 
     # 7. Output

@@ -274,6 +274,139 @@ def compute_focus_suggestions(
     return result
 
 
+def compute_focus_recipes(
+    all_recipes: Optional[Dict[str, Any]] = None,
+    unlocked_recipe_ids: Optional[Set[str]] = None,
+    remaining_items_map: Optional[Dict[str, Dict[str, Any]]] = None,
+    recipe_sources: Optional[Dict[str, str]] = None,
+    top_n: int = 10,
+    recipes: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """
+    Ranks locked cooking recipes by the number of pending ungifted NPC preferences
+    (loved + liked combined) satisfied by their output dish.
+
+    Parameters:
+      all_recipes: Canonical recipe database (all 186 recipes). If None, falls back
+                   to recipes or load_recipes().
+      unlocked_recipe_ids: Set of lowercased recipe IDs unlocked by the player.
+                           If None (e.g. no save data or mock save), returns empty list.
+      remaining_items_map: Mapping of item_id -> {"loved": set(), "liked": set()}
+                           representing ungifted NPC preferences.
+      recipe_sources: Mapping of recipe_id -> unlock location string.
+      top_n: Maximum number of ranked suggestions to return (default: 10).
+      recipes: Alias for all_recipes for keyword compatibility.
+
+    Returns:
+      Tuple of (focus_recipes, recipe_unlock_stats):
+        - focus_recipes: Top N ranked dicts with keys:
+            ['rank', 'recipe_id', 'display_name', 'impact', 'unlock_source']
+        - recipe_unlock_stats: Dict with keys:
+            ['total_cooking_recipes', 'unlocked_recipes_count', 'unlocked_percentage',
+             'total_cooking', 'unlocked_count', 'has_unlock_data']
+    """
+    if all_recipes is not None:
+        recipe_dict = all_recipes
+    elif recipes is not None:
+        recipe_dict = recipes
+    else:
+        recipe_dict = load_recipes()
+
+    if not isinstance(recipe_dict, dict):
+        recipe_dict = {}
+
+    # 1. Identify cooking recipes only (milling recipes are always unlocked)
+    cooking_recipes: Dict[str, dict] = {}
+    for rid, rdata in recipe_dict.items():
+        if not rid or not isinstance(rdata, dict):
+            continue
+        src = str(rdata.get("source", "")).strip().lower()
+        if src == "cooking":
+            cooking_recipes[str(rid).strip().lower()] = rdata
+
+    total_cooking = len(cooking_recipes)
+
+    # 2. Compute unlock statistics
+    has_unlock_data = unlocked_recipe_ids is not None
+    norm_unlocked: Set[str] = set()
+    if has_unlock_data and isinstance(unlocked_recipe_ids, (set, list, tuple, frozenset)):
+        norm_unlocked = {str(x).strip().lower() for x in unlocked_recipe_ids if x}
+
+    unlocked_cooking_count = sum(1 for rid in cooking_recipes if rid in norm_unlocked) if has_unlock_data else 0
+    unlocked_pct = (unlocked_cooking_count / total_cooking * 100.0) if (total_cooking > 0 and has_unlock_data) else 0.0
+
+    recipe_unlock_stats = {
+        "total_cooking_recipes": total_cooking,
+        "unlocked_recipes_count": unlocked_cooking_count,
+        "unlocked_percentage": unlocked_pct,
+        "total_cooking": total_cooking,
+        "unlocked_count": unlocked_cooking_count,
+        "has_unlock_data": has_unlock_data,
+    }
+
+    # 3. Handle edge cases where suggestions list should be empty:
+    #    - No save data / no unlock data provided (unlocked_recipe_ids is None)
+    #    - All cooking recipes unlocked
+    #    - top_n <= 0 or total_cooking == 0
+    if not has_unlock_data or unlocked_cooking_count >= total_cooking or top_n <= 0 or total_cooking == 0:
+        return [], recipe_unlock_stats
+
+    # Helper to safely parse NPC sets from remaining_items_map
+    def _parse_npc_set(val: Any) -> Set[str]:
+        if val is None:
+            return set()
+        if isinstance(val, (str, bytes)):
+            s = str(val).strip()
+            return {s} if s else set()
+        if hasattr(val, "__iter__"):
+            return {str(x).strip() for x in val if x and str(x).strip()}
+        return set()
+
+    # 4. Filter for locked cooking recipes and calculate impact
+    candidates: List[Dict[str, Any]] = []
+    for rid, rdata in cooking_recipes.items():
+        if rid in norm_unlocked:
+            continue
+
+        out_dish_id = str(rdata.get("item_id") or rid).strip().lower()
+        disp_name = str(rdata.get("display_name") or rid.replace("_", " ").title()).strip()
+
+        source_str = "Unknown"
+        if recipe_sources and isinstance(recipe_sources, dict):
+            src_val = recipe_sources.get(rid) or recipe_sources.get(out_dish_id)
+            if src_val and str(src_val).strip():
+                source_str = str(src_val).strip()
+
+        impact = 0
+        if remaining_items_map and isinstance(remaining_items_map, dict):
+            targets = remaining_items_map.get(out_dish_id) or remaining_items_map.get(rid)
+            if targets and isinstance(targets, dict):
+                loved_set = _parse_npc_set(targets.get("loved"))
+                liked_set = _parse_npc_set(targets.get("liked"))
+                impact = len(loved_set | liked_set)
+            elif isinstance(targets, (set, list, tuple)):
+                impact = len(_parse_npc_set(targets))
+
+        candidates.append({
+            "recipe_id": rid,
+            "display_name": disp_name,
+            "impact": impact,
+            "unlock_source": source_str,
+        })
+
+    # 5. Rank: impact descending, display_name ascending (case-insensitive), recipe_id ascending
+    candidates.sort(key=lambda x: (-x["impact"], str(x["display_name"]).lower(), str(x["recipe_id"]).lower()))
+
+    # 6. Assign 1-indexed rank and truncate to top_n
+    ranked_recipes: List[Dict[str, Any]] = []
+    for rank, item in enumerate(candidates[:top_n], start=1):
+        entry = dict(item)
+        entry["rank"] = rank
+        ranked_recipes.append(entry)
+
+    return ranked_recipes, recipe_unlock_stats
+
+
 def plan_daily_gift_bag(
     save: Optional[SaveData] = None,
     npc_gift_definitions: Optional[Dict[str, dict]] = None,
@@ -290,6 +423,7 @@ def plan_daily_gift_bag(
     all_recipes: Optional[Dict[str, Any]] = None,
     item_locations: Optional[Dict[str, str]] = None,
     focus_sort: str = "impact",
+    recipe_sources: Optional[Dict[str, str]] = None,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -308,6 +442,8 @@ def plan_daily_gift_bag(
         - target_npcs: set of npc_ids included in planning
         - remaining_items_map: dict of ungifted item_id -> {"loved": set(), "liked": set()}
         - focus_suggestions: top 5 insufficient blocker items
+        - focus_recipes: top 10 ranked locked cooking recipes
+        - recipe_unlock_stats: summary stats of cooking recipe unlocks
         - overall_stats: summary counts
     """
     if exclude_npcs is None:
@@ -321,6 +457,7 @@ def plan_daily_gift_bag(
     if all_recipes is None:
         loaded = load_recipes()
         all_recipes = loaded if loaded else dict(recipes)
+    unlocked = None
     if save is not None and hasattr(save, "get_unlocked_recipe_ids"):
         unlocked = save.get_unlocked_recipe_ids()
         if unlocked is not None:
@@ -554,10 +691,13 @@ def plan_daily_gift_bag(
 
             if max_avail <= 0:
                 tier = AvailabilityTier.UNAVAILABLE
+                tier_rank = 0
             elif owned_count >= actual_cover_count:
                 tier = AvailabilityTier.HAVE
+                tier_rank = 1
             else:
                 tier = AvailabilityTier.CRAFT
+                tier_rank = 1
 
             meta = item_metadata.get(item_id, {})
             try:
@@ -580,8 +720,8 @@ def plan_daily_gift_bag(
             )
 
             # 7-element Candidate ranking tuple:
-            # (availability_tier, score, vendor_hits, len(selected_loved), -bin_p, -store_p, -len(item_name))
-            candidate_tuple = (int(tier), score, vendor_hits, len(selected_loved), -bin_p, -store_p, -len(item_name))
+            # (tier_rank, score, vendor_hits, len(selected_loved), -bin_p, -store_p, -len(item_name))
+            candidate_tuple = (tier_rank, score, vendor_hits, len(selected_loved), -bin_p, -store_p, -len(item_name))
 
             if best_item_id is None or candidate_tuple > best_tuple:
                 best_tuple = candidate_tuple
@@ -735,6 +875,14 @@ def plan_daily_gift_bag(
         focus_sort=focus_sort,
     )
 
+    focus_recipes, recipe_unlock_stats = compute_focus_recipes(
+        all_recipes=all_recipes,
+        unlocked_recipe_ids=unlocked if (save is not None) else None,
+        remaining_items_map=all_remaining_items_map,
+        recipe_sources=recipe_sources,
+        top_n=10,
+    )
+
     return {
         "bag_plan": bag_plan,
         "npc_progress": npc_progress,
@@ -744,6 +892,8 @@ def plan_daily_gift_bag(
         "all_remaining_items_map": all_remaining_items_map,
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
+        "focus_recipes": focus_recipes,
+        "recipe_unlock_stats": recipe_unlock_stats,
         "focus_sort": focus_sort,
         "overall_stats": overall_stats,
     }
@@ -845,6 +995,7 @@ def plan_max_relationship(
     max_relationship_points: Optional[float] = None,
     exclude_max_relationship: bool = True,
     focus_sort: str = "impact",
+    recipe_sources: Optional[Dict[str, str]] = None,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -894,6 +1045,7 @@ def plan_max_relationship(
       infused_items: Optional explicit infused dishes structure overriding auto-detection.
       recipes: Recipe dictionary for computing downstream blocker focus suggestions.
       item_locations: Mapping of item IDs to world acquisition hints.
+      recipe_sources: Mapping of recipe ID to unlock source string.
 
     Returns:
       A dictionary compatible with all exporters (terminal, CSV, Excel):
@@ -905,6 +1057,8 @@ def plan_max_relationship(
         - all_remaining_items_map: All pending items across all non-excluded NPCs.
         - today_remaining_items_map: Pending items relevant to today's target NPCs.
         - focus_suggestions: List of blocker raw material deficit suggestions.
+        - focus_recipes: Top ranked locked cooking recipes by impact.
+        - recipe_unlock_stats: Summary statistics of cooking recipe unlocks.
         - overall_stats: Comprehensive summary statistics including total_relationship_points.
         - infused_items: Raw or detected infused items pool.
     """
@@ -927,6 +1081,7 @@ def plan_max_relationship(
     if all_recipes is None:
         loaded = load_recipes()
         all_recipes = loaded if loaded else dict(recipes)
+    unlocked = None
     if save is not None and hasattr(save, "get_unlocked_recipe_ids"):
         unlocked = save.get_unlocked_recipe_ids()
         if unlocked is not None:
@@ -1211,47 +1366,50 @@ def plan_max_relationship(
                 else:
                     other_pool[item_id] = rem
 
-    # Stage 1: Specific Love Gifts (+20)
-    while True:
-        candidates = []
-        for nid in unassigned_npcs:
-            avail = [iid for iid in npc_progress[nid]["loved"] if current_inventory.get(iid, 0) > 0]
-            if avail:
-                is_v = npc_progress[nid]["is_vendor"]
-                is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
-                candidates.append((
-                    len(avail),
-                    0 if is_boosted else 1,
-                    str(npc_progress[nid]["name"]).lower(),
-                    nid,
-                    avail,
-                ))
-        if not candidates:
-            break
+    # Stage 1: Specific Love Gifts (+20) (Owned then Crafted)
+    def _allocate_loved_owned():
+        while True:
+            candidates = []
+            for nid in unassigned_npcs:
+                avail = [iid for iid in npc_progress[nid]["loved"] if current_inventory.get(iid, 0) > 0]
+                if avail:
+                    is_v = npc_progress[nid]["is_vendor"]
+                    is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                    candidates.append((
+                        len(avail),
+                        0 if is_boosted else 1,
+                        str(npc_progress[nid]["name"]).lower(),
+                        nid,
+                        avail,
+                    ))
+            if not candidates:
+                break
 
-        candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
-        _, _, _, best_nid, avail = candidates[0]
+            candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+            _, _, _, best_nid, avail = candidates[0]
 
-        avail.sort(key=lambda iid: (
-            -current_inventory.get(iid, 0),
-            str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
-            iid,
-        ))
-        chosen_item = avail[0]
+            avail.sort(key=lambda iid: (
+                -current_inventory.get(iid, 0),
+                str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                iid,
+            ))
+            chosen_item = avail[0]
 
-        _sync_deduct_specific(chosen_item)
+            _sync_deduct_specific(chosen_item)
 
-        meta = item_metadata.get(chosen_item, {})
-        disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
 
-        npc_progress[best_nid]["assigned_item_id"] = chosen_item
-        npc_progress[best_nid]["assigned_item_name"] = disp_name
-        npc_progress[best_nid]["assigned_pref_type"] = "LOVE"
-        npc_progress[best_nid]["assigned_points"] = 20
-        unassigned_npcs.remove(best_nid)
+            npc_progress[best_nid]["assigned_item_id"] = chosen_item
+            npc_progress[best_nid]["assigned_item_name"] = disp_name
+            npc_progress[best_nid]["assigned_pref_type"] = "LOVE"
+            npc_progress[best_nid]["assigned_points"] = 20
+            unassigned_npcs.remove(best_nid)
 
-    # Stage 1 (Crafting Sub-pass): Specific Love Gifts (+20) via Crafting
-    if recipes:
+    def _allocate_loved_crafted():
+        nonlocal current_inventory
+        if not recipes:
+            return
         while True:
             candidates = []
             for nid in unassigned_npcs:
@@ -1295,6 +1453,9 @@ def plan_max_relationship(
             crafted_assignments.add(best_nid)
             unassigned_npcs.remove(best_nid)
 
+    _allocate_loved_owned()
+    _allocate_loved_crafted()
+
     # Stage 2: Universal Love Gifts (+20)
     if lovable_pool:
         def univ_love_sort_key(nid):
@@ -1327,47 +1488,50 @@ def plan_max_relationship(
             npc_progress[nid]["assigned_points"] = 20
             unassigned_npcs.remove(nid)
 
-    # Stage 3: Specific Like Gifts (+10)
-    while True:
-        candidates = []
-        for nid in unassigned_npcs:
-            avail = [iid for iid in npc_progress[nid]["liked"] if current_inventory.get(iid, 0) > 0]
-            if avail:
-                is_v = npc_progress[nid]["is_vendor"]
-                is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
-                candidates.append((
-                    len(avail),
-                    0 if is_boosted else 1,
-                    str(npc_progress[nid]["name"]).lower(),
-                    nid,
-                    avail,
-                ))
-        if not candidates:
-            break
+    # Stage 3: Specific Like Gifts (+10) (Owned then Crafted)
+    def _allocate_liked_owned():
+        while True:
+            candidates = []
+            for nid in unassigned_npcs:
+                avail = [iid for iid in npc_progress[nid]["liked"] if current_inventory.get(iid, 0) > 0]
+                if avail:
+                    is_v = npc_progress[nid]["is_vendor"]
+                    is_boosted = (planning_for_saturday and is_v) or (is_animal_fest and nid.lower() in ANIMAL_FESTIVAL_ATTENDING_VENDORS)
+                    candidates.append((
+                        len(avail),
+                        0 if is_boosted else 1,
+                        str(npc_progress[nid]["name"]).lower(),
+                        nid,
+                        avail,
+                    ))
+            if not candidates:
+                break
 
-        candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
-        _, _, _, best_nid, avail = candidates[0]
+            candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+            _, _, _, best_nid, avail = candidates[0]
 
-        avail.sort(key=lambda iid: (
-            -current_inventory.get(iid, 0),
-            str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
-            iid,
-        ))
-        chosen_item = avail[0]
+            avail.sort(key=lambda iid: (
+                -current_inventory.get(iid, 0),
+                str(item_metadata.get(iid, {}).get("display_name") or iid).lower(),
+                iid,
+            ))
+            chosen_item = avail[0]
 
-        _sync_deduct_specific(chosen_item)
+            _sync_deduct_specific(chosen_item)
 
-        meta = item_metadata.get(chosen_item, {})
-        disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
+            meta = item_metadata.get(chosen_item, {})
+            disp_name = str(meta.get("display_name") or chosen_item.replace("_", " ").title())
 
-        npc_progress[best_nid]["assigned_item_id"] = chosen_item
-        npc_progress[best_nid]["assigned_item_name"] = disp_name
-        npc_progress[best_nid]["assigned_pref_type"] = "LIKE"
-        npc_progress[best_nid]["assigned_points"] = 10
-        unassigned_npcs.remove(best_nid)
+            npc_progress[best_nid]["assigned_item_id"] = chosen_item
+            npc_progress[best_nid]["assigned_item_name"] = disp_name
+            npc_progress[best_nid]["assigned_pref_type"] = "LIKE"
+            npc_progress[best_nid]["assigned_points"] = 10
+            unassigned_npcs.remove(best_nid)
 
-    # Stage 3 (Crafting Sub-pass): Specific Like Gifts (+10) via Crafting
-    if recipes:
+    def _allocate_liked_crafted():
+        nonlocal current_inventory
+        if not recipes:
+            return
         while True:
             candidates = []
             for nid in unassigned_npcs:
@@ -1410,6 +1574,9 @@ def plan_max_relationship(
             npc_progress[best_nid]["assigned_points"] = 10
             crafted_assignments.add(best_nid)
             unassigned_npcs.remove(best_nid)
+
+    _allocate_liked_owned()
+    _allocate_liked_crafted()
 
     # Stage 4: Universal Like Gifts (+10)
     if likable_pool:
@@ -1619,6 +1786,14 @@ def plan_max_relationship(
         focus_sort=focus_sort,
     )
 
+    focus_recipes, recipe_unlock_stats = compute_focus_recipes(
+        all_recipes=all_recipes,
+        unlocked_recipe_ids=unlocked if (save is not None) else None,
+        remaining_items_map=all_remaining_items_map,
+        recipe_sources=recipe_sources,
+        top_n=10,
+    )
+
     return {
         "bag_plan": bag_plan,
         "npc_progress": npc_progress,
@@ -1628,6 +1803,8 @@ def plan_max_relationship(
         "all_remaining_items_map": all_remaining_items_map,
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
+        "focus_recipes": focus_recipes,
+        "recipe_unlock_stats": recipe_unlock_stats,
         "focus_sort": focus_sort,
         "overall_stats": overall_stats,
         "infused_items": raw_infused,

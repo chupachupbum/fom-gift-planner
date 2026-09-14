@@ -510,6 +510,36 @@ class TestGiftPlannerIntegration(unittest.TestCase):
         self.assertEqual(bag_plan[0]["status"], "HAVE")
         self.assertEqual(bag_plan[0]["availability_tier"], 2)
 
+    def test_slot_minimization_prefers_higher_coverage(self):
+        """
+        Verify that slot-minimization logic prioritizes multi-NPC coverage regardless of HAVE vs CRAFT.
+        Scenario:
+          - Player has 1 'strawberry' in bag (HAVE, covers 1 NPC: Louis)
+          - Player has 3 'corn' to craft 'cornmeal' (CRAFT, covers 3 NPCs: Adeline, Darcy, March)
+        Expected:
+          - Cornmeal (CRAFT) is selected for slot 1 because it covers 3 NPCs per slot (score 3.5),
+            beating strawberry (HAVE) which only covers 1 NPC (score 1.5).
+        """
+        bag = {"strawberry": 1, "corn": 3}
+        save_path = self.work_dir / "slot_min_test.sav"
+        create_synthetic_save_file(save_path, bag_items=bag, day=6)
+        save = parse_save_file(save_path)
+
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            mode="all",
+            max_slots=5,
+            recipes=self.mock_recipes,
+        )
+
+        bag_plan = plan["bag_plan"]
+        self.assertGreater(len(bag_plan), 0)
+        self.assertEqual(bag_plan[0]["item_id"], "cornmeal")
+        self.assertEqual(bag_plan[0]["status"], "CRAFT")
+        self.assertEqual(bag_plan[0]["quantity_to_pack"], 3)
+
     def test_craft_beats_unavailable_despite_lower_raw_score(self):
         """Verify craftable items rank above unavailable items even if coverage score is lower."""
         # Player has 1 corn -> can craft 1 cornmeal (liked by Darcy & March)
@@ -1171,6 +1201,11 @@ class TestFocusSuggestions(unittest.TestCase):
 
         output = buf.getvalue()
         self.assertIn("FOCUS SUGGESTIONS", output)
+        self.assertIn("Rank", output)
+        self.assertIn("Item Name", output)
+        self.assertIn("Need", output)
+        self.assertIn("Impact", output)
+        self.assertIn("Location / Source", output)
         self.assertIn("Golden Milk", output)
         self.assertIn("Need 8 more", output)
         self.assertIn("blocks 5 gifts", output)

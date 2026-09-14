@@ -6,7 +6,7 @@ Multi-sheet Excel workbook export routines and styling using openpyxl.
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 try:
     import openpyxl
@@ -90,11 +90,11 @@ def style_sheet_table(ws, headers, data_rows, numeric_cols=None, center_cols=Non
 
 
 def export_plan_to_excel(
-    save: Optional[SaveData],
-    plan_results: dict,
-    npc_gift_definitions: Dict[str, dict],
-    item_metadata: Dict[str, dict],
-    output_path: Path
+    save: Optional[Any] = None,
+    plan_results: Optional[Any] = None,
+    npc_gift_definitions: Optional[Dict[str, dict]] = None,
+    item_metadata: Optional[Dict[str, dict]] = None,
+    output_path: Optional[Union[Path, str]] = None,
 ):
     """
     Exports a comprehensive multi-sheet Excel report with Saturday Market classification and inventory status.
@@ -102,6 +102,27 @@ def export_plan_to_excel(
     if not OPENPYXL_AVAILABLE:
         print("[Excel] openpyxl is not installed. Skipping Excel export.", file=sys.stderr)
         return
+
+    if isinstance(save, dict) and (plan_results is None or isinstance(plan_results, (str, Path))):
+        output_path = plan_results
+        plan_results = save
+        save = None
+        npc_gift_definitions = npc_gift_definitions or {}
+        item_metadata = item_metadata or {}
+    elif plan_results is None and isinstance(save, dict):
+        plan_results = save
+        save = None
+
+    if plan_results is None:
+        plan_results = {}
+    if npc_gift_definitions is None:
+        npc_gift_definitions = {}
+    if item_metadata is None:
+        item_metadata = {}
+    if output_path is None:
+        output_path = Path("daily_gift_bag_plan.xlsx")
+    elif isinstance(output_path, str):
+        output_path = Path(output_path)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     wb = openpyxl.Workbook()
@@ -112,9 +133,9 @@ def export_plan_to_excel(
     vendor_header_fill = PatternFill(start_color="8E44AD", end_color="8E44AD", fill_type="solid")  # Purple
     vendor_header_font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
 
-    bag_plan = plan_results["bag_plan"]
-    npc_progress = plan_results["npc_progress"]
-    stats = plan_results["overall_stats"]
+    bag_plan = plan_results.get("bag_plan", [])
+    npc_progress = plan_results.get("npc_progress", {})
+    stats = plan_results.get("overall_stats", {})
 
     # ----------------------------------------------------
     # Sheet 1: Daily Bag Plan
@@ -331,6 +352,22 @@ def export_plan_to_excel(
 
     ws4.freeze_panes = "D2"
     ws4.auto_filter.ref = ws4.dimensions
+
+    # ----------------------------------------------------
+    # Sheet 5: Focus Recipes
+    # ----------------------------------------------------
+    ws5 = wb.create_sheet(title="Focus Recipes")
+    headers5 = ["Rank", "Recipe Name", "Impact", "Unlock Source"]
+    focus_recipes = plan_results.get("focus_recipes") or []
+    rows5 = []
+    for r in focus_recipes:
+        rows5.append([
+            r.get("rank", 1),
+            r.get("display_name") or r.get("recipe_id", ""),
+            r.get("impact", 0),
+            r.get("unlock_source", "Unknown"),
+        ])
+    style_sheet_table(ws5, headers5, rows5, numeric_cols=[1, 3], center_cols=[1, 3], styles=styles)
 
     wb.save(output_path)
     print(f"[Excel] Successfully exported Gift Planner Report to: {output_path}")

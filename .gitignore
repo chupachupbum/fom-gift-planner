@@ -32,3 +32,6 @@ Thumbs.db
 .idea/
 
 .agents/
+exports/*
+TEST_INFRA.md
+TEST_READY.md

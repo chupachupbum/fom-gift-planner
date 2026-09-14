@@ -127,7 +127,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
         ])
 
     # Market & Festival context banner
-    if getattr(date_info, "is_saturday", False) or stats["mode"] in ("saturday", "market"):
+    if getattr(date_info, "is_saturday", False) or stats.get("mode") in ("saturday", "market"):
         if getattr(date_info, "is_saturday", False):
             print(f"\n🎉 TODAY IS SATURDAY MARKET DAY! All {num_total} NPCs ({num_townsfolk} townsfolk + {num_vendors} visiting vendors) are in town!")
         else:
@@ -135,7 +135,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
             next_sat = getattr(date_info, "next_saturday_day", 6)
             print(f"\n🎪 PLANNING FOR SATURDAY MARKET (Simulated Day {next_sat}, in {days_until} days):")
             print(f"  • Includes all {num_total} NPCs ({num_townsfolk} townsfolk + {num_vendors} visiting vendors) with priority boost on the {num_vendors} weekly visiting vendors.")
-    elif stats["mode"] == "market-only":
+    elif stats.get("mode") == "market-only":
         print(f"\n🎪 PLANNING FOR SATURDAY MARKET VENDORS ONLY:")
         vendor_names_str = ", ".join(unlocked_vendor_names) if unlocked_vendor_names else "None"
         print(f"  • Focuses exclusively on the {num_vendors} weekly visiting vendors ({vendor_names_str}).")
@@ -164,13 +164,19 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
         print(f"  💡 Tip: Run with '--mode saturday' to plan your upcoming Saturday Market shopping list!")
 
     print(f"\n📊 OVERALL COMPLETION PROGRESS:")
-    p_loved = (stats["game_given_loved"] / stats["game_total_loved"] * 100) if stats["game_total_loved"] else 0
-    p_liked = (stats["game_given_liked"] / stats["game_total_liked"] * 100) if stats["game_total_liked"] else 0
-    p_total = (stats["game_given_total"] / stats["game_total_preferences"] * 100) if stats["game_total_preferences"] else 0
-    print(f"  • Loved Gifts: {stats['game_given_loved']}/{stats['game_total_loved']} ({p_loved:.1f}%)")
-    print(f"  • Liked Gifts: {stats['game_given_liked']}/{stats['game_total_liked']} ({p_liked:.1f}%)")
-    print(f"  • Total Preferences: {stats['game_given_total']}/{stats['game_total_preferences']} ({p_total:.1f}%)")
-    print(f"  • Unique Ungifted Items Remaining in Game: {stats['remaining_unique_items']}")
+    game_total_loved = stats.get("game_total_loved", 0)
+    game_total_liked = stats.get("game_total_liked", 0)
+    game_total_pref = stats.get("game_total_preferences", 0)
+    game_given_loved = stats.get("game_given_loved", 0)
+    game_given_liked = stats.get("game_given_liked", 0)
+    game_given_total = stats.get("game_given_total", 0)
+    p_loved = (game_given_loved / game_total_loved * 100) if game_total_loved else 0
+    p_liked = (game_given_liked / game_total_liked * 100) if game_total_liked else 0
+    p_total = (game_given_total / game_total_pref * 100) if game_total_pref else 0
+    print(f"  • Loved Gifts: {game_given_loved}/{game_total_loved} ({p_loved:.1f}%)")
+    print(f"  • Liked Gifts: {game_given_liked}/{game_total_liked} ({p_liked:.1f}%)")
+    print(f"  • Total Preferences: {game_given_total}/{game_total_pref} ({p_total:.1f}%)")
+    print(f"  • Unique Ungifted Items Remaining in Game: {stats.get('remaining_unique_items', 0)}")
 
     if stats.get("locked_npcs"):
         print(f"\n🔒 NOT YET UNLOCKED ({len(stats['locked_npcs'])} NPCs): {', '.join(stats['locked_npcs'])}")
@@ -178,10 +184,13 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     if stats.get("max_relationship_npcs"):
         print(f"\n💖 MAX RELATIONSHIP REACHED ({len(stats['max_relationship_npcs'])} NPCs): {', '.join(stats['max_relationship_npcs'])}")
 
-    if stats["ungiftable_npcs"]:
+    if stats.get("ungiftable_npcs"):
         print(f"\n⚠️  ALREADY GIFTED TODAY ({len(stats['ungiftable_npcs'])} NPCs): {', '.join(stats['ungiftable_npcs'])}")
 
-    print(f"\n🎒 OPTIMAL BAG LOADOUT ({len(bag_plan)}/{stats['max_slots']} slots → covers {stats['covered_npcs_count']}/{stats['target_npcs_count']} NPCs):")
+    max_slots_display = stats.get("max_slots", 20)
+    cov_count = stats.get("covered_npcs_count", 0)
+    tgt_count = stats.get("target_npcs_count", 0)
+    print(f"\n🎒 OPTIMAL BAG LOADOUT ({len(bag_plan)}/{max_slots_display} slots → covers {cov_count}/{tgt_count} NPCs):")
     print("━" * 86)
     print(f" {'Slot':<5} │ {'Qty':<4} │ {'Status':<9} │ {'Item Name':<24} │ {'Today Target Recipients (NPCs)'}")
     print("━" * 86)
@@ -250,12 +259,46 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     if not focus_suggestions:
         print("  🎉 All required materials and gifts are currently in your inventory!")
     else:
+        print(f" {'Rank':<5} │ {'Item Name':<24} │ {'Need':<14} │ {'Impact':<16} │ {'Location / Source'}")
+        print("━" * 86)
         for s in focus_suggestions:
-            loc_str = f"  ({s['location_hint']})" if s.get("location_hint") else ""
             pairs = s.get("blocked_pairs")
-            pair_str = f" (blocks {pairs} gift{'s' if pairs != 1 else ''})" if pairs is not None else ""
-            print(f"  {s['rank']}. {s['item_name']} — Need {s['deficit']} more{pair_str}{loc_str}")
+            impact_str = f"blocks {pairs} gift{'s' if pairs != 1 else ''}" if pairs is not None else "—"
+            deficit = s.get("deficit") if s.get("deficit") is not None else 0
+            need_str = f"Need {deficit} more"
+            loc_str = s.get("location_hint") or "—"
+            rank_val = s.get("rank") if s.get("rank") is not None else 1
+            item_name = s.get("item_name") or ""
+            print(f"  {rank_val:<4} │ {item_name:<24} │ {need_str:<14} │ {impact_str:<16} │ {loc_str}")
     print("━" * 86)
+
+    # Focus Recipes Section (Cooking progression)
+    recipe_unlock_stats = plan_results.get("recipe_unlock_stats")
+    focus_recipes = plan_results.get("focus_recipes")
+
+    if save is not None and recipe_unlock_stats is not None and recipe_unlock_stats.get("has_unlock_data", True):
+        total_cooking = recipe_unlock_stats.get("total_cooking", 163)
+        unlocked_count = recipe_unlock_stats.get("unlocked_count", 0)
+        pct = recipe_unlock_stats.get("unlocked_percentage")
+        if pct is None:
+            pct = (unlocked_count / total_cooking * 100) if total_cooking > 0 else 0.0
+
+        print(f"\n🍳 FOCUS RECIPES ({unlocked_count}/{total_cooking} cooking recipes unlocked — {pct:.1f}%):")
+        print("━" * 86)
+        if unlocked_count >= total_cooking or not focus_recipes:
+            print("  🎉 All cooking recipes unlocked!")
+        else:
+            print(f" {'Rank':<5} │ {'Recipe Name':<24} │ {'Impact':<15} │ {'Unlock Source'}")
+            print("━" * 86)
+            for r in focus_recipes:
+                rank_val = r.get("rank", 1)
+                name = r.get("display_name") or r.get("recipe_id", "")
+                impact = r.get("impact", 0)
+                impact_str = f"in {impact} gift{'s' if impact != 1 else ''}"
+                source = r.get("unlock_source") or "Unknown"
+                print(f"  {rank_val:<4} │ {name:<24} │ {impact_str:<15} │ {source}")
+        print("━" * 86)
+
     print("═" * 86 + "\n")
 
 
