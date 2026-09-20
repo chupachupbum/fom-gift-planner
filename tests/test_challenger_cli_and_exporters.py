@@ -45,7 +45,8 @@ class TestCLIExecutionAndHelp(unittest.TestCase):
         self.assertIn("--recipe-sources", help_output)
         self.assertIn("recipe_sources.json", help_output)
 
-    def test_cli_run_journal_strategy_with_recipe_sources(self):
+    @patch("fom_planner.cli.find_latest_save", return_value=None)
+    def test_cli_run_journal_strategy_with_recipe_sources(self, mock_save):
         """CLI execution: plan --strategy journal with --recipe-sources."""
         args = build_planner_parser().parse_args([
             "--strategy", "journal",
@@ -60,7 +61,8 @@ class TestCLIExecutionAndHelp(unittest.TestCase):
         # Without save file, focus recipes should be silently omitted
         self.assertNotIn("🍳 FOCUS RECIPES", out)
 
-    def test_cli_run_max_relationship_strategy_with_recipe_sources(self):
+    @patch("fom_planner.cli.find_latest_save", return_value=None)
+    def test_cli_run_max_relationship_strategy_with_recipe_sources(self, mock_save):
         """CLI execution: plan --strategy max-relationship with --recipe-sources."""
         args = build_planner_parser().parse_args([
             "--strategy", "max-relationship",

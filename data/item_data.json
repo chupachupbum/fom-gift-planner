@@ -3,9 +3,9 @@
   "generated_at": "2026-08-29T07:17:18Z",
   "summary": {
     "total_npcs": 34,
-    "total_items": 556,
+    "total_items": 557,
     "items_with_quests": 256,
-    "items_with_gifts": 438
+    "items_with_gifts": 443
   },
   "npcs": {
     "adeline": "Adeline",
@@ -47,7 +47,9 @@
     "acorn": {
       "display_name": "Acorn",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [],
       "crafting_recipes": [
         "deluxe_hay",
@@ -180,7 +182,8 @@
     "ancient_crystal_goblet": {
       "display_name": "Ancient Crystal Goblet",
       "loved_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "liked_by": [],
       "cooking_recipes": [],
@@ -382,7 +385,9 @@
     "ash_mushroom": {
       "display_name": "Ash Mushroom",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [
         "incredibly_hot_pot"
       ],
@@ -923,7 +928,9 @@
     "bell_berry": {
       "display_name": "Bell Berry",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [
         "bell_berry_bakewell_tart"
       ],
@@ -2877,7 +2884,8 @@
     "crispy_fried_earthshroom": {
       "display_name": "Crispy Fried Earthshroom",
       "loved_by": [
-        "hemlock"
+        "hemlock",
+        "zorel"
       ],
       "liked_by": [
         "vera"
@@ -2936,7 +2944,8 @@
         "merri",
         "olric",
         "ryis",
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "cooking_recipes": [],
       "crafting_recipes": [
@@ -2993,7 +3002,8 @@
     "crystal_apple": {
       "display_name": "Crystal Apple",
       "loved_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "liked_by": [],
       "cooking_recipes": [],
@@ -3009,7 +3019,8 @@
         "darcy"
       ],
       "liked_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "cooking_recipes": [
         "crystal_berry_pie",
@@ -3029,7 +3040,8 @@
     "crystal_berry_pie": {
       "display_name": "Crystal Berry Pie",
       "loved_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "liked_by": [
         "eiland",
@@ -3070,7 +3082,8 @@
       "liked_by": [
         "balor",
         "louis",
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "cooking_recipes": [],
       "crafting_recipes": [
@@ -3087,7 +3100,8 @@
       "display_name": "Crystal Wing Moth",
       "loved_by": [],
       "liked_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "cooking_recipes": [],
       "crafting_recipes": [],
@@ -3102,7 +3116,8 @@
         "dozy"
       ],
       "liked_by": [
-        "stillwell"
+        "stillwell",
+        "zorel"
       ],
       "cooking_recipes": [],
       "crafting_recipes": [],
@@ -3625,7 +3640,9 @@
     "earthshroom": {
       "display_name": "Earthshroom",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [
         "crispy_fried_earthshroom",
         "incredibly_hot_pot",
@@ -3797,7 +3814,9 @@
     "ethereal_grass": {
       "display_name": "Ethereal Grass",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [],
       "crafting_recipes": [
         "crop_faux_ethereal_grass"
@@ -3897,9 +3916,7 @@
     "fennel": {
       "display_name": "Fennel",
       "loved_by": [],
-      "liked_by": [
-        "zorel"
-      ],
+      "liked_by": [],
       "cooking_recipes": [
         "cabbage_slaw",
         "spring_salad"
@@ -3976,9 +3993,7 @@
     "fiddlehead": {
       "display_name": "Fiddlehead",
       "loved_by": [],
-      "liked_by": [
-        "zorel"
-      ],
+      "liked_by": [],
       "cooking_recipes": [
         "spring_galette",
         "spring_salad"
@@ -5452,9 +5467,7 @@
     },
     "heather": {
       "display_name": "Heather",
-      "loved_by": [
-        "zorel"
-      ],
+      "loved_by": [],
       "liked_by": [
         "adeline",
         "celine"
@@ -6477,8 +6490,7 @@
         "adeline",
         "celine",
         "louis",
-        "maple",
-        "zorel"
+        "maple"
       ],
       "liked_by": [
         "juniper"
@@ -6511,12 +6523,12 @@
     "miners_mushroom_stew": {
       "display_name": "Miner's Mushroom Stew",
       "loved_by": [
-        "errol"
+        "errol",
+        "zorel"
       ],
       "liked_by": [
         "olric",
-        "reina",
-        "zorel"
+        "reina"
       ],
       "cooking_recipes": [],
       "crafting_recipes": [],
@@ -7098,11 +7110,10 @@
     },
     "morel_mushroom": {
       "display_name": "Morel Mushroom",
-      "loved_by": [
-        "zorel"
-      ],
+      "loved_by": [],
       "liked_by": [
-        "juniper"
+        "juniper",
+        "zorel"
       ],
       "cooking_recipes": [
         "mushroom_rice",
@@ -7137,7 +7148,8 @@
     "mushroom_brew": {
       "display_name": "Mushroom Brew",
       "loved_by": [
-        "juniper"
+        "juniper",
+        "zorel"
       ],
       "liked_by": [],
       "cooking_recipes": [],
@@ -7151,10 +7163,10 @@
     },
     "mushroom_rice": {
       "display_name": "Mushroom Rice",
-      "loved_by": [],
-      "liked_by": [
+      "loved_by": [
         "zorel"
       ],
+      "liked_by": [],
       "cooking_recipes": [],
       "crafting_recipes": [],
       "quests": [
@@ -7170,7 +7182,8 @@
     "mushroom_steak_dinner": {
       "display_name": "Mushroom Steak Dinner",
       "loved_by": [
-        "vera"
+        "vera",
+        "zorel"
       ],
       "liked_by": [
         "caldarus",
@@ -8018,7 +8031,9 @@
     "oyster_mushroom": {
       "display_name": "Oyster Mushroom",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [
         "mushroom_steak_dinner",
         "winter_stew"
@@ -8550,7 +8565,9 @@
     "pinecone": {
       "display_name": "Pinecone",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [],
       "crafting_recipes": [
         "sapling_pine"
@@ -8564,7 +8581,9 @@
     "pineshroom": {
       "display_name": "Pineshroom",
       "loved_by": [],
-      "liked_by": [],
+      "liked_by": [
+        "zorel"
+      ],
       "cooking_recipes": [
         "pineshroom_toast"
       ],
@@ -8582,7 +8601,9 @@
     },
     "pineshroom_toast": {
       "display_name": "Pineshroom Toast",
-      "loved_by": [],
+      "loved_by": [
+        "zorel"
+      ],
       "liked_by": [
         "adeline"
       ],
@@ -9636,9 +9657,7 @@
     "sage": {
       "display_name": "Sage",
       "loved_by": [],
-      "liked_by": [
-        "zorel"
-      ],
+      "liked_by": [],
       "cooking_recipes": [
         "herb_salad"
       ],
@@ -11344,9 +11363,7 @@
     },
     "sunflower": {
       "display_name": "Sunflower",
-      "loved_by": [
-        "zorel"
-      ],
+      "loved_by": [],
       "liked_by": [
         "celine",
         "josephine",
@@ -12499,9 +12516,7 @@
     "wild_leek": {
       "display_name": "Wild Leek",
       "loved_by": [],
-      "liked_by": [
-        "zorel"
-      ],
+      "liked_by": [],
       "cooking_recipes": [
         "crayfish_etouffee",
         "fish_stew",
@@ -12666,6 +12681,19 @@
       "tags": [
         "forageable",
         "mines_forageable"
+      ]
+    },
+    "metal_leaf": {
+      "display_name": "Metal Leaf",
+      "loved_by": [
+        "zorel"
+      ],
+      "liked_by": [],
+      "cooking_recipes": [],
+      "crafting_recipes": [],
+      "quests": [],
+      "tags": [
+        "archaeology"
       ]
     }
   }

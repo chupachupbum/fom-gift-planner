@@ -3,6 +3,8 @@ data_loader.py
 
 Loaders for game databases, item metadata, item locations, and NPC preferences:
 - load_item_locations
+- load_item_seasons
+- load_recipe_sources
 - load_npc_preferences_from_fiddle
 - load_npc_preferences_from_json
 - load_item_metadata
@@ -12,7 +14,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
     import tomllib
@@ -81,6 +83,48 @@ def load_recipe_sources(sources_path: Optional[Union[str, Path]] = None) -> Dict
             data = json.load(f)
         if isinstance(data, dict):
             return {str(k).strip().lower(): str(v).strip() for k, v in data.items()}
+    except Exception:
+        return {}
+    return {}
+
+
+def load_item_seasons(seasons_path: Optional[Union[str, Path]] = None) -> Dict[str, List[str]]:
+    """
+    Loads item seasonal availability from JSON database file.
+    Maps item_id -> list of lowercased season names (e.g. ['spring'], ['summer', 'fall']).
+    If seasons_path is not specified, defaults to 'data/item_seasons.json'
+    relative to the repository root.
+    Gracefully returns {} if path is None, file does not exist, or parsing fails.
+    """
+    if seasons_path is None:
+        root_path = Path(__file__).resolve().parent.parent / "data" / "item_seasons.json"
+        script_path = Path(__file__).resolve().parent / "data" / "item_seasons.json"
+        if root_path.exists():
+            target = root_path
+        elif script_path.exists():
+            target = script_path
+        else:
+            target = Path("data/item_seasons.json")
+    else:
+        target = Path(seasons_path)
+
+    if not target.exists() or not target.is_file():
+        return {}
+
+    try:
+        with open(target, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            res: Dict[str, List[str]] = {}
+            for k, v in data.items():
+                if not k:
+                    continue
+                k_clean = str(k).strip().lower()
+                if isinstance(v, list):
+                    res[k_clean] = [str(s).strip().lower() for s in v if s]
+                elif isinstance(v, str) and v.strip():
+                    res[k_clean] = [str(v).strip().lower()]
+            return res
     except Exception:
         return {}
     return {}

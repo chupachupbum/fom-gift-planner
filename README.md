@@ -37,7 +37,7 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
     - `deficit`: Prioritizes items with the largest overall deficit/shortage in your storage.
     - `quick-wins`: Prioritizes items closest to completion (smallest deficit first) for immediate gift unlocks.
 - **Zero Mandatory Dependencies**: Runs entirely on Python's standard library. Optional Excel export via `openpyxl`.
-- **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 438+ giftable items by popularity across the 34 NPCs.
+- **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 440+ giftable items by popularity across the 34 NPCs.
 
 ---
 

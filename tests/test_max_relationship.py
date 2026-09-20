@@ -748,10 +748,10 @@ class TestEmptyInventoryAndZeroAvailableItems(unittest.TestCase):
     def test_inventory_with_only_unloved_unliked_items(self):
         """Items not loved/liked by anyone must NOT be assigned as neutral (+3) gifts."""
         inv = {
-            "acorn": 999,
+            "cave_kelp": 999,
             "bomb": 500,
-            "bell_berry": 250,
-            "ash_mushroom": 50,
+            "chickpea": 250,
+            "burdock_root": 50,
         }
 
         result = plan_max_relationship(

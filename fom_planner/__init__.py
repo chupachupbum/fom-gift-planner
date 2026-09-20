@@ -24,6 +24,7 @@ from fom_planner.crafting import (
 from fom_planner.data_loader import (
     load_item_locations,
     load_item_metadata,
+    load_item_seasons,
     load_npc_preferences_from_fiddle,
     load_npc_preferences_from_json,
     load_recipe_sources,
@@ -46,6 +47,7 @@ from fom_planner.models import (
 )
 from fom_planner.optimizer import (
     ITEM_LOCATIONS,
+    ITEM_SEASONS,
     compute_focus_recipes,
     compute_focus_suggestions,
     plan_daily_gift_bag,
@@ -83,12 +85,14 @@ __all__ = [
     "deduct_crafting_materials",
     "format_crafting_chain",
     "load_item_locations",
+    "load_item_seasons",
     "load_recipe_sources",
     "load_item_metadata",
     "load_npc_preferences_from_fiddle",
     "load_npc_preferences_from_json",
     "build_ranked_rows",
     "ITEM_LOCATIONS",
+    "ITEM_SEASONS",
     "resolve_root_raw_materials",
     "compute_focus_suggestions",
     "compute_focus_recipes",

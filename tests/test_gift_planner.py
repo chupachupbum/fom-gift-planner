@@ -1153,6 +1153,320 @@ class TestFocusSuggestions(unittest.TestCase):
         self.assertIn("deficit", top)
         self.assertIn("location_hint", top)
 
+    def test_focus_season_filter_excludes_out_of_season(self):
+        """Items only available in spring are excluded when current_season is summer."""
+        remaining_map = {
+            "turnip": {"loved": {"npc1"}, "liked": set()},  # spring only
+            "corn": {"loved": {"npc2"}, "liked": set()},    # summer only
+        }
+        item_seasons = {"turnip": ["spring"], "corn": ["summer"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="summer",
+            item_seasons=item_seasons,
+        )
+        item_ids = [s["item_id"] for s in suggestions]
+        self.assertIn("corn", item_ids)
+        self.assertNotIn("turnip", item_ids)
+
+    def test_focus_season_filter_includes_in_season(self):
+        """Items available in spring are included when current_season is spring."""
+        remaining_map = {
+            "turnip": {"loved": {"npc1"}, "liked": set()},  # spring only
+            "corn": {"loved": {"npc2"}, "liked": set()},    # summer only
+        }
+        item_seasons = {"turnip": ["spring"], "corn": ["summer"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="spring",
+            item_seasons=item_seasons,
+        )
+        item_ids = [s["item_id"] for s in suggestions]
+        self.assertIn("turnip", item_ids)
+        self.assertNotIn("corn", item_ids)
+
+    def test_focus_season_filter_includes_all_season_items(self):
+        """Items not in item_seasons always appear regardless of current_season."""
+        remaining_map = {
+            "ruby": {"loved": {"npc1"}, "liked": set()},    # not in item_seasons -> all-season
+            "turnip": {"loved": {"npc2"}, "liked": set()},  # spring only
+        }
+        item_seasons = {"turnip": ["spring"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="winter",
+            item_seasons=item_seasons,
+        )
+        item_ids = [s["item_id"] for s in suggestions]
+        self.assertIn("ruby", item_ids)
+        self.assertNotIn("turnip", item_ids)
+
+    def test_focus_no_season_filter_when_none(self):
+        """When current_season is None, all items appear (equivalent to --all-seasons)."""
+        remaining_map = {
+            "turnip": {"loved": {"npc1"}, "liked": set()},
+            "corn": {"loved": {"npc2"}, "liked": set()},
+            "beet": {"loved": {"npc3"}, "liked": set()},
+        }
+        item_seasons = {"turnip": ["spring"], "corn": ["summer"], "beet": ["winter"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season=None,
+            item_seasons=item_seasons,
+        )
+        item_ids = [s["item_id"] for s in suggestions]
+        self.assertIn("turnip", item_ids)
+        self.assertIn("corn", item_ids)
+        self.assertIn("beet", item_ids)
+
+    def test_focus_season_filter_multi_season_items(self):
+        """Items available in multiple seasons appear in each matching season and are excluded otherwise."""
+        remaining_map = {
+            "salmon": {"loved": {"npc1"}, "liked": set()},  # spring, fall
+        }
+        item_seasons = {"salmon": ["spring", "fall"]}
+        s_spring = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="spring",
+            item_seasons=item_seasons,
+        )
+        self.assertEqual(len(s_spring), 1)
+
+        s_fall = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="fall",
+            item_seasons=item_seasons,
+        )
+        self.assertEqual(len(s_fall), 1)
+
+        s_autumn = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="autumn",
+            item_seasons=item_seasons,
+        )
+        self.assertEqual(len(s_autumn), 1)
+
+        s_summer = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="summer",
+            item_seasons=item_seasons,
+        )
+        self.assertEqual(len(s_summer), 0)
+
+    def test_plan_daily_gift_bag_all_seasons_flag(self):
+        """all_seasons=True overrides save file's current season and includes out-of-season items."""
+        save_entries = {
+            "header": json.dumps({"name": "Hero", "calendar_time": 0}),  # spring day 1
+            "player": json.dumps({"name": "Hero", "inventory": []}),
+            "npcs": json.dumps({}),
+        }
+        save = SaveData(Path("test.sav"), save_entries)
+        npcs = {
+            "npc1": {"name": "NPC1", "loved": ["pumpkin"], "liked": []}  # fall crop
+        }
+        # Default: auto-detects spring from save, pumpkin (fall) is excluded
+        plan_default = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=npcs,
+            recipes={},
+        )
+        default_ids = [s["item_id"] for s in plan_default["focus_suggestions"]]
+        self.assertNotIn("pumpkin", default_ids)
+
+        # With all_seasons=True: pumpkin is included
+        plan_all = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=npcs,
+            recipes={},
+            all_seasons=True,
+        )
+        all_ids = [s["item_id"] for s in plan_all["focus_suggestions"]]
+        self.assertIn("pumpkin", all_ids)
+
+    def test_terminal_output_season_header_badge(self):
+        """print_terminal_plan includes season label in FOCUS SUGGESTIONS header."""
+        base_stats = {
+            "mode": "auto",
+            "max_slots": 20,
+            "covered_npcs_count": 0,
+            "target_npcs_count": 0,
+            "today_loved_completed": 0,
+            "today_liked_completed": 0,
+            "vendors_covered_today": 0,
+            "game_total_loved": 0,
+            "game_total_liked": 0,
+            "game_total_preferences": 0,
+            "game_given_loved": 0,
+            "game_given_liked": 0,
+            "game_given_total": 0,
+            "remaining_unique_items": 0,
+            "ungiftable_npcs": [],
+            "not_present_npcs": [],
+        }
+        plan_spring = {
+            "overall_stats": {**base_stats, "current_season": "spring", "all_seasons": False},
+            "bag_plan": [],
+            "npc_progress": {},
+            "current_season": "spring",
+            "all_seasons": False,
+            "focus_suggestions": [],
+            "focus_sort": "impact",
+        }
+        buf = io.StringIO()
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = buf
+            print_terminal_plan(save=None, plan_results=plan_spring)
+        finally:
+            sys.stdout = old_stdout
+        out = buf.getvalue()
+        self.assertIn("💡 FOCUS SUGGESTIONS (Top Blocker Items — Spring Only — Sorted by Impact):", out)
+
+        plan_all = {
+            "overall_stats": {**base_stats, "current_season": None, "all_seasons": True},
+            "bag_plan": [],
+            "npc_progress": {},
+            "current_season": None,
+            "all_seasons": True,
+            "focus_suggestions": [],
+            "focus_sort": "deficit",
+        }
+        buf = io.StringIO()
+        try:
+            sys.stdout = buf
+            print_terminal_plan(save=None, plan_results=plan_all)
+        finally:
+            sys.stdout = old_stdout
+        out2 = buf.getvalue()
+        self.assertIn("💡 FOCUS SUGGESTIONS (Top Blocker Items — All Seasons — Sorted by Deficit):", out2)
+
+    def test_focus_seasonal_boost_prioritizes_season_only_items(self):
+        """Single-season items get 2.0x boost, outranking all-season items with higher base blocked count."""
+        remaining_map = {
+            "all_season_item": {"loved": {"npc1", "npc2", "npc3"}, "liked": set()},  # 3 blocked pairs, boost 1.0 -> 3.0
+            "spring_crop": {"loved": {"npc1", "npc2"}, "liked": set()},               # 2 blocked pairs, boost 2.0 -> 4.0
+        }
+        item_seasons = {"spring_crop": ["spring"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="spring",
+            item_seasons=item_seasons,
+            seasonal_boost=2.0,
+        )
+        self.assertEqual(len(suggestions), 2)
+        self.assertEqual(suggestions[0]["item_id"], "spring_crop")
+        self.assertEqual(suggestions[0]["seasonal_boost"], 2.0)
+        self.assertEqual(suggestions[0]["weighted_impact"], 4.0)
+        self.assertEqual(suggestions[1]["item_id"], "all_season_item")
+        self.assertEqual(suggestions[1]["seasonal_boost"], 1.0)
+        self.assertEqual(suggestions[1]["weighted_impact"], 3.0)
+
+    def test_focus_seasonal_boost_disabled_with_1_0(self):
+        """When seasonal_boost=1.0, items rank strictly by unweighted blocked pairs."""
+        remaining_map = {
+            "all_season_item": {"loved": {"npc1", "npc2", "npc3"}, "liked": set()},  # 3 blocked pairs
+            "spring_crop": {"loved": {"npc1", "npc2"}, "liked": set()},               # 2 blocked pairs
+        }
+        item_seasons = {"spring_crop": ["spring"]}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="spring",
+            item_seasons=item_seasons,
+            seasonal_boost=1.0,
+        )
+        self.assertEqual(suggestions[0]["item_id"], "all_season_item")
+        self.assertEqual(suggestions[1]["item_id"], "spring_crop")
+
+    def test_focus_seasonal_boost_tiered_multi_season(self):
+        """Single-season items (2.0x) outrank multi-season items (1.5x) at equal base demand."""
+        remaining_map = {
+            "single_season": {"loved": {"npc1", "npc2"}, "liked": set()},  # 2 pairs * 2.0 = 4.0
+            "multi_season": {"loved": {"npc3", "npc4"}, "liked": set()},   # 2 pairs * 1.5 = 3.0
+            "all_year": {"loved": {"npc5", "npc6"}, "liked": set()},       # 2 pairs * 1.0 = 2.0
+        }
+        item_seasons = {
+            "single_season": ["spring"],
+            "multi_season": ["spring", "fall"],
+        }
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            current_season="spring",
+            item_seasons=item_seasons,
+            seasonal_boost=2.0,
+        )
+        self.assertEqual(suggestions[0]["item_id"], "single_season")
+        self.assertEqual(suggestions[0]["seasonal_boost"], 2.0)
+        self.assertEqual(suggestions[1]["item_id"], "multi_season")
+        self.assertEqual(suggestions[1]["seasonal_boost"], 1.5)
+        self.assertEqual(suggestions[2]["item_id"], "all_year")
+        self.assertEqual(suggestions[2]["seasonal_boost"], 1.0)
+
+    def test_terminal_output_seasonal_location_badge(self):
+        """print_terminal_plan prefixes location column with [Season] for seasonal items."""
+        base_stats = {
+            "mode": "auto",
+            "max_slots": 20,
+            "covered_npcs_count": 0,
+            "target_npcs_count": 0,
+            "today_loved_completed": 0,
+            "today_liked_completed": 0,
+            "vendors_covered_today": 0,
+            "game_total_loved": 0,
+            "game_total_liked": 0,
+            "game_total_preferences": 0,
+            "game_given_loved": 0,
+            "game_given_liked": 0,
+            "game_given_total": 0,
+            "remaining_unique_items": 0,
+            "ungiftable_npcs": [],
+            "not_present_npcs": [],
+        }
+        plan_results = {
+            "overall_stats": {**base_stats, "current_season": "spring", "all_seasons": False},
+            "bag_plan": [],
+            "npc_progress": {},
+            "focus_suggestions": [
+                {
+                    "rank": 1,
+                    "item_id": "turnip",
+                    "item_name": "Turnip",
+                    "blocked_pairs": 2,
+                    "demand": 2,
+                    "inventory": 0,
+                    "deficit": 2,
+                    "location_hint": "Farm (Spring Crop)",
+                    "is_seasonal": True,
+                    "seasons": ["spring"],
+                },
+                {
+                    "rank": 2,
+                    "item_id": "stone",
+                    "item_name": "Stone",
+                    "blocked_pairs": 1,
+                    "demand": 1,
+                    "inventory": 0,
+                    "deficit": 1,
+                    "location_hint": "The Mines",
+                    "is_seasonal": False,
+                    "seasons": [],
+                }
+            ],
+            "focus_sort": "impact",
+            "current_season": "spring",
+            "all_seasons": False,
+        }
+        buf = io.StringIO()
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = buf
+            print_terminal_plan(save=None, plan_results=plan_results)
+        finally:
+            sys.stdout = old_stdout
+        out = buf.getvalue()
+        self.assertIn("[Spring] Farm (Spring Crop)", out)
+        self.assertIn("The Mines", out)
+        self.assertNotIn("[Stone]", out)
+
     def test_terminal_output_focus_suggestions_section(self):
         """print_terminal_plan includes FOCUS SUGGESTIONS section with Need X more and location hint."""
         plan_results = {
@@ -3525,6 +3839,7 @@ class TestSaveRecipeUnlocksIntegration(unittest.TestCase):
             "npcs": json.dumps({"adeline": {"gift_flag": True}}),
         }
         save = SaveData(Path("test.sav"), save_entries)
+        save.in_game_date = InGameDate(year=1, season="fall", day=1)
         plan = plan_daily_gift_bag(
             save=save,
             npc_gift_definitions=self.mock_npcs,

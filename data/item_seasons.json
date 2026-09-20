@@ -1,0 +1,611 @@
+{
+  "ice_block": [
+    "winter"
+  ],
+  "turnip": [
+    "spring"
+  ],
+  "potato": [
+    "spring"
+  ],
+  "cabbage": [
+    "spring"
+  ],
+  "carrot": [
+    "spring"
+  ],
+  "strawberry": [
+    "spring"
+  ],
+  "peas": [
+    "spring"
+  ],
+  "pea": [
+    "spring"
+  ],
+  "chickpea": [
+    "spring"
+  ],
+  "tulip": [
+    "spring"
+  ],
+  "daffodil": [
+    "spring"
+  ],
+  "lilac": [
+    "spring"
+  ],
+  "snowdrop_anemone": [
+    "spring"
+  ],
+  "snowdrop": [
+    "spring"
+  ],
+  "corn": [
+    "summer"
+  ],
+  "tomato": [
+    "summer"
+  ],
+  "cucumber": [
+    "summer"
+  ],
+  "sugar_cane": [
+    "summer"
+  ],
+  "tea": [
+    "summer"
+  ],
+  "watermelon": [
+    "summer"
+  ],
+  "chili_pepper": [
+    "summer"
+  ],
+  "sunflower": [
+    "summer"
+  ],
+  "marigold": [
+    "summer"
+  ],
+  "cosmos": [
+    "summer"
+  ],
+  "daisy": [
+    "summer"
+  ],
+  "iris": [
+    "summer"
+  ],
+  "night_queen": [
+    "summer"
+  ],
+  "catmint": [
+    "summer"
+  ],
+  "basil": [
+    "summer"
+  ],
+  "dill": [
+    "summer"
+  ],
+  "oregano": [
+    "summer"
+  ],
+  "sage": [
+    "summer"
+  ],
+  "thyme": [
+    "summer"
+  ],
+  "pumpkin": [
+    "fall"
+  ],
+  "sweet_potato": [
+    "fall"
+  ],
+  "onion": [
+    "fall"
+  ],
+  "garlic": [
+    "fall"
+  ],
+  "broccoli": [
+    "fall"
+  ],
+  "cranberry": [
+    "fall"
+  ],
+  "wheat": [
+    "fall"
+  ],
+  "rice_stalk": [
+    "fall"
+  ],
+  "moon_fruit": [
+    "fall"
+  ],
+  "chrysanthemum": [
+    "fall"
+  ],
+  "celosia": [
+    "fall"
+  ],
+  "heather": [
+    "fall"
+  ],
+  "viola": [
+    "fall"
+  ],
+  "rosemary": [
+    "fall"
+  ],
+  "beet": [
+    "winter"
+  ],
+  "cauliflower": [
+    "winter"
+  ],
+  "daikon_radish": [
+    "winter"
+  ],
+  "radish": [
+    "winter"
+  ],
+  "snow_peas": [
+    "winter"
+  ],
+  "snow_pea": [
+    "winter"
+  ],
+  "burdock_root": [
+    "winter"
+  ],
+  "frost_lily": [
+    "winter"
+  ],
+  "jasmine": [
+    "winter"
+  ],
+  "poinsettia": [
+    "winter"
+  ],
+  "snapdragon": [
+    "winter"
+  ],
+  "apple": [
+    "fall"
+  ],
+  "cherry": [
+    "spring"
+  ],
+  "orange": [
+    "summer"
+  ],
+  "peach": [
+    "summer"
+  ],
+  "pear": [
+    "fall"
+  ],
+  "pomegranate": [
+    "fall"
+  ],
+  "lemon": [
+    "summer"
+  ],
+  "coconut": [
+    "summer"
+  ],
+  "dandelion": [
+    "spring"
+  ],
+  "morel_mushroom": [
+    "spring"
+  ],
+  "plum_blossom": [
+    "winter"
+  ],
+  "middlemist": [
+    "spring"
+  ],
+  "wild_berries": [
+    "spring"
+  ],
+  "wild_leek": [
+    "spring"
+  ],
+  "fennel": [
+    "spring"
+  ],
+  "fiddlehead": [
+    "spring"
+  ],
+  "nettle": [
+    "spring"
+  ],
+  "blueberry": [
+    "spring"
+  ],
+  "water_chestnut": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "sesame": [
+    "summer"
+  ],
+  "hydrangea": [
+    "summer"
+  ],
+  "rose": [
+    "summer"
+  ],
+  "wild_grapes": [
+    "summer"
+  ],
+  "blackberry": [
+    "fall"
+  ],
+  "chestnut": [
+    "fall"
+  ],
+  "fog_orchid": [
+    "fall"
+  ],
+  "horseradish": [
+    "fall"
+  ],
+  "glowberry": [
+    "winter"
+  ],
+  "oyster_mushroom": [
+    "winter"
+  ],
+  "pineshroom": [
+    "winter"
+  ],
+  "rose_hip": [
+    "winter"
+  ],
+  "wintergreen_berry": [
+    "winter"
+  ],
+  "crocus": [
+    "winter"
+  ],
+  "holly": [
+    "winter"
+  ],
+  "cattail": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "cattail_fluff": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "crab": [
+    "summer"
+  ],
+  "lobster": [
+    "spring"
+  ],
+  "shrimp": [
+    "spring"
+  ],
+  "king_crab": [
+    "winter"
+  ],
+  "sea_horse": [
+    "summer"
+  ],
+  "octopus": [
+    "fall",
+    "winter"
+  ],
+  "bonito": [
+    "summer",
+    "winter"
+  ],
+  "salmon": [
+    "spring",
+    "fall"
+  ],
+  "red_snapper": [
+    "spring",
+    "fall"
+  ],
+  "cod": [
+    "summer",
+    "winter"
+  ],
+  "mackerel": [
+    "spring"
+  ],
+  "herring": [
+    "winter"
+  ],
+  "bream": [
+    "summer"
+  ],
+  "sea_bream": [
+    "spring",
+    "fall"
+  ],
+  "perch": [
+    "fall"
+  ],
+  "freshwater_eel": [
+    "winter"
+  ],
+  "alligator_gar": [
+    "winter"
+  ],
+  "anchovy": [
+    "spring"
+  ],
+  "angel_fish": [
+    "spring"
+  ],
+  "barb": [
+    "spring"
+  ],
+  "bluefish": [
+    "fall"
+  ],
+  "bluegill": [
+    "spring"
+  ],
+  "bowfish": [
+    "winter"
+  ],
+  "brown_bullhead": [
+    "summer"
+  ],
+  "brown_trout": [
+    "spring"
+  ],
+  "bullfrog": [
+    "summer",
+    "winter"
+  ],
+  "burbot": [
+    "winter"
+  ],
+  "carp": [
+    "spring"
+  ],
+  "chum_salmon": [
+    "fall"
+  ],
+  "chum": [
+    "fall"
+  ],
+  "electric_catfish": [
+    "summer"
+  ],
+  "flathead_catfish": [
+    "winter"
+  ],
+  "frog": [
+    "spring",
+    "summer"
+  ],
+  "gar": [
+    "winter"
+  ],
+  "giant_trevally": [
+    "summer"
+  ],
+  "golden_trout": [
+    "spring",
+    "fall"
+  ],
+  "grayling": [
+    "winter"
+  ],
+  "green_sunfish": [
+    "summer"
+  ],
+  "horse_mackerel": [
+    "winter"
+  ],
+  "koi": [
+    "spring",
+    "summer"
+  ],
+  "largemouth_bass": [
+    "summer"
+  ],
+  "mahi_mahi": [
+    "summer"
+  ],
+  "minnow": [
+    "spring"
+  ],
+  "moonfish": [
+    "fall"
+  ],
+  "muskie": [
+    "fall"
+  ],
+  "pollock": [
+    "fall",
+    "winter"
+  ],
+  "puffer_fish": [
+    "summer"
+  ],
+  "rainbow_trout": [
+    "fall"
+  ],
+  "roach": [
+    "spring",
+    "summer"
+  ],
+  "rock_bass": [
+    "spring",
+    "fall"
+  ],
+  "sea_bass": [
+    "winter"
+  ],
+  "shadow_bass": [
+    "winter"
+  ],
+  "silver_redhorse": [
+    "spring",
+    "fall"
+  ],
+  "snakehead": [
+    "summer"
+  ],
+  "snapping_turtle": [
+    "summer",
+    "fall"
+  ],
+  "striped_bass": [
+    "fall"
+  ],
+  "sturgeon": [
+    "winter"
+  ],
+  "sunny": [
+    "spring",
+    "summer"
+  ],
+  "swordfish": [
+    "summer"
+  ],
+  "tetra": [
+    "spring"
+  ],
+  "turtle": [
+    "spring",
+    "summer"
+  ],
+  "walleye": [
+    "fall"
+  ],
+  "white_perch": [
+    "fall"
+  ],
+  "yellow_perch": [
+    "spring"
+  ],
+  "ant": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "bumblebee": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "butterfly": [
+    "spring"
+  ],
+  "caterpillar": [
+    "spring"
+  ],
+  "cicada": [
+    "summer"
+  ],
+  "cricket": [
+    "summer"
+  ],
+  "crystal_caterpillar": [
+    "winter"
+  ],
+  "crystal_wing_moth": [
+    "winter"
+  ],
+  "dragonfly": [
+    "summer",
+    "fall"
+  ],
+  "fairy_bee": [
+    "fall"
+  ],
+  "firefly": [
+    "summer"
+  ],
+  "grasshopper": [
+    "summer",
+    "fall"
+  ],
+  "honeybee": [
+    "spring",
+    "summer"
+  ],
+  "hummingbird_hawk_moth": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "inchworm": [
+    "fall"
+  ],
+  "jewel_beetle": [
+    "summer"
+  ],
+  "ladybug": [
+    "spring"
+  ],
+  "lightning_bug": [
+    "summer"
+  ],
+  "luna_moth": [
+    "summer"
+  ],
+  "mantis": [
+    "fall"
+  ],
+  "mistmoth": [
+    "fall"
+  ],
+  "monarch_butterfly": [
+    "fall"
+  ],
+  "moth": [
+    "spring",
+    "summer"
+  ],
+  "orchid_mantis": [
+    "spring"
+  ],
+  "praying_mantis": [
+    "fall"
+  ],
+  "rhinoceros_beetle": [
+    "spring",
+    "summer",
+    "fall"
+  ],
+  "roly_poly": [
+    "spring"
+  ],
+  "scarab_beetle": [
+    "summer"
+  ],
+  "snowball_beetle": [
+    "winter"
+  ],
+  "stag_beetle": [
+    "summer"
+  ],
+  "strobe_firefly": [
+    "summer"
+  ],
+  "swallowtail_butterfly": [
+    "spring",
+    "summer"
+  ],
+  "lavender_tea": [
+    "spring"
+  ]
+}

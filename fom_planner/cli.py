@@ -25,6 +25,7 @@ from fom_planner.crafting import filter_recipes_by_unlocks, load_recipes
 from fom_planner.data_loader import (
     load_item_locations,
     load_item_metadata,
+    load_item_seasons,
     load_npc_preferences_from_fiddle,
     load_npc_preferences_from_json,
     load_recipe_sources,
@@ -171,6 +172,22 @@ def build_planner_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--all-seasons",
+        action="store_true",
+        help="Disable season filtering for focus suggestions and show blocker items across all seasons"
+    )
+    parser.add_argument(
+        "--seasonal-boost",
+        type=float,
+        default=2.0,
+        help="Multiplier boost applied to season-only blocker items in focus suggestions (default: 2.0, 1.0 to disable)"
+    )
+    parser.add_argument(
+        "--item-seasons",
+        default="data/item_seasons.json",
+        help="Path to item_seasons.json database (default: data/item_seasons.json)"
+    )
+    parser.add_argument(
         "--csv-name",
         default="daily_gift_bag_plan.csv",
         help="Filename for CSV export (default: daily_gift_bag_plan.csv)"
@@ -195,6 +212,7 @@ def run_planner(args=None):
     recipes_path = (repo_root / args.recipes).resolve() if not Path(args.recipes).is_absolute() else Path(args.recipes)
     item_locations_path = (repo_root / args.item_locations).resolve() if not Path(args.item_locations).is_absolute() else Path(args.item_locations)
     recipe_sources_path = (repo_root / args.recipe_sources).resolve() if not Path(args.recipe_sources).is_absolute() else Path(args.recipe_sources)
+    item_seasons_path = (repo_root / args.item_seasons).resolve() if not Path(args.item_seasons).is_absolute() else Path(args.item_seasons)
 
     # 1. Resolve save file
     save_path = None
@@ -239,6 +257,7 @@ def run_planner(args=None):
                 print(f"Filtered {filtered_count} locked recipe(s) — {len(recipes)}/{full_count} recipes available.")
     item_locations = load_item_locations(str(item_locations_path))
     recipe_sources = load_recipe_sources(str(recipe_sources_path))
+    item_seasons = load_item_seasons(str(item_seasons_path))
 
     # 3. Load gift definitions & metadata
     npcs_def = None
@@ -284,6 +303,8 @@ def run_planner(args=None):
 
     # 6. Plan daily gift bag
     focus_sort = getattr(args, "focus_sort", "impact")
+    all_seasons_flag = getattr(args, "all_seasons", False)
+    seasonal_boost_val = getattr(args, "seasonal_boost", 2.0)
     if getattr(args, "strategy", "journal") == "max-relationship":
         from fom_planner.optimizer import plan_max_relationship
 
@@ -304,6 +325,9 @@ def run_planner(args=None):
             exclude_max_relationship=not getattr(args, "no_exclude_max_relationship", False),
             focus_sort=focus_sort,
             recipe_sources=recipe_sources,
+            item_seasons=item_seasons,
+            all_seasons=all_seasons_flag,
+            seasonal_boost=seasonal_boost_val,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -322,6 +346,9 @@ def run_planner(args=None):
             item_locations=item_locations,
             focus_sort=focus_sort,
             recipe_sources=recipe_sources,
+            item_seasons=item_seasons,
+            all_seasons=all_seasons_flag,
+            seasonal_boost=seasonal_boost_val,
         )
 
     # 7. Output

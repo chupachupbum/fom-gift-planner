@@ -246,6 +246,18 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
             focus_sort=sort_mode or "impact",
         )
 
+    current_season = plan_results.get("current_season")
+    if not current_season:
+        overall_stats = plan_results.get("overall_stats") or {}
+        current_season = overall_stats.get("current_season")
+
+    all_seasons = plan_results.get("all_seasons")
+    if all_seasons is None:
+        overall_stats = plan_results.get("overall_stats") or {}
+        all_seasons = overall_stats.get("all_seasons", False)
+
+    season_label = f" — {str(current_season).capitalize()} Only" if (current_season and not all_seasons) else " — All Seasons"
+
     sort_suffix = ""
     if sort_mode == "deficit":
         sort_suffix = " — Sorted by Deficit"
@@ -254,7 +266,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     elif sort_mode == "impact":
         sort_suffix = " — Sorted by Impact"
 
-    print(f"\n💡 FOCUS SUGGESTIONS (Top Blocker Items{sort_suffix}):")
+    print(f"\n💡 FOCUS SUGGESTIONS (Top Blocker Items{season_label}{sort_suffix}):")
     print("━" * 86)
     if not focus_suggestions:
         print("  🎉 All required materials and gifts are currently in your inventory!")
@@ -273,6 +285,10 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
             deficit = s.get("deficit") if s.get("deficit") is not None else 0
             need_str = f"Need {deficit} more"
             loc_str = s.get("location_hint") or "—"
+            if s.get("is_seasonal") and s.get("seasons"):
+                season_tag = "/".join(str(sn).capitalize() for sn in s["seasons"])
+                if not loc_str.startswith("["):
+                    loc_str = f"[{season_tag}] {loc_str}"
             rank_val = s.get("rank") if s.get("rank") is not None else 1
             item_name = s.get("item_name") or ""
             print(f"  {rank_val:<4} │ {item_name:<22} │ {need_str:<14} │ {impact_str:<25} │ {loc_str}")

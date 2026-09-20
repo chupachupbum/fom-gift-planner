@@ -21,10 +21,11 @@ from fom_planner.crafting import (
     filter_recipes_by_unlocks,
     load_recipes,
 )
-from fom_planner.data_loader import load_item_locations
+from fom_planner.data_loader import load_item_locations, load_item_seasons
 from fom_planner.models import SaveData
 
 ITEM_LOCATIONS: Dict[str, str] = load_item_locations()
+ITEM_SEASONS: Dict[str, List[str]] = load_item_seasons()
 
 
 def resolve_root_raw_materials(
@@ -85,6 +86,9 @@ def compute_focus_suggestions(
     top_n: int = 5,
     item_locations: Optional[Dict[str, str]] = None,
     focus_sort: str = "impact",
+    current_season: Optional[str] = None,
+    item_seasons: Optional[Dict[str, List[str]]] = None,
+    seasonal_boost: float = 2.0,
 ) -> List[Dict[str, Any]]:
     """
     Computes a ranked list of top insufficient items (raw materials and direct gifts)
@@ -234,11 +238,26 @@ def compute_focus_suggestions(
                             raw_blocked_pairs[raw_id].add(pair)
                             raw_pair_costs[raw_id][pair] = count_per_gift
 
+    season_map = item_seasons if item_seasons is not None else ITEM_SEASONS
+    clean_season = str(current_season).strip().lower() if current_season else None
+    if clean_season in ("all", "all seasons", "all-seasons", ""):
+        clean_season = None
+    elif clean_season == "autumn":
+        clean_season = "fall"
+
     suggestions: List[Dict[str, Any]] = []
     for raw_id, total_dem in raw_demand.items():
         inv_count = effective_inv.get(raw_id, 0)
         deficit = total_dem - inv_count
         if deficit > 0:
+            if clean_season and season_map and raw_id in season_map:
+                avail_seasons = [
+                    "fall" if str(s).strip().lower() == "autumn" else str(s).strip().lower()
+                    for s in season_map[raw_id]
+                ]
+                if clean_season not in avail_seasons:
+                    continue
+
             pair_map = raw_pair_costs.get(raw_id, {})
             # Sort deterministically by (item_id, npc_id)
             sorted_pairs = sorted(pair_map.items(), key=lambda x: (x[0][1], x[0][0]))
@@ -261,6 +280,19 @@ def compute_focus_suggestions(
             loc_map = item_locations if item_locations is not None else ITEM_LOCATIONS
             location = loc_map.get(raw_id, "")
 
+            # Calculate seasonal boost (single-season items get seasonal_boost, multi-season get tiered boost)
+            boost = 1.0
+            item_seasons_list = season_map.get(raw_id, []) if season_map else []
+            is_seasonal = bool(season_map and raw_id in season_map and item_seasons_list)
+            safe_boost = max(1.0, float(seasonal_boost if seasonal_boost is not None else 1.0))
+            if is_seasonal and safe_boost > 1.0:
+                if len(item_seasons_list) == 1:
+                    boost = safe_boost
+                else:
+                    boost = 1.0 + (safe_boost - 1.0) * 0.5
+
+            weighted_impact = blocked_count * boost
+
             suggestions.append({
                 "item_id": raw_id,
                 "item_name": disp_name,
@@ -271,19 +303,23 @@ def compute_focus_suggestions(
                 "inventory": inv_count,
                 "deficit": deficit,
                 "location_hint": location,
+                "seasonal_boost": boost,
+                "weighted_impact": weighted_impact,
+                "seasons": item_seasons_list,
+                "is_seasonal": is_seasonal,
             })
 
     # Sort based on configured focus_sort mode
     clean_sort = str(focus_sort or "impact").strip().lower()
     if clean_sort == "deficit":
-        # (1) deficit descending, (2) blocked pairs descending, (3) name ascending
-        suggestions.sort(key=lambda x: (-x["deficit"], -x["blocked_pairs"], str(x["item_name"]).lower()))
+        # (1) deficit descending, (2) weighted impact descending, (3) name ascending
+        suggestions.sort(key=lambda x: (-x["deficit"], -x["weighted_impact"], str(x["item_name"]).lower()))
     elif clean_sort == "quick-wins":
-        # (1) deficit ascending, (2) blocked pairs descending, (3) name ascending
-        suggestions.sort(key=lambda x: (x["deficit"], -x["blocked_pairs"], str(x["item_name"]).lower()))
+        # (1) deficit ascending, (2) weighted impact descending, (3) name ascending
+        suggestions.sort(key=lambda x: (x["deficit"], -x["weighted_impact"], str(x["item_name"]).lower()))
     else:
-        # Default: 'impact' -> (1) blocked pairs descending, (2) deficit descending, (3) name ascending
-        suggestions.sort(key=lambda x: (-x["blocked_pairs"], -x["deficit"], str(x["item_name"]).lower()))
+        # Default: 'impact' -> (1) weighted impact descending, (2) deficit descending, (3) name ascending
+        suggestions.sort(key=lambda x: (-x["weighted_impact"], -x["deficit"], str(x["item_name"]).lower()))
 
     # Assign 1-indexed ranks and trim to top_n
     result: List[Dict[str, Any]] = []
@@ -444,6 +480,10 @@ def plan_daily_gift_bag(
     item_locations: Optional[Dict[str, str]] = None,
     focus_sort: str = "impact",
     recipe_sources: Optional[Dict[str, str]] = None,
+    current_season: Optional[str] = None,
+    item_seasons: Optional[Dict[str, List[str]]] = None,
+    all_seasons: bool = False,
+    seasonal_boost: float = 2.0,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -885,14 +925,30 @@ def plan_daily_gift_bag(
         "locked_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in locked_npcs if nid in npc_gift_definitions],
     }
 
+    if all_seasons:
+        effective_season = None
+    elif current_season is not None:
+        effective_season = current_season
+    elif save is not None and hasattr(save, "in_game_date") and save.in_game_date is not None:
+        effective_season = getattr(save.in_game_date, "season", None)
+    else:
+        effective_season = None
+
+    overall_stats["current_season"] = effective_season
+    overall_stats["all_seasons"] = all_seasons or (effective_season is None)
+    overall_stats["seasonal_boost"] = seasonal_boost
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
         recipes=all_recipes,
         item_metadata=item_metadata,
-        top_n=10,
+        top_n=20,
         item_locations=item_locations,
         focus_sort=focus_sort,
+        current_season=effective_season,
+        item_seasons=item_seasons,
+        seasonal_boost=seasonal_boost,
     )
 
     focus_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -915,6 +971,9 @@ def plan_daily_gift_bag(
         "focus_recipes": focus_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
         "focus_sort": focus_sort,
+        "current_season": effective_season,
+        "all_seasons": all_seasons or (effective_season is None),
+        "seasonal_boost": seasonal_boost,
         "overall_stats": overall_stats,
     }
 
@@ -1016,6 +1075,10 @@ def plan_max_relationship(
     exclude_max_relationship: bool = True,
     focus_sort: str = "impact",
     recipe_sources: Optional[Dict[str, str]] = None,
+    current_season: Optional[str] = None,
+    item_seasons: Optional[Dict[str, List[str]]] = None,
+    all_seasons: bool = False,
+    seasonal_boost: float = 2.0,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -1796,6 +1859,19 @@ def plan_max_relationship(
         "infused_items_detected": total_infused_detected,
     }
 
+    if all_seasons:
+        effective_season = None
+    elif current_season is not None:
+        effective_season = current_season
+    elif save is not None and hasattr(save, "in_game_date") and save.in_game_date is not None:
+        effective_season = getattr(save.in_game_date, "season", None)
+    else:
+        effective_season = None
+
+    overall_stats["current_season"] = effective_season
+    overall_stats["all_seasons"] = all_seasons or (effective_season is None)
+    overall_stats["seasonal_boost"] = seasonal_boost
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
@@ -1804,6 +1880,9 @@ def plan_max_relationship(
         top_n=5,
         item_locations=item_locations,
         focus_sort=focus_sort,
+        current_season=effective_season,
+        item_seasons=item_seasons,
+        seasonal_boost=seasonal_boost,
     )
 
     focus_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -1826,6 +1905,9 @@ def plan_max_relationship(
         "focus_recipes": focus_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
         "focus_sort": focus_sort,
+        "current_season": effective_season,
+        "all_seasons": all_seasons or (effective_season is None),
+        "seasonal_boost": seasonal_boost,
         "overall_stats": overall_stats,
         "infused_items": raw_infused,
     }
