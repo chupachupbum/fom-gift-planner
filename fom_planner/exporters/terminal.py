@@ -259,17 +259,23 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     if not focus_suggestions:
         print("  🎉 All required materials and gifts are currently in your inventory!")
     else:
-        print(f" {'Rank':<5} │ {'Item Name':<24} │ {'Need':<14} │ {'Impact':<16} │ {'Location / Source'}")
+        print(f" {'Rank':<5} │ {'Item Name':<22} │ {'Need':<14} │ {'Impact':<25} │ {'Location / Source'}")
         print("━" * 86)
         for s in focus_suggestions:
             pairs = s.get("blocked_pairs")
-            impact_str = f"blocks {pairs} gift{'s' if pairs != 1 else ''}" if pairs is not None else "—"
+            ready = s.get("ready_pairs", 0)
+            if ready > 0 and pairs is not None:
+                impact_str = f"blocks {pairs} gift{'s' if pairs != 1 else ''} ({ready} ready)"
+            elif pairs is not None:
+                impact_str = f"blocks {pairs} gift{'s' if pairs != 1 else ''}"
+            else:
+                impact_str = "—"
             deficit = s.get("deficit") if s.get("deficit") is not None else 0
             need_str = f"Need {deficit} more"
             loc_str = s.get("location_hint") or "—"
             rank_val = s.get("rank") if s.get("rank") is not None else 1
             item_name = s.get("item_name") or ""
-            print(f"  {rank_val:<4} │ {item_name:<24} │ {need_str:<14} │ {impact_str:<16} │ {loc_str}")
+            print(f"  {rank_val:<4} │ {item_name:<22} │ {need_str:<14} │ {impact_str:<25} │ {loc_str}")
     print("━" * 86)
 
     # Focus Recipes Section (Cooking progression)

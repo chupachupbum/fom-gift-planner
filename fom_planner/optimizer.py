@@ -188,6 +188,7 @@ def compute_focus_suggestions(
 
     raw_demand: Dict[str, int] = {}
     raw_blocked_pairs: Dict[str, Set[Tuple[str, str]]] = {}
+    raw_pair_costs: Dict[str, Dict[Tuple[str, str], int]] = {}
 
     if remaining_items_map and isinstance(remaining_items_map, dict):
         for item_id, targets in remaining_items_map.items():
@@ -212,8 +213,11 @@ def compute_focus_suggestions(
                 raw_demand[item_clean] = raw_demand.get(item_clean, 0) + total_needed
                 if item_clean not in raw_blocked_pairs:
                     raw_blocked_pairs[item_clean] = set()
+                    raw_pair_costs[item_clean] = {}
                 for nid in pending_npcs:
-                    raw_blocked_pairs[item_clean].add((str(nid), item_clean))
+                    pair = (str(nid), item_clean)
+                    raw_blocked_pairs[item_clean].add(pair)
+                    raw_pair_costs[item_clean][pair] = 1
             else:
                 # Crafted item
                 if needed_to_craft > 0:
@@ -224,15 +228,29 @@ def compute_focus_suggestions(
                         raw_demand[raw_id] = raw_demand.get(raw_id, 0) + count_per_gift * needed_to_craft
                         if raw_id not in raw_blocked_pairs:
                             raw_blocked_pairs[raw_id] = set()
+                            raw_pair_costs[raw_id] = {}
                         for nid in list(pending_npcs)[:needed_to_craft]:
-                            raw_blocked_pairs[raw_id].add((str(nid), item_clean))
+                            pair = (str(nid), item_clean)
+                            raw_blocked_pairs[raw_id].add(pair)
+                            raw_pair_costs[raw_id][pair] = count_per_gift
 
     suggestions: List[Dict[str, Any]] = []
     for raw_id, total_dem in raw_demand.items():
         inv_count = effective_inv.get(raw_id, 0)
         deficit = total_dem - inv_count
         if deficit > 0:
-            blocked_count = len(raw_blocked_pairs.get(raw_id, set()))
+            pair_map = raw_pair_costs.get(raw_id, {})
+            # Sort deterministically by (item_id, npc_id)
+            sorted_pairs = sorted(pair_map.items(), key=lambda x: (x[0][1], x[0][0]))
+            remaining_inv = inv_count
+            ready_count = 0
+            for pair, cost in sorted_pairs:
+                if remaining_inv >= cost:
+                    ready_count += 1
+                    remaining_inv -= cost
+            total_pairs = len(sorted_pairs)
+            blocked_count = total_pairs - ready_count
+
             meta = item_metadata.get(raw_id, {}) if isinstance(item_metadata, dict) else {}
             if isinstance(meta, dict):
                 disp_name = meta.get("display_name") or raw_id.replace("_", " ").title()
@@ -247,6 +265,8 @@ def compute_focus_suggestions(
                 "item_id": raw_id,
                 "item_name": disp_name,
                 "blocked_pairs": blocked_count,
+                "ready_pairs": ready_count,
+                "total_pairs": total_pairs,
                 "demand": total_dem,
                 "inventory": inv_count,
                 "deficit": deficit,

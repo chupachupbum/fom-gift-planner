@@ -1245,6 +1245,43 @@ class TestFocusSuggestions(unittest.TestCase):
         self.assertIn("Sorted by Deficit", output)
         self.assertIn("blocks 1 gift", output)
 
+    def test_terminal_output_focus_suggestions_inventory_aware_ready_suffix(self):
+        """print_terminal_plan renders 'blocks X gifts (Y ready)' when ready_pairs > 0."""
+        plan_results = {
+            "overall_stats": {
+                "mode": "auto", "max_slots": 20, "covered_npcs_count": 0, "target_npcs_count": 0,
+                "today_loved_completed": 0, "today_liked_completed": 0, "vendors_covered_today": 0,
+                "game_total_loved": 0, "game_total_liked": 0, "game_total_preferences": 0,
+                "game_given_loved": 0, "game_given_liked": 0, "game_given_total": 0,
+                "remaining_unique_items": 1, "ungiftable_npcs": [], "not_present_npcs": [],
+            },
+            "bag_plan": [],
+            "npc_progress": {},
+            "focus_sort": "impact",
+            "focus_suggestions": [
+                {
+                    "rank": 1, "item_id": "earthshroom", "item_name": "Earthshroom",
+                    "blocked_pairs": 2, "ready_pairs": 5, "total_pairs": 7,
+                    "demand": 7, "inventory": 5, "deficit": 2,
+                    "location_hint": "The Deep Earth (Floors 41-59)",
+                }
+            ],
+            "remaining_items_map": {},
+        }
+        buf = io.StringIO()
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = buf
+            print_terminal_plan(save=None, plan_results=plan_results)
+        finally:
+            sys.stdout = old_stdout
+
+        output = buf.getvalue()
+        self.assertIn("Earthshroom", output)
+        self.assertIn("Need 2 more", output)
+        self.assertIn("blocks 2 gifts (5 ready)", output)
+
+
     def test_terminal_output_congratulations_when_no_deficit(self):
         """print_terminal_plan outputs a congratulations message when focus_suggestions is empty."""
         plan_results = {
@@ -1298,12 +1335,42 @@ class TestFocusSuggestions(unittest.TestCase):
             item_metadata=self.meta,
         )
         # Total demand for golden_cow_milk = 1 + 2 + 10 = 13. Inventory = 3. Deficit = 10.
-        # Blocked pairs = 3: (npc1, golden_cow_milk), (npc2, golden_cheese), (npc3, golden_cheesecake)
+        # Total pairs = 3: (npc1, golden_cow_milk), (npc2, golden_cheese), (npc3, golden_cheesecake)
+        # Inventory of 3 covers golden_cow_milk (cost 1) and golden_cheese (cost 2) -> 2 ready, 1 blocked (cheesecake needs 10)
         milk_sugg = next(s for s in suggestions if s["item_id"] == "golden_cow_milk")
         self.assertEqual(milk_sugg["demand"], 13)
         self.assertEqual(milk_sugg["inventory"], 3)
         self.assertEqual(milk_sugg["deficit"], 10)
-        self.assertEqual(milk_sugg["blocked_pairs"], 3)
+        self.assertEqual(milk_sugg["total_pairs"], 3)
+        self.assertEqual(milk_sugg["ready_pairs"], 2)
+        self.assertEqual(milk_sugg["blocked_pairs"], 1)
+
+    def test_focus_suggestions_inventory_aware_ready_and_blocked_pairs(self):
+        """Focus suggestions computes ready_pairs and blocked_pairs based on player inventory."""
+        # 3 NPCs want hot pot (1 earthshroom each), 2 NPCs want sea bream rice (1 earthshroom each) -> total 5 gifts
+        remaining_map = {
+            "incredibly_hot_pot": {"loved": {"hemlock", "josephine", "reina"}, "liked": set()},
+            "sea_bream_rice": {"loved": {"terithia"}, "liked": {"march"}},
+        }
+        recipes = {
+            "incredibly_hot_pot": {"ingredients": [{"item_id": "earthshroom", "count": 1}]},
+            "sea_bream_rice": {"ingredients": [{"item_id": "earthshroom", "count": 1}]},
+        }
+        # Player has 3 earthshroom in inventory -> covers 3 gifts, 2 gifts remain blocked
+        inv = {"earthshroom": 3}
+        suggestions = compute_focus_suggestions(
+            remaining_items_map=remaining_map,
+            inventory=inv,
+            recipes=recipes,
+            item_metadata=self.meta,
+        )
+        earth_sugg = next(s for s in suggestions if s["item_id"] == "earthshroom")
+        self.assertEqual(earth_sugg["demand"], 5)
+        self.assertEqual(earth_sugg["inventory"], 3)
+        self.assertEqual(earth_sugg["deficit"], 2)
+        self.assertEqual(earth_sugg["total_pairs"], 5)
+        self.assertEqual(earth_sugg["ready_pairs"], 3)
+        self.assertEqual(earth_sugg["blocked_pairs"], 2)
 
     def test_focus_diamond_recipe_dag(self):
         """Diamond DAG recipe tree counts all paths to root raw materials."""
