@@ -111,8 +111,8 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
                 print(f"  • Likable Dishes (🌟 Universal Like, +10 pts): {likable_count} total — {likable_str}")
 
     # Dynamic NPC counts based on unlocked progression
-    num_vendors = stats.get("unlocked_vendors_count", len([x for x in npc_progress if npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)]))
-    num_townsfolk = stats.get("unlocked_townsfolk_count", len([x for x in npc_progress if not npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)]))
+    num_vendors = stats.get("unlocked_vendors_count", len([x for x in npc_progress if npc_progress[x].get("is_vendor", False) and npc_progress[x].get("is_unlocked", True)]))
+    num_townsfolk = stats.get("unlocked_townsfolk_count", len([x for x in npc_progress if not npc_progress[x].get("is_vendor", False) and npc_progress[x].get("is_unlocked", True)]))
     num_total = num_vendors + num_townsfolk
 
     if save is not None and hasattr(save, "get_unlocked_vendor_ids") and hasattr(save, "npcs") and save.npcs:
@@ -123,7 +123,7 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     else:
         unlocked_vendor_names = sorted([
             npc_progress[x]["name"] for x in npc_progress
-            if npc_progress[x]["is_vendor"] and npc_progress[x].get("is_unlocked", True)
+            if npc_progress[x].get("is_vendor", False) and npc_progress[x].get("is_unlocked", True)
         ])
 
     # Market & Festival context banner
@@ -180,6 +180,18 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
 
     if stats.get("locked_npcs"):
         print(f"\n🔒 NOT YET UNLOCKED ({len(stats['locked_npcs'])} NPCs): {', '.join(stats['locked_npcs'])}")
+
+    completed_npcs = stats.get("completed_npcs")
+    if completed_npcs is None:
+        completed_npcs = stats.get("done_npcs")
+    if completed_npcs is None and npc_progress:
+        completed_npcs = sorted([
+            p["name"] for nid, p in npc_progress.items()
+            if (p.get("is_completed") or (p.get("total_remaining", -1) == 0 and p.get("pct_total_done", 0) == 100.0 and p.get("gifts_given_count", 0) > 0))
+            and p.get("is_unlocked", True)
+        ])
+    if completed_npcs:
+        print(f"\n✅ COMPLETED ({len(completed_npcs)} NPCs): {', '.join(completed_npcs)}")
 
     if stats.get("max_relationship_npcs"):
         print(f"\n💖 MAX RELATIONSHIP REACHED ({len(stats['max_relationship_npcs'])} NPCs): {', '.join(stats['max_relationship_npcs'])}")

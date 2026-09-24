@@ -35,3 +35,4 @@ Thumbs.db
 exports/*
 TEST_INFRA.md
 TEST_READY.md
+companion_config.json

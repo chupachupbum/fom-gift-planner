@@ -1368,6 +1368,119 @@ class TestTerminalMaxRelationshipBanner(unittest.TestCase):
         output = out.getvalue()
         self.assertIn("💖 MAX RELATIONSHIP REACHED (2 NPCs): Adeline, March", output)
 
+    def test_terminal_output_completed_npcs_banner(self):
+        """Verify completed NPCs are displayed with ✅ COMPLETED banner."""
+        plan_results = {
+            "bag_plan": [],
+            "npc_progress": {},
+            "covered_npcs": set(),
+            "target_npcs": set(),
+            "overall_stats": {
+                "strategy": "journal",
+                "game_given_loved": 10,
+                "game_total_loved": 10,
+                "game_given_liked": 20,
+                "game_total_liked": 20,
+                "game_given_total": 30,
+                "game_total_preferences": 30,
+                "remaining_unique_items": 0,
+                "mode": "weekday",
+                "max_slots": 20,
+                "covered_npcs_count": 0,
+                "target_npcs_count": 0,
+                "vendors_covered_today": 0,
+                "today_loved_completed": 0,
+                "today_liked_completed": 0,
+                "locked_npcs": [],
+                "ungiftable_npcs": [],
+                "completed_npcs": ["Adeline", "March"],
+                "completed_npcs_count": 2,
+            },
+        }
+        out = io.StringIO()
+        with patch("sys.stdout", out):
+            print_terminal_plan(None, plan_results)
+        output = out.getvalue()
+        self.assertIn("✅ COMPLETED (2 NPCs): Adeline, March", output)
+
+    def test_terminal_output_completed_npcs_banner_empty(self):
+        """Verify completed NPCs banner is not printed when no NPCs are completed."""
+        plan_results = {
+            "bag_plan": [],
+            "npc_progress": {},
+            "covered_npcs": set(),
+            "target_npcs": set(),
+            "overall_stats": {
+                "strategy": "journal",
+                "game_given_loved": 0,
+                "game_total_loved": 10,
+                "game_given_liked": 0,
+                "game_total_liked": 20,
+                "game_given_total": 0,
+                "game_total_preferences": 30,
+                "remaining_unique_items": 15,
+                "mode": "weekday",
+                "max_slots": 20,
+                "covered_npcs_count": 0,
+                "target_npcs_count": 1,
+                "vendors_covered_today": 0,
+                "today_loved_completed": 0,
+                "today_liked_completed": 0,
+                "locked_npcs": [],
+                "ungiftable_npcs": [],
+                "completed_npcs": [],
+                "completed_npcs_count": 0,
+            },
+        }
+        out = io.StringIO()
+        with patch("sys.stdout", out):
+            print_terminal_plan(None, plan_results)
+        output = out.getvalue()
+        self.assertNotIn("✅ COMPLETED", output)
+
+    def test_terminal_output_completed_npcs_fallback_from_npc_progress(self):
+        """Verify completed NPCs are displayed using fallback from npc_progress if not in stats."""
+        plan_results = {
+            "bag_plan": [],
+            "npc_progress": {
+                "celine": {
+                    "name": "Celine",
+                    "total_remaining": 0,
+                    "pct_total_done": 100.0,
+                    "gifts_given_count": 5,
+                    "is_unlocked": True,
+                    "is_completed": True,
+                }
+            },
+            "covered_npcs": set(),
+            "target_npcs": set(),
+            "overall_stats": {
+                "strategy": "journal",
+                "game_given_loved": 5,
+                "game_total_loved": 10,
+                "game_given_liked": 0,
+                "game_total_liked": 20,
+                "game_given_total": 5,
+                "game_total_preferences": 30,
+                "remaining_unique_items": 5,
+                "mode": "weekday",
+                "max_slots": 20,
+                "covered_npcs_count": 0,
+                "target_npcs_count": 0,
+                "vendors_covered_today": 0,
+                "today_loved_completed": 0,
+                "today_liked_completed": 0,
+                "locked_npcs": [],
+                "ungiftable_npcs": [],
+            },
+        }
+        out = io.StringIO()
+        with patch("sys.stdout", out):
+            print_terminal_plan(None, plan_results)
+        output = out.getvalue()
+        self.assertIn("✅ COMPLETED (1 NPCs): Celine", output)
+
 
 if __name__ == "__main__":
     unittest.main()
+

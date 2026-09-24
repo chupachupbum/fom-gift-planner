@@ -92,6 +92,28 @@ Or specify your save file manually:
 uv run fom-planner --save-file "path/to/your/save.sav"
 ```
 
+### 3. Launch Live Companion Web App (Auto-Updates When You Save!)
+
+Run the companion on your second monitor or in the background while playing Fields of Mistria on Windows or Linux:
+
+```bash
+# Install companion dependencies (FastAPI, uvicorn, watchdog)
+uv sync --extra companion
+# or: pip install -e ".[companion]"
+
+# Start companion server
+uv run fom-companion
+# or: python -m companion.server
+```
+
+Then open **[http://localhost:8000](http://localhost:8000)** in any browser.
+
+- 📡 **Instant Live Sync**: Uses Server-Sent Events (SSE) and watchdog to automatically update the gift plan the moment you save or sleep in-game.
+- 🎒 **Optimal Daily Bag Cards**: Shows item status (`📦 HAVE`, `✅ CRAFT`, `❌ NEED`), quantities, and recipient NPC chips.
+- 🌾 **Focus Suggestions**: Pinpoints top blocker raw materials to gather or plant today.
+- ⚙️ **All Parameters Configurable**: Change strategy (`journal` vs `max-relationship`), bag slot budget, date overrides, scoring multipliers, or NPC exclusions directly from the sidebar.
+- 🪟 **Windows Optimized**: Built with Windows filesystem semantics, atomic save rename handling, and file lock retry logic.
+
 ---
 
 ## Save File Locations

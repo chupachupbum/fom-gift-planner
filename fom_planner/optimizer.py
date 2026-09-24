@@ -567,6 +567,7 @@ def plan_daily_gift_bag(
     ungiftable_npcs = []
     not_present_npcs = []
     locked_npcs = []
+    completed_npcs = []
 
     npc_progress = {}
     total_game_loved = 0
@@ -600,6 +601,7 @@ def plan_daily_gift_bag(
 
         remaining_loved = all_loved - given_set
         remaining_liked = all_liked - given_set
+        is_completed = (len(remaining_loved) == 0 and len(remaining_liked) == 0 and bool(all_loved or all_liked))
 
         # Check unlocked status from save progression
         is_unlocked = True
@@ -632,7 +634,9 @@ def plan_daily_gift_bag(
             else:
                 can_gift = True
 
-            if not is_present:
+            if is_completed:
+                completed_npcs.append(nid)
+            elif not is_present:
                 not_present_npcs.append(nid)
             elif not can_gift:
                 ungiftable_npcs.append(nid)
@@ -645,6 +649,7 @@ def plan_daily_gift_bag(
             "hp": hp,
             "is_vendor": is_vendor,
             "is_unlocked": is_unlocked,
+            "is_completed": is_completed,
             "is_present_today": is_present,
             "can_gift_today": can_gift,
             "gifts_given_count": len(given_set),
@@ -923,6 +928,10 @@ def plan_daily_gift_bag(
         "ungiftable_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in ungiftable_npcs if nid in npc_gift_definitions],
         "not_present_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in not_present_npcs if nid in npc_gift_definitions],
         "locked_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in locked_npcs if nid in npc_gift_definitions],
+        "completed_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in completed_npcs if nid in npc_gift_definitions],
+        "completed_npcs_count": len(completed_npcs),
+        "done_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in completed_npcs if nid in npc_gift_definitions],
+        "done_npcs_count": len(completed_npcs),
     }
 
     if all_seasons:
@@ -1234,6 +1243,7 @@ def plan_max_relationship(
     not_present_npcs: List[str] = []
     locked_npcs: List[str] = []
     max_relationship_npcs: List[str] = []
+    completed_npcs: List[str] = []
 
     npc_progress: Dict[str, dict] = {}
     total_game_loved = 0
@@ -1271,6 +1281,7 @@ def plan_max_relationship(
 
         remaining_loved = all_loved - given_set
         remaining_liked = all_liked - given_set
+        is_completed = (len(remaining_loved) == 0 and len(remaining_liked) == 0 and bool(all_loved or all_liked))
 
         hp = 0.0
         if save is not None and hasattr(save, "get_npc_heart_points"):
@@ -1295,6 +1306,9 @@ def plan_max_relationship(
                 is_unlocked = bool(save.is_npc_unlocked(nid_clean))
             except Exception:
                 is_unlocked = True
+
+        if is_completed and is_unlocked:
+            completed_npcs.append(nid)
 
         if not is_unlocked:
             is_present = False
@@ -1356,6 +1370,7 @@ def plan_max_relationship(
             "hp": hp,
             "is_vendor": is_vendor,
             "is_unlocked": is_unlocked,
+            "is_completed": is_completed,
             "is_max_relationship": is_max_rel,
             "is_present_today": is_present,
             "can_gift_today": can_gift,
@@ -1856,6 +1871,10 @@ def plan_max_relationship(
         "locked_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in locked_npcs if nid in npc_gift_definitions],
         "max_relationship_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in max_relationship_npcs if nid in npc_gift_definitions],
         "max_relationship_npcs_count": len(max_relationship_npcs),
+        "completed_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in completed_npcs if nid in npc_gift_definitions],
+        "completed_npcs_count": len(completed_npcs),
+        "done_npcs": [npc_gift_definitions[nid].get("name", nid) for nid in completed_npcs if nid in npc_gift_definitions],
+        "done_npcs_count": len(completed_npcs),
         "infused_items_detected": total_infused_detected,
     }
 

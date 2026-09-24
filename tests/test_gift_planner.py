@@ -3857,9 +3857,42 @@ class TestSaveRecipeUnlocksIntegration(unittest.TestCase):
         self.assertIn("wheat", focus_ids)
         self.assertNotIn("bread", focus_ids)
 
+    def test_completed_npcs_excluded_from_targets_and_reported(self):
+        """When an NPC has received all loved and liked gifts, they are marked completed and shown in terminal output."""
+        save_entries = {
+            "player": json.dumps({"name": "Hero", "inventory": []}),
+            "npcs": json.dumps({
+                "adeline": {"gift_history": ["bread"], "gift_flag": True},
+            }),
+        }
+        save = SaveData(Path("test_completed.sav"), save_entries)
+        plan = plan_daily_gift_bag(
+            save=save,
+            npc_gift_definitions=self.mock_npcs,
+            item_metadata=self.mock_meta,
+            recipes=self.mock_recipes,
+            force_all_npcs=True,
+        )
+
+        # Adeline is done (only loved gift 'bread' was given)
+        self.assertNotIn("adeline", plan["target_npcs"])
+        self.assertIn("Adeline", plan["overall_stats"]["completed_npcs"])
+        self.assertEqual(plan["overall_stats"]["completed_npcs_count"], 1)
+        self.assertIn("Adeline", plan["overall_stats"]["done_npcs"])
+        self.assertTrue(plan["npc_progress"]["adeline"]["is_completed"])
+
+        # Terminal output check
+        from unittest.mock import patch
+        out = io.StringIO()
+        with patch("sys.stdout", out):
+            print_terminal_plan(save, plan)
+        output = out.getvalue()
+        self.assertIn("✅ COMPLETED (1 NPCs): Adeline", output)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

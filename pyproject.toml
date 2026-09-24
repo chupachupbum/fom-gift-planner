@@ -19,19 +19,29 @@ dependencies = []
 excel = [
     "openpyxl>=3.1.0",
 ]
+companion = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "watchdog>=4.0.0",
+]
 
 [project.scripts]
 fom-planner = "fom_planner.cli:main"
 gift-planner = "fom_planner.cli:main"
+fom-companion = "companion.server:launch"
 
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
     "openpyxl>=3.1.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "watchdog>=4.0.0",
+    "httpx>=0.27.0",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["fom_planner"]
+packages = ["fom_planner", "companion"]
 
 [tool.uv]
 default-groups = ["dev"]

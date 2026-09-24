@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fields of Mistria — Live Companion</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-section">
+        <h1><span>🎁</span> Fields of Mistria Companion</h1>
+        <div class="live-indicator" id="liveIndicator" title="Watching save folder for changes">
+          <span class="live-dot"></span>
+          <span id="liveText">LIVE SYNC</span>
+        </div>
+      </div>
+
+      <div class="date-status-bar">
+        <div class="date-badge" id="dateBadge">
+          <span class="season-tag season-spring" id="seasonTag">SPRING</span>
+          <span id="dateText">Day 1</span>
+          <span class="festival-pill" id="festivalPill" style="display: none;">FESTIVAL</span>
+        </div>
+        <div id="playerFarmBadge" style="font-size: 0.85rem; opacity: 0.9;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Layout Container -->
+  <div class="layout-container">
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- Error Banner -->
+      <div id="errorBanner" class="error-banner"></div>
+
+      <!-- Section 1: Optimal Daily Bag Loadout -->
+      <section id="section-bag">
+        <div class="section-header">
+          <h2><span>🎒</span> Optimal Gift Bag Plan</h2>
+          <span class="badge-counter" id="bagSlotsBadge">0 / 20 Slots</span>
+        </div>
+
+        <div id="bagGrid" class="cards-grid">
+          <p style="color: var(--text-muted); font-style: italic;">Loading daily plan...</p>
+        </div>
+      </section>
+
+      <!-- Section 2: Focus Suggestions & Raw Material Blockers -->
+      <section id="section-focus">
+        <div class="section-header">
+          <h2><span>🌾</span> Focus Suggestions (Raw Material Blockers)</h2>
+          <span class="badge-counter" id="focusCountBadge">0 Items</span>
+        </div>
+
+        <div id="focusGrid" class="focus-grid">
+          <p style="color: var(--text-muted); font-style: italic;">Loading focus suggestions...</p>
+        </div>
+      </section>
+
+      <!-- Section 3: Infused Cooking Dishes Banner (If any) -->
+      <section id="section-infused" style="display: none;">
+        <div class="section-header">
+          <h2><span>🔮</span> Cooking Perk Infused Dishes</h2>
+        </div>
+        <div id="infusedContainer" class="recipients-container" style="padding: 14px;"></div>
+      </section>
+
+    </main>
+
+    <!-- Sidebar: Controls & Settings -->
+    <aside class="sidebar">
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">
+          <span>⚙️ Companion Settings</span>
+          <button id="refreshBtn" class="refresh-btn" title="Force re-read save and recalculate">
+            <span>🔄</span> Refresh
+          </button>
+        </div>
+
+        <!-- Save Status Summary -->
+        <div class="save-status-box" id="saveStatusBox">
+          <div class="save-status-row">
+            <span style="color: var(--text-muted);">Save File:</span>
+            <strong id="saveFilename">Detecting...</strong>
+          </div>
+          <div class="save-status-row">
+            <span style="color: var(--text-muted);">Coverage:</span>
+            <span id="coverageSummary">0/0 NPCs</span>
+          </div>
+          <div class="save-status-row">
+            <span style="color: var(--text-muted);">Strategy:</span>
+            <span id="activeStrategy">Journal</span>
+          </div>
+          <div class="save-status-row">
+            <span style="color: var(--text-muted);">Mode:</span>
+            <span id="activeMode">Auto</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Settings Accordion -->
+        <div id="settingsAccordion">
+          <!-- Populated dynamically by app.js from /api/settings schema -->
+        </div>
+
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">Settings updated</div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
