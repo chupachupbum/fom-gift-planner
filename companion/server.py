@@ -229,6 +229,316 @@ async def sse_events(request: Request):
 # Sprite and Asset Delivery (with graceful SVG fallback)
 # ---------------------------------------------------------------------------
 
+_ITEM_ID_TO_ASSET_NAME: Dict[str, str] = {
+    # 1. Treats & Pet Feed
+    "cat_treat": "animal_treat_cat",
+    "dog_treat": "animal_treat_dog",
+    "deluxe_hay": "animal_feed_hay_deluxe",
+    "quality_hay": "animal_feed_hay_quality",
+    "ultimate_hay": "animal_feed_hay_ultimate",
+    "deluxe_small_animal_feed": "animal_feed_seed_deluxe",
+    "quality_small_animal_feed": "animal_feed_seed_quality",
+    "ultimate_small_animal_feed": "animal_feed_seed_ultimate",
+
+    # 2. Food & Cooking
+    "miners_mushroom_stew": "miner_mushroom_stew",
+    "crayfish": "dive_crayfish",
+    "golden_egg": "chicken_egg_gold",
+    "egg": "chicken_egg_regular",
+    "duck_egg": "duck_egg_regular",
+    "golden_duck_egg": "duck_egg_gold",
+    "cow_milk": "cow_milk_regular",
+    "golden_cow_milk": "cow_milk_gold",
+
+    # 3. Animal Products
+    "golden_feather": "chicken_feather_gold",
+    "feather": "chicken_feather_regular",
+    "golden_duck_feather": "duck_feather_gold",
+    "duck_feather": "duck_feather_regular",
+    "alpaca_wool": "alpaca_wool_regular",
+    "golden_alpaca_wool": "alpaca_wool_gold",
+    "bristle": "capybara_bristle_regular",
+    "golden_bristle": "capybara_bristle_gold",
+    "horse_hair": "horse_hair_regular",
+    "golden_horse_hair": "horse_hair_gold",
+    "rabbit_wool": "rabbit_hair_regular",
+    "golden_rabbit_wool": "rabbit_hair_gold",
+    "sheep_wool": "sheep_wool_regular",
+    "golden_sheep_wool": "sheep_wool_gold",
+    "bull_horn": "cow_horn_regular",
+    "golden_bull_horn": "cow_horn_gold",
+
+    # 4. Plants, Trees, Forage, Farming
+    "sapling_oak": "oak_sapling",
+    "sapling_pine": "pine_sapling",
+    "sapling_cherry": "cherry_sapling",
+    "sapling_lemon": "lemon_sapling",
+    "wood": "regularwood",
+    "basic_wood": "regularwood",
+    "wild_grapes": "bush_grape",
+    "bell_berry": "bush_bell_berry",
+    "blackberry": "bush_blackberry",
+    "blueberry": "bush_blueberry",
+    "glowberry": "bush_glowberry",
+    "hydrangea": "bush_hydrangea",
+    "rose_hip": "bush_rosehip",
+    "wild_berries": "bush_wildberry",
+    "wintergreen_berry": "bush_wintergreen",
+    "breath_of_fire": "breath_of_flame",
+    "dandelion": "dandelionflower",
+    "middlemist": "middlemistred",
+    "wild_leek": "springonion",
+    "grass_seed": "small_grass_starter",
+    "hay": "hayball",
+    "haydens_weathervane": "weathervane",
+    "lava_chestnuts": "lava_chestnut",
+    "seed_mystery_bag": "bagseed_mystery_bag_icon",
+
+    # 5. Ores, Stones & Minerals
+    "ore_stone": "rock",
+    "ore_copper": "copper_ore",
+    "ore_iron": "iron_ore",
+    "ore_gold": "gold_ore",
+    "ore_silver": "silver_ore",
+    "ore_mistril": "mistril_ore",
+    "ore_ruby": "ruby",
+    "ore_sapphire": "sapphire",
+    "ore_emerald": "emerald",
+    "ore_diamond": "diamond",
+    "ore_pink_diamond": "pinkdiamond",
+
+    # 6. Diving & Shells
+    "blue_conch_shell": "shell_small_blue_conch",
+    "pink_scallop_shell": "shell_pink_scallop",
+    "sand_dollar": "shell_sand_dollar",
+    "spirula_shell": "shell_common_spirula",
+    "clam": "dive_clam",
+    "freshwater_oyster": "dive_freshwater_oyster",
+    "newt": "dive_newt",
+    "river_snail": "dive_pond_snail",
+    "seaweed": "dive_seaweed",
+
+    # 7. Fish
+    "sardine": "fish_small_sardine",
+    "salmon": "fish_large_salmon",
+    "trout": "fish_medium_trout",
+    "tuna": "fish_large_tuna",
+    "bonito": "fish_medium_bonito",
+    "bream": "fish_large_bream",
+    "catfish": "fish_medium_catfish",
+    "cod": "fish_large_cod",
+    "goby": "fish_medium_goby",
+    "perch": "fish_large_perch",
+    "pike": "fish_large_pike",
+    "squid": "fish_medium_squid",
+    "tilapia": "fish_small_tilapia",
+    "turtle": "fish_large_turtle",
+    "red_snapper": "fish_large_red_snapper",
+    "sea_bream": "fish_medium_sea_bream",
+    "shrimp": "fish_small_shrimp",
+    "archerfish": "fish_small_archerfish",
+    "coelacanth": "fish_large_coelacanth",
+    "herring": "fish_small_herring",
+    "mackerel": "fish_large_mackerel",
+    "mullet": "fish_medium_mullet",
+    "tetra": "fish_small_tetra",
+    "armored_bass": "fish_medium_armored_bass",
+    "bullfrog": "fish_small_bullfrog",
+    "cave_shrimp": "fish_small_cave_shrimp",
+    "crab": "fish_small_crab",
+    "firesail_fish": "fish_large_firesail_fish",
+    "freshwater_eel": "fish_medium_freshwater_eel",
+    "frog": "fish_small_frog",
+    "king_crab": "fish_large_king_crab",
+    "lake_trout": "fish_large_lake_trout",
+    "lobster": "fish_medium_lobster",
+    "luminescent_crab": "fish_medium_luminescent_crab",
+    "sapphire_betta": "fish_small_sapphire_betta",
+    "smallmouth_bass": "fish_small_smallmouth_bass",
+    "stone_loach": "fish_medium_stone_loach",
+    "striped_bass": "fish_large_striped_bass",
+
+    # 8. Bugs & Critters
+    "lightning_dragonfly": "insect_lightningdragonfly",
+    "hummingbird_hawk_moth": "insect_hummingbirdhawkmoth",
+    "rhinoceros_beetle": "insect_rhinocerosbeetle",
+    "crystalline_cricket": "insect_crystalline_cricket",
+    "ant": "insect_ant",
+    "ancient_firefly": "insect_ancient_firefly",
+    "bumblebee": "insect_bumblebee",
+    "butterfly": "insect_butterfly",
+    "caterpillar": "insect_caterpillar",
+    "cicada": "insect_cicada",
+    "copper_beetle": "insect_copper_beetle",
+    "coral_mantis": "insect_coral_mantis",
+    "cricket": "insect_cricket",
+    "crystal_caterpillar": "insect_crystalcaterpillar",
+    "crystal_wing_moth": "insect_crystal_wing_moth",
+    "deep_earthworm": "insect_deep_earthworm",
+    "dragon_horn_beetle": "insect_dragon_horn_beetle",
+    "fairy_bee": "insect_fairybee",
+    "fire_wasp": "insect_fire_wasp",
+    "firefly": "insect_firefly",
+    "fuzzy_moth": "insect_fuzzymoth",
+    "grasshopper": "insect_grasshopper",
+    "hermit_crab": "insect_hermitcrab",
+    "inchworm": "insect_inchworm",
+    "jewel_beetle": "insect_jewelbeetle",
+    "ladybug": "insect_ladybug",
+    "lantern_moth": "insect_lantern_moth",
+    "mistmoth": "insect_mistmoth",
+    "monarch_butterfly": "insect_monarchbutterfly",
+    "orchid_mantis": "insect_orchidmantis",
+    "pond_skater": "insect_pondskater",
+    "praying_mantis": "insect_prayingmantis",
+    "puddle_spider": "insect_puddle_spider",
+    "question_mark_butterfly": "insect_questionmarkbutterfly",
+    "roly_poly": "insect_pillbug",
+    "sea_scarab": "insect_sea_scarab",
+    "singing_katydid": "insect_singing_katydid",
+    "smoke_moth": "insect_smoke_moth",
+    "snail": "insect_snail",
+    "snowball_beetle": "insect_snowballbeetle",
+    "strobe_firefly": "insect_strobefirefly",
+    "void_snail": "insect_void_snail",
+    "worm": "insect_worm",
+
+    # 9. Tools & Wearables
+    "axe_silver": "tool_silver_axe",
+    "net_copper": "tool_copper_net",
+    "shovel_copper": "tool_copper_shovel",
+    "shovel_iron": "tool_iron_shovel",
+    "sword_corrupted_mistril": "tool_corrupted_mistril_sword",
+    "sword_silver": "tool_silver_sword",
+    "watering_can_iron": "tool_iron_watering_can",
+    "iron_armor": "wearable_top_iron_armor",
+
+    # 10. Placeables & Misc
+    "animal_currency": "currency",
+    "shiny_bead": "shiny_bead",
+    "spooky_haybale": "decor_spooky_haybale",
+    "starter_bird_house_red": "decor_starter_bird_house_red",
+    "starter_potted_plant": "decor_starter_potted_plant",
+    "starter_scarecrow": "decor_starter_scarecrow",
+    "starter_shipping_box": "basic_misc_shipping_bin",
+    "starter_wood_fence": "decor_starter_wood_fence",
+
+    # 11. Additional location/season item aliases
+    "stone": "rock",
+    "milk": "cow_milk_regular",
+    "golden_milk": "cow_milk_gold",
+    "cattail_fluff": "cattail",
+    "alligator_gar": "fish_giant_alligator_gar",
+    "anchovy": "fish_small_anchovy",
+    "angel_fish": "fish_small_angel_fish",
+    "barb": "fish_small_barb",
+    "bluefish": "fish_large_bluefish",
+    "bluegill": "fish_small_blue_gill",
+    "bowfish": "fish_large_bowfish",
+    "brown_bullhead": "fish_medium_brown_bullhead",
+    "brown_trout": "fish_large_brown_trout",
+    "burbot": "fish_large_burbot",
+    "carp": "fish_medium_carp",
+    "cave_eel": "fish_medium_cave_eel",
+    "chum": "fish_large_chum",
+    "chum_salmon": "fish_large_chum",
+    "diamond_beetle": "insect_diamond_beetle",
+    "dragonfly": "insect_lightningdragonfly",
+    "earth_eel": "fish_medium_earth_eel",
+    "flathead_catfish": "fish_medium_flathead_catfish",
+    "forest_perch": "fish_medium_forest_perch",
+    "gar": "fish_large_gar",
+    "gazer": "fish_small_gazer",
+    "giant_jellyfish": "fish_large_giant_jellyfish",
+    "giant_worm": "insect_giant_worm",
+    "grayling": "fish_small_grayling",
+    "horse_mackerel": "fish_small_horse_mackerel",
+    "koi": "fish_medium_koi",
+    "minnow": "fish_small_minnow",
+    "muskie": "fish_large_muskie",
+    "paper_pond_shell": "dive_paper_pondshell",
+    "paper_pond_snail": "dive_pond_snail",
+    "parchment_moth": "insect_parchment_moth",
+    "pea": "peas",
+    "snow_pea": "snow_peas",
+    "pearl_clam": "dive_pearl_clam",
+    "pollock": "fish_large_pollock",
+    "pond_snail": "dive_pond_snail",
+    "puffer_fish": "fish_medium_puffer_fish",
+    "radish": "daikon_radish",
+    "rainbow_trout": "fish_medium_rainbow_trout",
+    "roach": "fish_medium_roach",
+    "rock_bass": "fish_medium_rock_bass",
+    "sea_bass": "fish_medium_sea_bass",
+    "sea_urchin": "fish_small_sea_urchin",
+    "shadow_bass": "fish_medium_shadow_bass",
+    "silver_redhorse": "fish_medium_silver_redhorse",
+    "snakehead": "fish_large_snakehead",
+    "snapping_turtle": "fish_large_snapping_turtle",
+    "sturgeon": "fish_large_sturgeon",
+    "sulfur_crab": "fish_medium_sulfur_crab",
+    "sunny": "fish_small_sunny",
+    "swallowtail_butterfly": "insect_tigerswallowtailbutterfly",
+    "swordfish": "fish_large_swordfish",
+    "walleye": "fish_large_walleye",
+    "white_perch": "fish_medium_white_perch",
+    "winged_shrimp": "fish_small_winged_shrimp",
+    "octopus": "fish_large_octopus",
+    "lava_piranha": "fish_small_lava_piranha",
+    "mantis": "insect_prayingmantis",
+    "yellow_perch": "fish_large_perch",
+}
+
+
+def _find_local_icon(kind: str, item_id: str) -> Optional[Path]:
+    """
+    Locates a project-local icon in companion/static/icons/{kind}/.
+    Applies the resolution strategies:
+      1. Exact match (spr_ui_item_{id}.png, spr_ui_generic_icon_npc_{id}.png, spr_ui_item_sub_npc_{id}.png)
+      2. No-underscore match
+      3. Manual remap (for items)
+    """
+    clean_kind = kind.strip().lower()
+    clean_id = item_id.strip().lower()
+    icons_root = Path(__file__).resolve().parent / "static" / "icons"
+
+    if clean_kind in ("items", "item"):
+        items_dir = icons_root / "items"
+        if not items_dir.exists():
+            return None
+
+        candidates = [
+            items_dir / f"spr_ui_item_{clean_id}.png",
+            items_dir / f"spr_ui_item_{clean_id.replace('_', '')}.png",
+        ]
+        if clean_id in _ITEM_ID_TO_ASSET_NAME:
+            remapped = _ITEM_ID_TO_ASSET_NAME[clean_id]
+            candidates.append(items_dir / f"spr_ui_item_{remapped}.png")
+            candidates.append(items_dir / f"spr_ui_item_{remapped.replace('_', '')}.png")
+
+        for c in candidates:
+            if c.is_file():
+                return c
+
+    elif clean_kind in ("npcs", "npc"):
+        npcs_dir = icons_root / "npcs"
+        if not npcs_dir.exists():
+            return None
+
+        candidates = [
+            npcs_dir / f"spr_ui_generic_icon_npc_{clean_id}.png",
+            npcs_dir / f"spr_ui_generic_icon_npc_{clean_id.replace('_', '')}.png",
+            npcs_dir / f"spr_ui_item_sub_npc_{clean_id}.png",
+            npcs_dir / f"spr_ui_item_sub_npc_{clean_id.replace('_', '')}.png",
+            npcs_dir / f"{clean_id}.png",
+        ]
+        for c in candidates:
+            if c.is_file():
+                return c
+
+    return None
+
+
 def generate_placeholder_svg(label: str, kind: str = "item") -> str:
     """Generates an attractive SVG placeholder for items or NPCs."""
     initials = "".join([w[0] for w in label.replace("_", " ").split()[:2]]).upper() or "?"
@@ -245,11 +555,19 @@ def generate_placeholder_svg(label: str, kind: str = "item") -> str:
 @app.get("/assets/sprites/{kind}/{item_id}")
 async def get_sprite(kind: str, item_id: str):
     """
-    Attempts to locate real game sprite in configured game_assets_dir.
-    Falls back to inline generated SVG if not found or dir not configured.
+    Attempts to locate real game sprite:
+    1. Project-local static icons in companion/static/icons/{kind}/
+    2. Configured external game_assets_dir
+    3. Inline generated SVG fallback
     """
     item_clean = item_id.strip().lower()
 
+    # 1. First priority: Check project-local static icons
+    local_icon = _find_local_icon(kind, item_clean)
+    if local_icon and local_icon.is_file():
+        return FileResponse(local_icon)
+
+    # 2. Second priority: External game_assets_dir probe
     if state.config.game_assets_dir:
         assets_path = Path(state.config.game_assets_dir).expanduser()
         if assets_path.exists():
@@ -269,6 +587,7 @@ async def get_sprite(kind: str, item_id: str):
                 if c.exists() and c.is_file():
                     return FileResponse(c)
 
+    # 3. Third priority: Inline SVG placeholder fallback
     svg_data = generate_placeholder_svg(item_clean, kind)
     return Response(content=svg_data, media_type="image/svg+xml")
 

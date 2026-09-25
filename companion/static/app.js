@@ -167,11 +167,13 @@ function renderBagPlan(bagPlan, stats) {
       const prefClass = isLove ? "pref-love" : "pref-like";
       const heartIcon = isLove ? "💖" : "🌟";
       const vendorTag = r.is_vendor ? `<span class="vendor-tag">MARKET</span>` : "";
+      const npcAvatar = `/assets/sprites/npcs/${r.npc_id || 'default'}`;
 
       return `
         <span class="npc-chip ${prefClass}">
           <span class="pref-heart">${heartIcon}</span>
-          <span>${r.name}</span>
+          <img class="npc-chip-avatar" src="${npcAvatar}" alt="${r.name}" loading="lazy" />
+          <span class="npc-name">${r.name}</span>
           ${vendorTag}
         </span>
       `;
@@ -249,6 +251,12 @@ function renderFocusSuggestions(focusItems) {
 
   grid.innerHTML = focusItems.map(f => {
     const seasonsStr = (f.seasons && f.seasons.length > 0) ? f.seasons.join(", ") : "All Seasons";
+    const blockedNpcsHtml = (f.blocked_npcs && f.blocked_npcs.length > 0)
+      ? f.blocked_npcs.map(name => {
+          const nid = name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+          return `<span class="npc-mini-tag"><img class="npc-mini-avatar" src="/assets/sprites/npcs/${nid}" alt="${name}" loading="lazy" /><span>${name}</span></span>`;
+        }).join(" ")
+      : 'Various NPCs';
 
     return `
       <div class="focus-card">
@@ -263,7 +271,7 @@ function renderFocusSuggestions(focusItems) {
         <div class="focus-details">
           <div><strong>📍 Source:</strong> ${f.location || 'Gather / Farm'}</div>
           <div><strong>📅 Season:</strong> ${seasonsStr}</div>
-          <div><strong>🔒 Unlocks Gifts For:</strong> ${(f.blocked_npcs || []).join(", ") || 'Various NPCs'}</div>
+          <div><strong>🔒 Unlocks Gifts For:</strong> ${blockedNpcsHtml}</div>
         </div>
       </div>
     `;

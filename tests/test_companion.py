@@ -213,7 +213,12 @@ def test_fastapi_endpoints():
         assert res_refresh.status_code == 200
 
         # 6. Sprite endpoint with SVG fallback
-        res_sprite = client.get("/assets/sprites/items/apple")
+        res_sprite = client.get("/assets/sprites/items/nonexistent_test_item")
         assert res_sprite.status_code == 200
         assert "image/svg+xml" in res_sprite.headers.get("content-type", "")
         assert "<svg" in res_sprite.text
+
+        # Real sprite returns PNG
+        res_apple = client.get("/assets/sprites/items/apple")
+        assert res_apple.status_code == 200
+        assert "image/png" in res_apple.headers.get("content-type", "")
