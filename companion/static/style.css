@@ -423,6 +423,64 @@ main.main-content {
   border-radius: 3px;
 }
 
+/* Blocked NPCs expand/collapse for Focus Suggestions */
+.blocked-npcs-wrapper {
+  display: inline;
+}
+
+.blocked-npcs-initial {
+  display: inline;
+}
+
+.blocked-npcs-extra {
+  display: none;
+}
+
+.blocked-npcs-wrapper.is-expanded .blocked-npcs-extra {
+  display: inline;
+}
+
+.npc-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fdfbf7;
+  color: var(--text-main);
+  border: 1px dashed var(--border-wood);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 2px 3px 2px 4px;
+  vertical-align: middle;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  font-family: inherit;
+  outline: none;
+}
+
+.npc-toggle-btn:hover {
+  background: #ede3d2;
+  border-color: #5c4434;
+  color: #3e2e23;
+}
+
+.npc-toggle-btn:active {
+  transform: scale(0.97);
+}
+
+.npc-collapse-btn {
+  display: none;
+}
+
+.blocked-npcs-wrapper.is-expanded .npc-expand-btn {
+  display: none;
+}
+
+.blocked-npcs-wrapper.is-expanded .npc-collapse-btn {
+  display: inline-flex;
+}
+
 /* Crafting Chain steps */
 .crafting-chain {
   font-size: 0.75rem;
@@ -480,6 +538,150 @@ main.main-content {
   gap: 2px;
 }
 
+/* Crafting Tree Toggle and Container */
+.tree-section {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border-light);
+  padding-top: 8px;
+}
+
+.tree-toggle {
+  background: var(--bg-card-inner);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-badge);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tree-toggle:hover {
+  background: #f0ebe1;
+  color: var(--text-main);
+  border-color: var(--border-wood);
+}
+
+.tree-container {
+  display: none;
+  margin-top: 8px;
+  padding-left: 2px;
+}
+
+.tree-container.expanded {
+  display: block;
+}
+
+/* Tree Nodes and Branch Connectors */
+.tree-node {
+  position: relative;
+  padding-left: calc(var(--depth, 0) * 18px);
+  margin: 4px 0;
+}
+
+.tree-node:not(.tree-root)::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--depth, 0) * 18px - 10px);
+  top: 0;
+  width: 8px;
+  height: 14px;
+  border-left: 2px solid var(--border-light);
+  border-bottom: 2px solid var(--border-light);
+}
+
+.tree-root::before {
+  display: none;
+}
+
+.tree-node-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-badge);
+  background: var(--bg-card-inner);
+  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.tree-gift .tree-node-header {
+  background: #f0f7ff;
+  border-color: #bfdbfe;
+}
+
+.tree-item-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.item-sprite-sm {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Alternate Source Badges */
+.alt-sources-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.alt-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  font-size: 0.72rem;
+  color: #2e7d32;
+  white-space: nowrap;
+}
+
+.source-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.source-emoji-fallback {
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Leaf Gift Recipient Chips */
+.gift-recipients {
+  display: inline-flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.npc-chip-mini {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #fff3e0;
+  border: 1px solid #ffe0b2;
+  color: #e65100;
+  white-space: nowrap;
+}
+
+.tree-children {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Sidebar & Settings */
 aside.sidebar {
   display: flex;
@@ -527,20 +729,225 @@ aside.sidebar {
 .save-status-box {
   background: var(--bg-card-inner);
   border: 1px solid var(--border-light);
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 12px;
   font-size: 0.8rem;
   margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.save-status-box.drag-over {
+  border: 2px dashed #5c4434;
+  background: #fbf7ee;
+}
+
+.save-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.save-label {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text-main);
+}
+
+.save-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-action-btn {
+  background: #eadecc;
+  color: var(--text-main);
+  border: 1px solid var(--border-wood);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.save-action-btn:hover {
+  background: #5c4434;
+  color: #ffffff;
+}
+
+.save-action-btn.btn-auto-detect {
+  background: #f4efe6;
+  border-color: var(--border-light);
+}
+
+.save-action-btn.btn-auto-detect:hover {
+  background: #5c4434;
+  color: #ffffff;
+}
+
+.save-select-wrapper {
+  width: 100%;
+}
+
+.save-dropdown {
+  width: 100%;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  border: 1px solid var(--border-wood);
+  border-radius: 5px;
+  background: #ffffff;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+}
+
+.save-dropdown:focus {
+  border-color: #5c4434;
+  box-shadow: 0 0 0 2px rgba(92, 68, 52, 0.2);
+}
+
+.save-meta-grid {
+  border-top: 1px solid var(--border-light);
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .save-status-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 4px;
+  font-size: 0.78rem;
 }
 
-.save-status-row:last-child {
-  margin-bottom: 0;
+.btn-import-file {
+  background: #5c4434;
+  color: #ffffff;
+  border: 1px solid #3e2e23;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s, transform 0.1s;
+  width: 100%;
+}
+
+.btn-import-file:hover {
+  background: #473428;
+  transform: translateY(-1px);
+}
+
+.btn-import-file:active {
+  transform: translateY(0);
+}
+
+.btn-reset-file {
+  background: #f4efe6;
+  color: var(--text-main);
+  border: 1px solid var(--border-light);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-reset-file:hover {
+  background: #eadecc;
+  border-color: var(--border-wood);
+}
+
+.file-import-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: #ffffff;
+  border: 2px dashed var(--border-light);
+  border-radius: 6px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.file-import-container.drag-over {
+  border-color: #5c4434;
+  background: #fbf7ee;
+}
+
+.file-import-button-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-import-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  background: var(--bg-card-inner);
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.file-status-icon {
+  flex-shrink: 0;
+}
+
+.file-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.file-drop-hint {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  text-align: center;
+  font-style: italic;
+}
+
+.manual-path-details {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.manual-path-details summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  padding: 2px 0;
+}
+
+.manual-path-details input[type="text"] {
+  margin-top: 6px;
+  width: 100%;
+  font-size: 0.78rem;
+  padding: 5px 7px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
 }
 
 /* Settings Groups Accordion */
@@ -702,6 +1109,406 @@ details.settings-group[open] summary {
   .header-inner {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* =========================================================================
+   Crafting Tree Modal Overlay
+   ========================================================================= */
+
+/* Backdrop */
+.tree-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(30, 20, 10, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: treeBackdropIn 0.25s ease-out;
+}
+
+@keyframes treeBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes treeBackdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Modal Panel */
+.tree-modal {
+  background: var(--bg-card);
+  border-radius: 14px;
+  box-shadow: 0 16px 52px rgba(30, 20, 10, 0.3);
+  width: min(95vw, 1320px);
+  height: min(88vh, 840px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: treeModalIn 0.25s ease-out;
+}
+
+@keyframes treeModalIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Header */
+.tree-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-card-inner);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.tree-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.tree-modal-search-wrapper {
+  flex: 1;
+  max-width: 320px;
+}
+
+.tree-search-input {
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  font-size: 0.82rem;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.tree-search-input:focus {
+  border-color: var(--border-wood);
+  box-shadow: 0 0 0 3px rgba(140, 106, 81, 0.15);
+}
+
+.tree-modal-close {
+  background: none;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.tree-modal-close:hover {
+  background: #fce8e6;
+  color: #c5221f;
+  border-color: #fad2cf;
+}
+
+/* Body (SVG container) */
+.tree-modal-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(140, 106, 81, 0.08) 1.5px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.tree-modal-body svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.tree-modal-body svg:active {
+  cursor: grabbing;
+}
+
+/* Zoom & Tree Controls */
+.tree-modal-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-card-inner);
+  flex-shrink: 0;
+}
+
+.tree-modal-ctrl-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-badge);
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.tree-modal-ctrl-btn:hover {
+  background: #f0ebe1;
+  color: var(--text-main);
+  border-color: var(--border-wood);
+}
+
+.tree-ctrl-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border-light);
+  margin: 0 4px;
+}
+
+.tree-modal-ctrl-fit {
+  padding: 5px 14px;
+}
+
+/* D3 Tree Node Cards (rendered via foreignObject) */
+.d3-tree-node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: var(--bg-card-inner);
+  border: 1.5px solid var(--border-light);
+  box-shadow: 0 2px 6px rgba(30, 20, 10, 0.08);
+  width: 220px;
+  box-sizing: border-box;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.d3-tree-node:hover {
+  box-shadow: 0 4px 14px rgba(30, 20, 10, 0.18);
+  border-color: var(--border-wood);
+  transform: translateY(-1px);
+}
+
+.d3-tree-node.is-root {
+  border-color: var(--border-wood);
+  border-width: 2px;
+  background: #fffdf9;
+  box-shadow: 0 3px 10px rgba(140, 106, 81, 0.15);
+}
+
+.d3-tree-node.is-intermediate {
+  background: #fcf9f2;
+  border-color: #d8c3af;
+}
+
+.d3-tree-node.is-gift {
+  background: #f0f7ff;
+  border-color: #bfdbfe;
+}
+
+.d3-tree-node.is-gift:hover {
+  border-color: #60a5fa;
+}
+
+.d3-tree-node.is-group {
+  background: #fdfbf7;
+  border-style: dashed;
+  border-color: #c9b49f;
+}
+
+/* Dimmed / Highlighted from Search */
+.d3-tree-node.is-dimmed {
+  opacity: 0.25;
+  filter: grayscale(80%);
+}
+
+.d3-tree-node.is-match {
+  border-color: #f59e0b !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45) !important;
+  transform: scale(1.03);
+}
+
+.d3-node-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.d3-node-sprite {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.d3-node-name {
+  font-weight: 700;
+  font-size: 0.83rem;
+  color: var(--text-main);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.d3-node-deficit {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--badge-need-bg);
+  color: var(--badge-need-text);
+  border: 1px solid var(--badge-need-border);
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.d3-node-alt-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.d3-node-alt-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  font-size: 0.68rem;
+  color: #2e7d32;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.d3-node-alt-badge .badge-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.d3-node-alt-badge .source-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.d3-node-npcs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: 100%;
+}
+
+.d3-node-npc-chip {
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #fff3e0;
+  border: 1px solid #ffe0b2;
+  color: #e65100;
+  white-space: nowrap;
+}
+
+/* Collapsible Branch Pill */
+.d3-node-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #eee6db;
+  color: #5c432d;
+  border: 1px solid #d9ccbc;
+  margin-top: 2px;
+  transition: all 0.15s ease;
+}
+
+.d3-node-toggle:hover {
+  background: #e3d6c5;
+  color: #332214;
+}
+
+.d3-node-toggle.is-collapsed {
+  background: #e0edff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.d3-node-toggle.is-collapsed:hover {
+  background: #cfe2ff;
+}
+
+/* D3 tree link lines */
+.tree-link {
+  fill: none;
+  stroke: #c2a893;
+  stroke-width: 2.2px;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.tree-link:hover {
+  stroke: #8c6a51;
+  stroke-width: 3px;
+}
+
+/* Close animation helper */
+.tree-modal-backdrop.closing {
+  animation: treeBackdropOut 0.2s ease-in forwards;
+}
+
+.tree-modal-backdrop.closing .tree-modal {
+  animation: treeModalOut 0.2s ease-in forwards;
+}
+
+@keyframes treeModalOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.92); }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .tree-modal {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  .tree-modal-search-wrapper {
+    display: none;
   }
 }
 

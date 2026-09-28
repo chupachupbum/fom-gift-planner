@@ -61,12 +61,11 @@ def test_config_serialization(tmp_path):
 def test_settings_schema_structure():
     schema = get_settings_schema()
     assert isinstance(schema, list)
-    assert len(schema) >= 4
+    assert len(schema) >= 3
     group_ids = [g["id"] for g in schema]
     assert "planning" in group_ids
     assert "scoring" in group_ids
     assert "npc_filters" in group_ids
-    assert "paths" in group_ids
 
 
 def test_planner_bridge_execution(repo_root):
@@ -93,6 +92,20 @@ def test_planner_bridge_max_relationship(repo_root):
     assert plan_res is not None
     assert "bag_plan" in plan_res
     assert len(plan_res["bag_plan"]) <= 12
+
+
+def test_planner_bridge_focus_suggestions_consistency_between_strategies(repo_root):
+    cfg_journal = CompanionConfig(strategy="journal", mode="auto", slots=20)
+    _, plan_j, _, _ = execute_plan(cfg_journal, repo_root)
+
+    cfg_max = CompanionConfig(strategy="max-relationship", mode="auto", slots=20)
+    _, plan_m, _, _ = execute_plan(cfg_max, repo_root)
+
+    assert "focus_suggestions" in plan_j
+    assert "focus_suggestions" in plan_m
+    # Both strategies must produce consistent focus suggestions (up to 20, > 5 when deficits exist)
+    assert len(plan_m["focus_suggestions"]) == len(plan_j["focus_suggestions"])
+    assert len(plan_m["focus_suggestions"]) > 5
 
 
 def test_json_exporter_is_serializable(repo_root):
@@ -179,7 +192,7 @@ def test_read_save_with_retry_permission_error():
         assert attempts[0] == 3
 
 
-def test_fastapi_endpoints():
+def test_fastapi_endpoints(repo_root):
     with TestClient(app) as client:
         # 1. Root HTML
         res_root = client.get("/")
@@ -222,3 +235,112 @@ def test_fastapi_endpoints():
         res_apple = client.get("/assets/sprites/items/apple")
         assert res_apple.status_code == 200
         assert "image/png" in res_apple.headers.get("content-type", "")
+
+        res_bead = client.get("/assets/sprites/items/animal_currency")
+        assert res_bead.status_code == 200
+        assert "image/png" in res_bead.headers.get("content-type", "")
+
+        res_bead_id = client.get("/assets/sprites/items/shiny_bead")
+        assert res_bead_id.status_code == 200
+        assert "image/png" in res_bead_id.headers.get("content-type", "")
+
+        res_adeline = client.get("/assets/sprites/npcs/adeline")
+        assert res_adeline.status_code == 200
+        assert "image/png" in res_adeline.headers.get("content-type", "")
+
+        # 7. Upload Save File (.sav) — Valid
+        sample_save = repo_root / "samples" / "sample_save.sav"
+        with open(sample_save, "rb") as f:
+            res_upload = client.post(
+                "/api/save/upload",
+                files={"file": ("custom_test.sav", f, "application/octet-stream")},
+            )
+        assert res_upload.status_code == 200
+        up_data = res_upload.json()
+        assert up_data["success"] is True
+        assert up_data["filename"] == "custom_test.sav"
+        assert "custom_test.sav" in up_data["config"]["save_file"]
+        assert "bag_plan" in up_data["plan"]
+
+        # 8. Upload Save File — Invalid extension
+        res_bad_ext = client.post(
+            "/api/save/upload",
+            files={"file": ("invalid.txt", b"not a save", "text/plain")},
+        )
+        assert res_bad_ext.status_code == 400
+        assert "Fields of Mistria save file" in res_bad_ext.json()["detail"]
+
+        # 9. Upload Save File — Corrupted content
+        res_corrupt = client.post(
+            "/api/save/upload",
+            files={"file": ("corrupt.sav", b"short", "application/octet-stream")},
+        )
+        assert res_corrupt.status_code == 400
+
+        # 10. Reset save_file to auto-detect
+        res_reset = client.post("/api/settings", json={"save_file": ""})
+        assert res_reset.status_code == 200
+        reset_data = res_reset.json()
+        assert reset_data["config"]["save_file"] is None
+
+        # 11. Discovered saves list endpoint
+        res_saves = client.get("/api/saves")
+        assert res_saves.status_code == 200
+        saves_data = res_saves.json()
+        assert "saves" in saves_data
+        assert isinstance(saves_data["saves"], list)
+        assert saves_data["is_auto"] is True
+
+        # 12. Static Assets for Focus Suggestion Blocked NPCs Expand/Collapse
+        res_js = client.get("/static/app.js")
+        assert res_js.status_code == 200
+        assert "renderBlockedNpcs" in res_js.text
+        assert "toggleBlockedNpcs" in res_js.text
+        assert "npc-expand-btn" in res_js.text
+        assert "npc-collapse-btn" in res_js.text
+        assert "and +" in res_js.text
+        assert "Collapse" in res_js.text
+
+        res_css = client.get("/static/style.css")
+        assert res_css.status_code == 200
+        assert ".blocked-npcs-wrapper" in res_css.text
+        assert ".blocked-npcs-extra" in res_css.text
+        assert ".npc-toggle-btn" in res_css.text
+        assert ".npc-collapse-btn" in res_css.text
+
+
+def test_focus_suggestions_blocked_npcs_structure():
+    """Verify that companion app.js correctly truncates >3 NPCs and provides expand/collapse buttons."""
+    static_app_js = Path(__file__).resolve().parent.parent / "companion" / "static" / "app.js"
+    assert static_app_js.exists()
+    content = static_app_js.read_text(encoding="utf-8")
+
+    # Verify key tokens and logic exist
+    assert "function renderBlockedNpcs(blockedNpcs)" in content
+    assert "validNpcs.length <= 3" in content
+    assert "validNpcs.slice(0, 3)" in content
+    assert "extraCount = validNpcs.length - 3" in content
+    assert "and +${extraCount} more" in content
+    assert ">Collapse<" in content or "Collapse</button>" in content
+    assert "is-expanded" in content
+
+    static_style_css = Path(__file__).resolve().parent.parent / "companion" / "static" / "style.css"
+    assert static_style_css.exists()
+    css_content = static_style_css.read_text(encoding="utf-8")
+    assert ".is-expanded" in css_content
+
+
+def test_focus_suggestions_sample_save_has_items_exceeding_three_npcs(repo_root):
+    """Verify that sample save contains focus items with >3 blocked NPCs where expand button triggers."""
+    cfg = CompanionConfig(strategy="journal", slots=20)
+    save, res, meta, path = execute_plan(cfg, repo_root)
+    data = plan_to_json(save, res, meta, path, cfg)
+
+    items_over_3 = [f for f in data.get("focus_suggestions", []) if len(f.get("blocked_npcs", [])) > 3]
+    assert len(items_over_3) > 0
+    feather = next(f for f in items_over_3 if f["item_id"] == "golden_duck_feather")
+    assert len(feather["blocked_npcs"]) == 4
+    assert feather["blocked_npcs"] == ["Landen", "Louis", "Merri", "Wheedle"]
+
+
+

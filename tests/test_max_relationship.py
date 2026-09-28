@@ -35,7 +35,7 @@ from fom_planner.constants import (
 )
 from fom_planner.data_loader import load_item_metadata, load_npc_preferences_from_json
 from fom_planner.models import InGameDate, SaveData
-from fom_planner.optimizer import plan_max_relationship
+from fom_planner.optimizer import plan_daily_gift_bag, plan_max_relationship
 from fom_planner.parser import parse_save_file
 
 from tests.test_gift_planner import (
@@ -3214,7 +3214,49 @@ class TestAdversarialHarnessStress(unittest.TestCase):
         self.assertNotIn("npc_low", plan["covered_npcs"])
         self.assertIsNone(plan["npc_progress"]["npc_low"]["assigned_item_id"])
 
+    def test_focus_suggestions_limit_consistent_with_journal(self):
+        """plan_max_relationship returns up to 20 focus suggestions by default, consistent with journal completion."""
+        # 10 items with deficits
+        npcs = {
+            f"npc_{i}": {"name": f"NPC {i}", "loved": [f"item_{i}"], "liked": []}
+            for i in range(10)
+        }
+        plan_max = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            inventory={},
+            force_all_npcs=True,
+        )
+        plan_journal = plan_daily_gift_bag(
+            npc_gift_definitions=npcs,
+            inventory={},
+            force_all_npcs=True,
+        )
+        self.assertEqual(len(plan_max["focus_suggestions"]), 10)
+        self.assertEqual(len(plan_max["focus_suggestions"]), len(plan_journal["focus_suggestions"]))
+
+    def test_focus_top_n_customizable(self):
+        """focus_top_n parameter can customize the limit in both plan_max_relationship and plan_daily_gift_bag."""
+        npcs = {
+            f"npc_{i}": {"name": f"NPC {i}", "loved": [f"item_{i}"], "liked": []}
+            for i in range(10)
+        }
+        plan_max_7 = plan_max_relationship(
+            npc_gift_definitions=npcs,
+            inventory={},
+            force_all_npcs=True,
+            focus_top_n=7,
+        )
+        self.assertEqual(len(plan_max_7["focus_suggestions"]), 7)
+
+        plan_journal_3 = plan_daily_gift_bag(
+            npc_gift_definitions=npcs,
+            inventory={},
+            force_all_npcs=True,
+            focus_top_n=3,
+        )
+        self.assertEqual(len(plan_journal_3["focus_suggestions"]), 3)
 
 
 if __name__ == "__main__":
     unittest.main()
+

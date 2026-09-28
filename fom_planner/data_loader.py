@@ -5,6 +5,7 @@ Loaders for game databases, item metadata, item locations, and NPC preferences:
 - load_item_locations
 - load_item_seasons
 - load_recipe_sources
+- load_alt_sources
 - load_npc_preferences_from_fiddle
 - load_npc_preferences_from_json
 - load_item_metadata
@@ -124,6 +125,51 @@ def load_item_seasons(seasons_path: Optional[Union[str, Path]] = None) -> Dict[s
                     res[k_clean] = [str(s).strip().lower() for s in v if s]
                 elif isinstance(v, str) and v.strip():
                     res[k_clean] = [str(v).strip().lower()]
+            return res
+    except Exception:
+        return {}
+    return {}
+
+
+def load_alt_sources(
+    sources_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Loads alternate acquisition sources from JSON database file.
+    Maps item_id -> list of source dicts, each with keys:
+      type, vendor/location, cost, currency, note, icon
+    If sources_path is not specified, defaults to 'data/alt_sources.json'
+    relative to the repository root.
+    Gracefully returns {} if path is None, file does not exist, or parsing fails.
+    """
+    if sources_path is None:
+        root_path = Path(__file__).resolve().parent.parent / "data" / "alt_sources.json"
+        script_path = Path(__file__).resolve().parent / "data" / "alt_sources.json"
+        if root_path.exists():
+            target = root_path
+        elif script_path.exists():
+            target = script_path
+        else:
+            target = Path("data/alt_sources.json")
+    else:
+        target = Path(sources_path)
+
+    if not target.exists() or not target.is_file():
+        return {}
+
+    try:
+        with open(target, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            res: Dict[str, List[Dict[str, Any]]] = {}
+            for k, v in data.items():
+                if not k:
+                    continue
+                k_clean = str(k).strip().lower()
+                if isinstance(v, list):
+                    valid_sources = [s for s in v if isinstance(s, dict) and s.get("type")]
+                    if valid_sources:
+                        res[k_clean] = valid_sources
             return res
     except Exception:
         return {}

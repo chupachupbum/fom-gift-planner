@@ -19,6 +19,66 @@ except ImportError:
 from fom_planner.constants import SATURDAY_MARKET_VENDORS
 from fom_planner.models import InGameDate, SaveData
 
+ALT_SOURCE_EMOJI: Dict[str, str] = {
+    "shop": "🛒",
+    "inn": "🍽️",
+    "market_stall": "🛒",
+    "chicken_statue": "🐔",
+    "mimic": "⛏️",
+    "mill": "⚙️",
+    "fishing": "🎣",
+    "wishing_well": "💫",
+    "festival": "🎪",
+    "date": "💕",
+    "quest": "📋",
+    "museum": "🏛️",
+}
+
+SOURCE_TYPE_NAMES: Dict[str, str] = {
+    "chicken_statue": "Chicken Statue",
+    "wishing_well": "Wishing Well",
+    "mill": "The Mill",
+    "fishing": "Fishing",
+    "mimic": "Mimic Chest",
+    "quest": "Quest Board",
+    "museum": "Museum",
+    "date": "Date",
+    "festival": "Festival Stall",
+    "market_stall": "Market Stall",
+    "inn": "Sleeping Dragon Inn",
+    "shop": "Shop",
+}
+
+
+def _format_alt_sources_excel(sources: Optional[List[Dict[str, Any]]]) -> str:
+    """Formats alternate acquisition sources for Excel export."""
+    if not sources:
+        return "—"
+    parts = []
+    for s in sources:
+        if not isinstance(s, dict):
+            continue
+        stype = s.get("type", "")
+        emoji = ALT_SOURCE_EMOJI.get(stype, "📍")
+        vendor = s.get("vendor") or s.get("location")
+        if not vendor:
+            vendor = SOURCE_TYPE_NAMES.get(stype, stype.replace("_", " ").title())
+        cost = s.get("cost")
+        note = s.get("note", "")
+        cost_str = ""
+        if cost is not None:
+            curr = s.get("currency", "tesserae")
+            if curr in ("shiny_beads", "beads"):
+                cost_str = f" ({cost} beads)"
+            elif curr in ("tesserae", "t"):
+                cost_str = f" ({cost}t)"
+            else:
+                cost_str = f" ({cost} {curr})"
+        note_str = f" [{note}]" if note else ""
+        parts.append(f"{emoji} {vendor}{cost_str}{note_str}")
+    return ", ".join(parts) if parts else "—"
+
+
 def get_excel_styles():
     """Returns standard openpyxl style objects for workbook formatting."""
     if not OPENPYXL_AVAILABLE:
@@ -368,6 +428,35 @@ def export_plan_to_excel(
             r.get("unlock_source", "Unknown"),
         ])
     style_sheet_table(ws5, headers5, rows5, numeric_cols=[1, 3], center_cols=[1, 3], styles=styles)
+
+    # ----------------------------------------------------
+    # Sheet 6: Focus Trees
+    # ----------------------------------------------------
+    ws6 = wb.create_sheet(title="Focus Trees")
+    headers6 = ["Blocker Item", "Depth", "Product", "Alt Sources", "Gift For (NPCs)"]
+    focus_trees = (plan_results.get("focus_trees") or []) if plan_results else []
+    rows6 = []
+
+    def _flatten_tree(node: Dict[str, Any], depth: int, blocker_name: str):
+        if not isinstance(node, dict):
+            return
+        node_name = node.get("item_name") or node.get("item_id", "").replace("_", " ").title()
+        prefix = ("→ " * depth) if depth > 0 else ""
+        product_display = f"{prefix}{node_name}"
+        alt_sources_str = _format_alt_sources_excel(node.get("alt_sources", []))
+        gift_npcs = node.get("gift_npcs") or []
+        gift_str = ", ".join(gift_npcs) if gift_npcs else "—"
+
+        rows6.append([blocker_name, depth, product_display, alt_sources_str, gift_str])
+        for child in node.get("children", []):
+            _flatten_tree(child, depth + 1, blocker_name)
+
+    for tree in focus_trees:
+        if isinstance(tree, dict):
+            b_name = tree.get("item_name") or tree.get("item_id", "").replace("_", " ").title()
+            _flatten_tree(tree, 0, b_name)
+
+    style_sheet_table(ws6, headers6, rows6, numeric_cols=[2], center_cols=[2], styles=styles)
 
     wb.save(output_path)
     print(f"[Excel] Successfully exported Gift Planner Report to: {output_path}")

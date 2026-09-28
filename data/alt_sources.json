@@ -1,0 +1,2129 @@
+{
+  "flour": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 200,
+      "currency": "tesserae",
+      "icon": "general_store"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Wheat",
+      "icon": "mill"
+    }
+  ],
+  "rice": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 200,
+      "currency": "tesserae",
+      "icon": "general_store"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Unmilled Rice",
+      "icon": "mill"
+    }
+  ],
+  "sugar": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 115,
+      "currency": "tesserae",
+      "icon": "general_store"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Sugarcane",
+      "icon": "mill"
+    }
+  ],
+  "oil": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 60,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "rock_salt": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 50,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "curry_powder": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 40,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "paper": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "honey": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "After quest",
+      "icon": "general_store"
+    },
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Bee Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "vinegar": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "black_pepper": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 60,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "glass": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 150,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "turnip_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "potato_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 30,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "cabbage_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 45,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "carrot_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 35,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "onion_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 40,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "tomato_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 50,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "corn_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 60,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "wheat_seeds": [
+    {
+      "type": "shop",
+      "vendor": "General Store",
+      "cost": 25,
+      "currency": "tesserae",
+      "icon": "general_store"
+    }
+  ],
+  "copper_ingot": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 300,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "iron_ingot": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 600,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "silver_ingot": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 1200,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "gold_ingot": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 2400,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "stone": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "ore_stone": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "clay": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 30,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "wood": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "basic_wood": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "hard_wood": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "fiber": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 20,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "hay": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 40,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 30,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "grass_seed": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "cost": 25,
+      "currency": "tesserae",
+      "icon": "balor_wagon"
+    }
+  ],
+  "sheep_wool": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Animal materials tab",
+      "icon": "balor_wagon"
+    }
+  ],
+  "horse_hair": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Animal materials tab",
+      "icon": "balor_wagon"
+    }
+  ],
+  "bristle": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Animal materials tab",
+      "icon": "balor_wagon"
+    }
+  ],
+  "duck_feather": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Animal materials tab",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "vegetable_quiche": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "cabbage_slaw": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "red_snapper_sushi": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "lemon_pie": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "mushroom_brew": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "coffee": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "tea": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "cup_of_tea": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "morel_mushroom": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "chocolate": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "turnip": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "strawberry": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "cow_milk": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "milk": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "blueberry": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "blackberry": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "cranberry": [
+    {
+      "type": "shop",
+      "vendor": "Balor's Wagon",
+      "note": "Rotating daily stock",
+      "icon": "balor_wagon"
+    }
+  ],
+  "small_grass_starter": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 40,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "cat_treat": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 150,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "dog_treat": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 150,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "deluxe_hay": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Wheat",
+      "icon": "mill"
+    }
+  ],
+  "quality_hay": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 60,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "ultimate_hay": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 200,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "deluxe_small_animal_feed": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 80,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "quality_small_animal_feed": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 50,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "ultimate_small_animal_feed": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 150,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "animal_name_tag": [
+    {
+      "type": "shop",
+      "vendor": "Hayden's Ranch Shop",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "ranch_shop"
+    }
+  ],
+  "canned_sardines": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "pan_fried_salmon": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "pan_fried_snapper": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "fish_skewer": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "salmon_sashimi": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "fishing",
+      "location": "Silver Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "mackerel_sashimi": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "icon": "tackle_shop"
+    },
+    {
+      "type": "fishing",
+      "location": "Silver Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "small_fish_treat": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "cost": 50,
+      "currency": "tesserae",
+      "icon": "tackle_shop"
+    }
+  ],
+  "medium_fish_treat": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "cost": 100,
+      "currency": "tesserae",
+      "icon": "tackle_shop"
+    }
+  ],
+  "large_fish_treat": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "cost": 200,
+      "currency": "tesserae",
+      "icon": "tackle_shop"
+    }
+  ],
+  "basic_fishing_rod": [
+    {
+      "type": "shop",
+      "vendor": "Tackle Shop",
+      "cost": 500,
+      "currency": "tesserae",
+      "icon": "tackle_shop"
+    }
+  ],
+  "pudding": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "wishing_well",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "100t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "omelet": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "quiche": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "deviled_eggs": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "egg": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "mayonnaise": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Chicken Egg",
+      "icon": "mill"
+    }
+  ],
+  "cheese": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Cow Milk",
+      "icon": "mill"
+    }
+  ],
+  "butter": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Cow Milk",
+      "icon": "mill"
+    }
+  ],
+  "duck_egg": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "duck_mayonnaise": [
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Duck Egg",
+      "icon": "mill"
+    }
+  ],
+  "golden_cookies": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "festival",
+      "vendor": "Animal Festival Stall",
+      "note": "Winter 10",
+      "icon": "festival_stall"
+    }
+  ],
+  "golden_cheesecake": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "festival",
+      "vendor": "Animal Festival Stall",
+      "note": "Winter 10",
+      "icon": "festival_stall"
+    }
+  ],
+  "golden_egg": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    },
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Animal Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "golden_cow_milk": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_milk": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_butter": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_cheese": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_mayonnaise": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_duck_egg": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_duck_mayonnaise": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_duck_feather": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_sheep_wool": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "golden_alpaca_wool": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "cheesecake": [
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
+    }
+  ],
+  "turnip_and_cabbage_salad": [
+    {
+      "type": "mimic",
+      "location": "Upper Mines (Floors 1-19)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "crunchy_chickpeas": [
+    {
+      "type": "mimic",
+      "location": "Upper Mines (Floors 1-19)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "monster_cookie": [
+    {
+      "type": "mimic",
+      "location": "Upper Mines (Floors 1-19)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "cookies": [
+    {
+      "type": "mimic",
+      "location": "Upper Mines (Floors 1-19)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "crispy_fried_earthshroom": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "tide_salad": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "chickpea_curry": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "monster_mash": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "sour_lemon_cake": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "cherry_smoothie": [
+    {
+      "type": "mimic",
+      "location": "Tide Caverns (Floors 21-39)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "herb_salad": [
+    {
+      "type": "mimic",
+      "location": "Deep Earth (Floors 41-59)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "turnip_and_potato_gratin": [
+    {
+      "type": "mimic",
+      "location": "Deep Earth (Floors 41-59)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "vegetable_pot_pie": [
+    {
+      "type": "mimic",
+      "location": "Deep Earth (Floors 41-59)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "summer_salad": [
+    {
+      "type": "mimic",
+      "location": "Lava Caves (Floors 61-79)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    },
+    {
+      "type": "fishing",
+      "location": "Silver Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "spicy_crab_sushi": [
+    {
+      "type": "mimic",
+      "location": "Lava Caves (Floors 61-79)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    },
+    {
+      "type": "fishing",
+      "location": "Golden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "fried_rice": [
+    {
+      "type": "mimic",
+      "location": "Lava Caves (Floors 61-79)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    },
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    },
+    {
+      "type": "date",
+      "location": "Inn Meal Date",
+      "icon": "date"
+    }
+  ],
+  "chili_coconut_curry": [
+    {
+      "type": "mimic",
+      "location": "Lava Caves (Floors 61-79)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "incredibly_hot_pot": [
+    {
+      "type": "mimic",
+      "location": "Lava Caves (Floors 61-79)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "pizza": [
+    {
+      "type": "mimic",
+      "location": "Ancient Ruins (Floors 81-99)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "spicy_corn": [
+    {
+      "type": "mimic",
+      "location": "Ancient Ruins (Floors 81-99)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "cucumber_sandwich": [
+    {
+      "type": "mimic",
+      "location": "Ancient Ruins (Floors 81-99)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    }
+  ],
+  "spell_fruit_parfait": [
+    {
+      "type": "mimic",
+      "location": "Ancient Ruins (Floors 81-99)",
+      "note": "Requires Dungeon Delicacies perk",
+      "icon": "mimic"
+    },
+    {
+      "type": "date",
+      "location": "Deep Woods Picnic Date",
+      "icon": "date"
+    }
+  ],
+  "fish_stew": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "fishing",
+      "location": "Copper Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "smoked_trout_soup": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "grilled_cheese": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "sweet_potato_pie": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "loaded_baked_potato": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "riceball": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "rice_ball": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "breaded_catfish": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "fishing",
+      "location": "Copper Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "vegetable_soup": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "candied_lemon_peel": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "spicy_cheddar_biscuit": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    },
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "deluxe_curry": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "coconut_milk": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "lemonade": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    },
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "red_wine": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "white_wine": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "beer": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "hot_toddy": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "tea_with_lemon": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "apple_juice": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "orange_juice": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Daily beverage",
+      "icon": "inn"
+    }
+  ],
+  "chickpea_soup": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "clam_chowder": [
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    }
+  ],
+  "cherry_cobbler": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    },
+    {
+      "type": "date",
+      "location": "Town Square Date",
+      "icon": "date"
+    }
+  ],
+  "caldosian_chocolate_cake": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "pumpkin_pie": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    },
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "ice_cream_sundae": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    },
+    {
+      "type": "date",
+      "location": "Town Square Date",
+      "icon": "date"
+    }
+  ],
+  "grape_juice": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "iced_coffee": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "pomegranate_juice": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "green_tea": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "hot_cocoa": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "jasmine_tea": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "latte": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "mocha": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "roasted_rice_tea": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "macaron": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "croissant": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "waffle": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "pancakes": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "boba_tea": [
+    {
+      "type": "market_stall",
+      "vendor": "Darcy's Stall",
+      "note": "Saturday Market",
+      "icon": "saturday_market"
+    }
+  ],
+  "sapling_oak": [
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Acorn",
+      "icon": "mill"
+    }
+  ],
+  "sapling_pine": [
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Pinecone",
+      "icon": "mill"
+    }
+  ],
+  "sapling_chestnut": [
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Chestnut",
+      "icon": "mill"
+    }
+  ],
+  "animal_feed": [
+    {
+      "type": "mill",
+      "location": "The Mill",
+      "note": "Milling: Grass Seed",
+      "icon": "mill"
+    }
+  ],
+  "crayfish_etouffee": [
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "lobster_roll": [
+    {
+      "type": "fishing",
+      "location": "Golden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "sesame_tuna_bowl": [
+    {
+      "type": "fishing",
+      "location": "Golden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "sushi_platter": [
+    {
+      "type": "fishing",
+      "location": "Golden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "driftwood": [
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "seaweed": [
+    {
+      "type": "fishing",
+      "location": "Wooden Treasure Box",
+      "icon": "fishing"
+    }
+  ],
+  "blueberry_jam": [
+    {
+      "type": "wishing_well",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "100t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "blackberry_jam": [
+    {
+      "type": "wishing_well",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "100t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "cranberry_jam": [
+    {
+      "type": "wishing_well",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "100t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "spring_salad": [
+    {
+      "type": "wishing_well",
+      "cost": 100,
+      "currency": "tesserae",
+      "note": "100t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "berry_bowl": [
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "fruit_salad": [
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "lucky_charm": [
+    {
+      "type": "wishing_well",
+      "cost": 500,
+      "currency": "tesserae",
+      "note": "500t donation",
+      "icon": "wishing_well"
+    }
+  ],
+  "scent_of_spring": [
+    {
+      "type": "festival",
+      "vendor": "Spring Festival Stall",
+      "note": "Spring 17",
+      "icon": "festival_stall"
+    }
+  ],
+  "lavender_tea": [
+    {
+      "type": "festival",
+      "vendor": "Spring Festival Stall",
+      "note": "Spring 17",
+      "icon": "festival_stall"
+    }
+  ],
+  "spring_bouquet": [
+    {
+      "type": "festival",
+      "vendor": "Spring Festival Stall",
+      "note": "Spring 17",
+      "icon": "festival_stall"
+    }
+  ],
+  "strawberry_shortcake": [
+    {
+      "type": "festival",
+      "vendor": "Spring Festival Stall",
+      "note": "Spring 17",
+      "icon": "festival_stall"
+    },
+    {
+      "type": "date",
+      "location": "Sweet Date Activity",
+      "icon": "date"
+    }
+  ],
+  "candied_queen_berries": [
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "queen_berry_pie": [
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "apple_honey_curry": [
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "harvest_plate": [
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "cider": [
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "chicky_hot_chocolate": [
+    {
+      "type": "festival",
+      "vendor": "Animal Festival Stall",
+      "note": "Winter 10",
+      "icon": "festival_stall"
+    }
+  ],
+  "cow_shaped_donut": [
+    {
+      "type": "festival",
+      "vendor": "Animal Festival Stall",
+      "note": "Winter 10",
+      "icon": "festival_stall"
+    }
+  ],
+  "animal_plushie": [
+    {
+      "type": "festival",
+      "vendor": "Animal Festival Stall",
+      "note": "Winter 10",
+      "icon": "festival_stall"
+    }
+  ],
+  "perch_risotto": [
+    {
+      "type": "date",
+      "location": "Inn Meal Date",
+      "icon": "date"
+    }
+  ],
+  "seafood_snow_pea_noodles": [
+    {
+      "type": "date",
+      "location": "Inn Meal Date",
+      "icon": "date"
+    }
+  ],
+  "chocolate_cake": [
+    {
+      "type": "date",
+      "location": "Sweet Date Activity",
+      "icon": "date"
+    }
+  ],
+  "picnic_basket": [
+    {
+      "type": "date",
+      "location": "Deep Woods Picnic Date",
+      "icon": "date"
+    }
+  ],
+  "sweet_tea": [
+    {
+      "type": "date",
+      "location": "Inn Meal Date",
+      "icon": "date"
+    }
+  ],
+  "bread": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Celine's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "tomato_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Valen's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "potato_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "apple_pie": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Hayden's Request",
+      "icon": "quest_board"
+    },
+    {
+      "type": "inn",
+      "vendor": "Sleeping Dragon Inn",
+      "note": "Rotating daily menu",
+      "icon": "inn"
+    },
+    {
+      "type": "festival",
+      "vendor": "Harvest Festival Stall",
+      "note": "Fall 27",
+      "icon": "festival_stall"
+    }
+  ],
+  "carrot_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Elsie's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "onion_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "berry_tart": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Nora's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "cabbage_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "chestnut_pie": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Eiland's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "flower_quiche": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Celine's Flower Request",
+      "icon": "quest_board"
+    }
+  ],
+  "fish_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Terithia's Request",
+      "icon": "quest_board"
+    }
+  ],
+  "pumpkin_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "beet_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "mushroom_soup": [
+    {
+      "type": "quest",
+      "location": "Request Board",
+      "note": "Reward for Request Board Quest",
+      "icon": "quest_board"
+    }
+  ],
+  "jade_dulse": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Flora Milestone Donation",
+      "icon": "museum"
+    }
+  ],
+  "ancient_stone_lantern": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "ancient_crystal_goblet": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "amber_trapped_insect": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Entomology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "ancient_royal_scepter": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "ancient_horn_circlet": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "ancient_gold_coin": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone",
+      "icon": "museum"
+    }
+  ],
+  "ruby": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Gemology Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "sapphire": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Gemology Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "emerald": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Gemology Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "diamond": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Gemology Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "crystal_rose": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Deep Earth Flora Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "dragon_fruit": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Rare Crops Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "ancient_fossil": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Archaeology Milestone Reward",
+      "icon": "museum"
+    }
+  ],
+  "prismatic_shard": [
+    {
+      "type": "museum",
+      "location": "Museum Milestone",
+      "note": "Grand Museum Milestone Reward",
+      "icon": "museum"
+    }
+  ]
+}

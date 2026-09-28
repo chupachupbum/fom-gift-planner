@@ -239,6 +239,7 @@ def plan_to_json(
         "infused_items": _to_serializable(infused_items),
         "bag_plan": bag_plan,
         "focus_suggestions": focus_suggestions,
+        "focus_trees": _to_serializable(plan_results.get("focus_trees", [])),
         "npc_progress": npc_progress,
         "error": None,
     }

@@ -21,7 +21,11 @@ from fom_planner.crafting import (
     filter_recipes_by_unlocks,
     load_recipes,
 )
-from fom_planner.data_loader import load_item_locations, load_item_seasons
+from fom_planner.data_loader import (
+    load_alt_sources,
+    load_item_locations,
+    load_item_seasons,
+)
 from fom_planner.models import SaveData
 
 ITEM_LOCATIONS: Dict[str, str] = load_item_locations()
@@ -83,7 +87,7 @@ def compute_focus_suggestions(
     inventory: Optional[Dict[str, int]] = None,
     recipes: Optional[Dict[str, Any]] = None,
     item_metadata: Optional[Dict[str, dict]] = None,
-    top_n: int = 5,
+    top_n: int = 20,
     item_locations: Optional[Dict[str, str]] = None,
     focus_sort: str = "impact",
     current_season: Optional[str] = None,
@@ -463,6 +467,210 @@ def compute_focus_recipes(
     return ranked_recipes, recipe_unlock_stats
 
 
+_TREE_ITEM_ALIASES: Dict[str, str] = {
+    "milk": "cow_milk",
+    "cow_milk": "milk",
+    "golden_milk": "golden_cow_milk",
+    "golden_cow_milk": "golden_milk",
+    "wood": "basic_wood",
+    "basic_wood": "wood",
+    "stone": "ore_stone",
+    "ore_stone": "stone",
+    "rice_ball": "riceball",
+    "riceball": "rice_ball",
+    "tea": "cup_of_tea",
+    "cup_of_tea": "tea",
+}
+
+
+def build_focus_crafting_trees(
+    focus_suggestions: List[Dict[str, Any]],
+    recipes: Optional[Dict[str, Any]] = None,
+    remaining_items_map: Optional[Dict[str, Dict[str, Any]]] = None,
+    alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    item_metadata: Optional[Dict[str, dict]] = None,
+    npc_names: Optional[Dict[str, str]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Builds a downstream crafting dependency tree for each focus suggestion blocker item.
+
+    For a blocker item like 'milk' / 'cow_milk', produces:
+      milk
+      ├── cheese (mill: milk → cheese)
+      │   ├── cheesecake (craft) [🐔 Chicken Statue: 100 beads]
+      │   └── quiche (craft)
+      └── butter (mill: milk → butter)
+          └── croissant (craft)
+
+    Each node includes:
+      - item_id, item_name
+      - alt_sources: list of alternate acquisition methods from alt_sources.json
+      - children: list of downstream product nodes
+      - gift_npcs: sorted list of NPC names who want this item as a gift (leaf/product nodes)
+      - sprite_url: URL path to the item's sprite image
+    """
+    if not focus_suggestions:
+        return []
+    if recipes is None:
+        recipes = {}
+    if remaining_items_map is None:
+        remaining_items_map = {}
+    if alt_sources is None:
+        alt_sources = {}
+    if item_metadata is None:
+        item_metadata = {}
+
+    # Normalize remaining_items_map keys to lowercase
+    norm_remaining_map: Dict[str, Any] = {}
+    if isinstance(remaining_items_map, dict):
+        for k, v in remaining_items_map.items():
+            if k is not None:
+                norm_remaining_map[str(k).strip().lower()] = v
+
+    pending_gift_ids: Set[str] = set(norm_remaining_map.keys())
+
+    # Build reverse index: ingredient_id -> set of recipe_ids that use it
+    ingredient_to_recipes: Dict[str, Set[str]] = {}
+    for rid, rdata in recipes.items():
+        if not isinstance(rdata, dict):
+            continue
+        for ing in rdata.get("ingredients", []):
+            if isinstance(ing, dict) and ing.get("item_id"):
+                ing_id = str(ing["item_id"]).strip().lower()
+                ingredient_to_recipes.setdefault(ing_id, set()).add(str(rid).strip().lower())
+
+    def _get_display_name(item_id: str) -> str:
+        meta = item_metadata.get(item_id, {})
+        if isinstance(meta, dict) and meta.get("display_name"):
+            return meta["display_name"]
+        if item_id in _TREE_ITEM_ALIASES:
+            meta_alias = item_metadata.get(_TREE_ITEM_ALIASES[item_id], {})
+            if isinstance(meta_alias, dict) and meta_alias.get("display_name"):
+                return meta_alias["display_name"]
+        rdata = recipes.get(item_id, {})
+        if isinstance(rdata, dict) and rdata.get("display_name"):
+            return rdata["display_name"]
+        if item_id in _TREE_ITEM_ALIASES:
+            rdata_alias = recipes.get(_TREE_ITEM_ALIASES[item_id], {})
+            if isinstance(rdata_alias, dict) and rdata_alias.get("display_name"):
+                return rdata_alias["display_name"]
+        return item_id.replace("_", " ").title()
+
+    def _is_pending_gift(item_id: str) -> bool:
+        if item_id in pending_gift_ids:
+            return True
+        if item_id in _TREE_ITEM_ALIASES and _TREE_ITEM_ALIASES[item_id] in pending_gift_ids:
+            return True
+        return False
+
+    def _get_gift_npcs(item_id: str) -> List[str]:
+        targets = norm_remaining_map.get(item_id)
+        if targets is None and item_id in _TREE_ITEM_ALIASES:
+            targets = norm_remaining_map.get(_TREE_ITEM_ALIASES[item_id])
+        if not targets:
+            return []
+        if isinstance(targets, dict):
+            loved = targets.get("loved") or set()
+            liked = targets.get("liked") or set()
+            if isinstance(loved, (list, tuple)):
+                loved = set(loved)
+            if isinstance(liked, (list, tuple)):
+                liked = set(liked)
+            all_n = set(loved) | set(liked)
+        elif isinstance(targets, (set, list, tuple)):
+            all_n = set(targets)
+        else:
+            all_n = set()
+        npcs = set()
+        for n in all_n:
+            if not n:
+                continue
+            n_str = str(n).strip()
+            if npc_names and n_str.lower() in npc_names:
+                npcs.add(npc_names[n_str.lower()])
+            else:
+                npcs.add(n_str.capitalize())
+        return sorted(npcs)
+
+    def _get_alt_sources(item_id: str) -> List[Dict[str, Any]]:
+        sources = alt_sources.get(item_id, [])
+        if not sources and item_id in _TREE_ITEM_ALIASES:
+            sources = alt_sources.get(_TREE_ITEM_ALIASES[item_id], [])
+        return sources or []
+
+    def _has_pending_downstream(item_id: str, seen: Set[str]) -> bool:
+        """Checks if any downstream product is a pending gift."""
+        if item_id in seen:
+            return False
+        seen.add(item_id)
+
+        downstream = ingredient_to_recipes.get(item_id, set())
+        if item_id in _TREE_ITEM_ALIASES:
+            downstream = downstream | ingredient_to_recipes.get(_TREE_ITEM_ALIASES[item_id], set())
+
+        for rid in sorted(downstream):
+            rdata = recipes.get(rid, {})
+            product = str(rdata.get("item_id", rid)).strip().lower()
+            if not product:
+                continue
+            if _is_pending_gift(product):
+                return True
+            if _has_pending_downstream(product, seen):
+                return True
+        return False
+
+    def _build_subtree(item_id: str, visited: Set[str]) -> Optional[Dict[str, Any]]:
+        """Recursively builds the downstream tree from an item."""
+        if item_id in visited:
+            return None
+        visited.add(item_id)
+        if item_id in _TREE_ITEM_ALIASES:
+            visited.add(_TREE_ITEM_ALIASES[item_id])
+
+        node: Dict[str, Any] = {
+            "item_id": item_id,
+            "item_name": _get_display_name(item_id),
+            "alt_sources": _get_alt_sources(item_id),
+            "gift_npcs": _get_gift_npcs(item_id),
+            "children": [],
+            "sprite_url": f"/assets/sprites/items/{item_id}",
+        }
+
+        downstream_recipes = ingredient_to_recipes.get(item_id, set())
+        if item_id in _TREE_ITEM_ALIASES:
+            downstream_recipes = downstream_recipes | ingredient_to_recipes.get(_TREE_ITEM_ALIASES[item_id], set())
+
+        products_seen: Set[str] = set()
+        for rid in sorted(downstream_recipes):
+            rdata = recipes.get(rid, {})
+            product_id = str(rdata.get("item_id", rid)).strip().lower()
+            if not product_id or product_id in products_seen:
+                continue
+            products_seen.add(product_id)
+
+            if _is_pending_gift(product_id) or _has_pending_downstream(product_id, set()):
+                child = _build_subtree(product_id, visited.copy())
+                if child:
+                    node["children"].append(child)
+
+        return node
+
+    trees: List[Dict[str, Any]] = []
+    for suggestion in focus_suggestions:
+        if not isinstance(suggestion, dict):
+            continue
+        item_id = str(suggestion.get("item_id", "")).strip().lower()
+        if not item_id:
+            continue
+        tree = _build_subtree(item_id, set())
+        if tree:
+            if suggestion.get("item_name") and tree.get("item_name") != suggestion["item_name"]:
+                tree["item_name"] = suggestion["item_name"]
+            trees.append(tree)
+
+    return trees
+
+
 def plan_daily_gift_bag(
     save: Optional[SaveData] = None,
     npc_gift_definitions: Optional[Dict[str, dict]] = None,
@@ -484,6 +692,8 @@ def plan_daily_gift_bag(
     item_seasons: Optional[Dict[str, List[str]]] = None,
     all_seasons: bool = False,
     seasonal_boost: float = 2.0,
+    focus_top_n: int = 20,
+    alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -501,7 +711,7 @@ def plan_daily_gift_bag(
         - covered_npcs: set of npc_ids covered today
         - target_npcs: set of npc_ids included in planning
         - remaining_items_map: dict of ungifted item_id -> {"loved": set(), "liked": set()}
-        - focus_suggestions: top 5 insufficient blocker items
+        - focus_suggestions: top 20 insufficient blocker items
         - focus_recipes: top 10 ranked locked cooking recipes
         - recipe_unlock_stats: summary stats of cooking recipe unlocks
         - overall_stats: summary counts
@@ -952,7 +1162,7 @@ def plan_daily_gift_bag(
         inventory=initial_inventory,
         recipes=all_recipes,
         item_metadata=item_metadata,
-        top_n=20,
+        top_n=focus_top_n,
         item_locations=item_locations,
         focus_sort=focus_sort,
         current_season=effective_season,
@@ -968,6 +1178,16 @@ def plan_daily_gift_bag(
         top_n=10,
     )
 
+    alt_sources_data = load_alt_sources() if alt_sources is None else alt_sources
+
+    focus_trees = build_focus_crafting_trees(
+        focus_suggestions=focus_suggestions,
+        recipes=all_recipes,
+        remaining_items_map=all_remaining_items_map,
+        alt_sources=alt_sources_data,
+        item_metadata=item_metadata,
+    )
+
     return {
         "bag_plan": bag_plan,
         "npc_progress": npc_progress,
@@ -979,6 +1199,8 @@ def plan_daily_gift_bag(
         "focus_suggestions": focus_suggestions,
         "focus_recipes": focus_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
+        "focus_trees": focus_trees,
+        "alt_sources": alt_sources_data,
         "focus_sort": focus_sort,
         "current_season": effective_season,
         "all_seasons": all_seasons or (effective_season is None),
@@ -1088,6 +1310,8 @@ def plan_max_relationship(
     item_seasons: Optional[Dict[str, List[str]]] = None,
     all_seasons: bool = False,
     seasonal_boost: float = 2.0,
+    focus_top_n: int = 20,
+    alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -1896,7 +2120,7 @@ def plan_max_relationship(
         inventory=initial_inventory,
         recipes=all_recipes,
         item_metadata=item_metadata,
-        top_n=5,
+        top_n=focus_top_n,
         item_locations=item_locations,
         focus_sort=focus_sort,
         current_season=effective_season,
@@ -1912,6 +2136,16 @@ def plan_max_relationship(
         top_n=10,
     )
 
+    alt_sources_data = load_alt_sources() if alt_sources is None else alt_sources
+
+    focus_trees = build_focus_crafting_trees(
+        focus_suggestions=focus_suggestions,
+        recipes=all_recipes,
+        remaining_items_map=all_remaining_items_map,
+        alt_sources=alt_sources_data,
+        item_metadata=item_metadata,
+    )
+
     return {
         "bag_plan": bag_plan,
         "npc_progress": npc_progress,
@@ -1923,6 +2157,8 @@ def plan_max_relationship(
         "focus_suggestions": focus_suggestions,
         "focus_recipes": focus_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
+        "focus_trees": focus_trees,
+        "alt_sources": alt_sources_data,
         "focus_sort": focus_sort,
         "current_season": effective_season,
         "all_seasons": all_seasons or (effective_season is None),

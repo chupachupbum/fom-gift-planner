@@ -228,16 +228,4 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                 },
             ],
         },
-        {
-            "group": "File & Data Paths",
-            "id": "paths",
-            "fields": [
-                {
-                    "key": "save_file",
-                    "label": "Specific .sav File (Leave blank to auto-detect)",
-                    "type": "text",
-                    "placeholder": "Auto-detects newest .sav",
-                },
-            ],
-        },
     ]

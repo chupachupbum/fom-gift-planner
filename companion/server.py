@@ -14,7 +14,7 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -149,6 +149,46 @@ async def get_settings():
     }
 
 
+@app.get("/api/saves")
+async def get_available_saves():
+    """
+    Returns list of discovered save files across standard locations,
+    Steam, Snap, Flatpak, and uploads.
+    """
+    from fom_planner.parser import find_save_files
+    from datetime import datetime
+
+    found = find_save_files()
+    upload_dir = state.repo_root / "data" / "uploads"
+    if upload_dir.exists():
+        for f in upload_dir.glob("*.sav"):
+            if f not in found:
+                found.append(f)
+
+    # Sort newest first
+    found.sort(key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True)
+
+    saves_data = []
+    for p in found[:30]:
+        try:
+            mtime = p.stat().st_mtime
+            time_str = datetime.fromtimestamp(mtime).strftime("%b %d, %H:%M")
+        except Exception:
+            time_str = ""
+        saves_data.append({
+            "path": str(p),
+            "filename": p.name,
+            "modified": time_str,
+            "is_active": (str(p) == state.config.save_file) or (state.config.save_file is None and p == (found[0] if found else None)),
+        })
+
+    return {
+        "current_save_path": state.config.save_file,
+        "is_auto": state.config.save_file is None,
+        "saves": saves_data,
+    }
+
+
 @app.post("/api/settings")
 async def update_settings(payload: Dict[str, Any]):
     """
@@ -160,6 +200,8 @@ async def update_settings(payload: Dict[str, Any]):
         if hasattr(state.config, k):
             target_type = type(getattr(state.config, k))
             if v is None:
+                setattr(state.config, k, None)
+            elif k == "save_file" and isinstance(v, str) and not v.strip():
                 setattr(state.config, k, None)
             elif target_type is bool:
                 setattr(state.config, k, bool(v))
@@ -185,6 +227,69 @@ async def update_settings(payload: Dict[str, Any]):
     # Re-run plan with new config
     updated_plan = await state.recompute_plan()
     return {"success": True, "config": state.config.to_dict(), "plan": updated_plan}
+
+
+@app.post("/api/save/upload")
+async def upload_save_file(file: UploadFile = File(...)):
+    """
+    Uploads and imports a Fields of Mistria .sav file chosen via file explorer.
+    Validates file structure, updates config.save_file, triggers watcher,
+    and recomputes the optimal daily gift plan.
+    """
+    if not file.filename or not file.filename.lower().endswith(".sav"):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file format. Please select a Fields of Mistria save file (.sav).",
+        )
+
+    upload_dir = state.repo_root / "data" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_filename = Path(file.filename).name
+    dest_path = upload_dir / safe_filename
+
+    try:
+        content = await file.read()
+        if len(content) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded save file is empty or corrupted.",
+            )
+        with open(dest_path, "wb") as f:
+            f.write(content)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save uploaded file: {e}")
+
+    # Validate that it is a valid Fields of Mistria save file
+    from fom_planner.parser import parse_save_file
+    try:
+        parse_save_file(dest_path)
+    except Exception as e:
+        if dest_path.exists():
+            dest_path.unlink()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not parse save file '{safe_filename}': {e}",
+        )
+
+    old_save_file = state.config.save_file
+    state.config.save_file = str(dest_path)
+    save_companion_config(state.config, state.repo_root)
+
+    if state.watcher and state.config.save_file != old_save_file:
+        state.watcher.update_watch_target(state.config.save_file)
+
+    updated_plan = await state.recompute_plan()
+
+    return {
+        "success": True,
+        "filename": safe_filename,
+        "path": str(dest_path),
+        "config": state.config.to_dict(),
+        "plan": updated_plan,
+    }
 
 
 @app.get("/api/events")
@@ -414,7 +519,7 @@ _ITEM_ID_TO_ASSET_NAME: Dict[str, str] = {
     "iron_armor": "wearable_top_iron_armor",
 
     # 10. Placeables & Misc
-    "animal_currency": "currency",
+    "animal_currency": "shiny_bead",
     "shiny_bead": "shiny_bead",
     "spooky_haybale": "decor_spooky_haybale",
     "starter_bird_house_red": "decor_starter_bird_house_red",
@@ -536,6 +641,19 @@ def _find_local_icon(kind: str, item_id: str) -> Optional[Path]:
             if c.is_file():
                 return c
 
+    elif clean_kind in ("locations", "location"):
+        loc_dir = icons_root / "locations"
+        if not loc_dir.exists():
+            return None
+
+        candidates = [
+            loc_dir / f"{clean_id}.png",
+            loc_dir / clean_id,
+        ]
+        for c in candidates:
+            if c.is_file():
+                return c
+
     return None
 
 
@@ -550,6 +668,21 @@ def generate_placeholder_svg(label: str, kind: str = "item") -> str:
   <rect x="2" y="2" width="44" height="44" rx="6" fill="none" stroke="{accent}" stroke-width="2" stroke-opacity="0.4" />
   <text x="24" y="28" font-family="'Segoe UI', -apple-system, sans-serif" font-weight="bold" font-size="16" fill="{accent}" text-anchor="middle" dominant-baseline="central">{initials}</text>
 </svg>"""
+
+
+@app.get("/assets/sprites/locations/{name}")
+async def get_location_sprite(name: str):
+    """Serves project-local location icons for alt-source badges."""
+    clean_name = name.strip().lower()
+    loc_dir = Path(__file__).resolve().parent / "static" / "icons" / "locations"
+    candidates = [
+        loc_dir / f"{clean_name}.png",
+        loc_dir / clean_name,
+    ]
+    for c in candidates:
+        if c.is_file():
+            return FileResponse(c, media_type="image/png")
+    raise HTTPException(status_code=404, detail=f"Location icon '{clean_name}' not found")
 
 
 @app.get("/assets/sprites/{kind}/{item_id}")
@@ -630,7 +763,7 @@ def launch():
     print("👀 Live Save Watcher active (auto-refreshes on every save)")
     print("=" * 70)
 
-    uvicorn.run("companion.server:app", host=host, port=port, reload=False)
+    uvicorn.run("companion.server:app", host=host, port=port, reload=True)
 
 
 if __name__ == "__main__":

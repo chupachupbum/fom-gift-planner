@@ -85,23 +85,41 @@
           </button>
         </div>
 
-        <!-- Save Status Summary -->
+        <!-- Save Status Summary & Quick Selector -->
         <div class="save-status-box" id="saveStatusBox">
-          <div class="save-status-row">
-            <span style="color: var(--text-muted);">Save File:</span>
-            <strong id="saveFilename">Detecting...</strong>
+          <div class="save-status-header">
+            <span class="save-label">🎮 Active Save</span>
+            <div class="save-actions">
+              <button id="quickImportBtn" class="save-action-btn" title="Open file explorer to import a .sav file">📁 Import File</button>
+              <button id="quickResetBtn" class="save-action-btn btn-auto-detect" title="Switch back to auto-detecting the newest save" style="display: none;">↺ Auto</button>
+            </div>
           </div>
-          <div class="save-status-row">
-            <span style="color: var(--text-muted);">Coverage:</span>
-            <span id="coverageSummary">0/0 NPCs</span>
+
+          <div class="save-select-wrapper">
+            <select id="saveSelectDropdown" class="save-dropdown" title="Select active save file">
+              <option value="">🔍 Auto-detecting latest game save...</option>
+            </select>
           </div>
-          <div class="save-status-row">
-            <span style="color: var(--text-muted);">Strategy:</span>
-            <span id="activeStrategy">Journal</span>
-          </div>
-          <div class="save-status-row">
-            <span style="color: var(--text-muted);">Mode:</span>
-            <span id="activeMode">Auto</span>
+
+          <input type="file" id="globalSaveFileInput" style="display: none;" />
+
+          <div class="save-meta-grid">
+            <div class="save-status-row">
+              <span style="color: var(--text-muted);">Loaded File:</span>
+              <strong id="saveFilename" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">Detecting...</strong>
+            </div>
+            <div class="save-status-row">
+              <span style="color: var(--text-muted);">Coverage:</span>
+              <span id="coverageSummary">0/0 NPCs</span>
+            </div>
+            <div class="save-status-row">
+              <span style="color: var(--text-muted);">Strategy:</span>
+              <span id="activeStrategy">Journal</span>
+            </div>
+            <div class="save-status-row">
+              <span style="color: var(--text-muted);">Mode:</span>
+              <span id="activeMode">Auto</span>
+            </div>
           </div>
         </div>
 
@@ -119,6 +137,33 @@
   <!-- Toast Notification -->
   <div id="toast">Settings updated</div>
 
+  <!-- Crafting Tree Modal Overlay -->
+  <div id="treeModal" class="tree-modal-backdrop" style="display: none;">
+    <div class="tree-modal" onclick="event.stopPropagation()">
+      <div class="tree-modal-header">
+        <div class="tree-modal-title">
+          <span>🌳</span>
+          <span id="treeModalTitle">Crafting Tree</span>
+          <span class="deficit-badge" id="treeModalDeficit" style="display: none;"></span>
+        </div>
+        <div class="tree-modal-search-wrapper">
+          <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="🔍 Search recipe or NPC..." autocomplete="off" />
+        </div>
+        <button class="tree-modal-close" id="treeModalClose" title="Close (Esc)">✕</button>
+      </div>
+      <div class="tree-modal-body" id="treeModalBody"></div>
+      <div class="tree-modal-controls">
+        <button class="tree-modal-ctrl-btn" id="treeExpandAllBtn" title="Expand All Branches">[+] Expand All</button>
+        <button class="tree-modal-ctrl-btn" id="treeCollapseAllBtn" title="Collapse Branches">[−] Collapse All</button>
+        <span class="tree-ctrl-sep"></span>
+        <button class="tree-modal-ctrl-btn" id="treeZoomIn" title="Zoom In">＋</button>
+        <button class="tree-modal-ctrl-btn" id="treeZoomOut" title="Zoom Out">−</button>
+        <button class="tree-modal-ctrl-btn tree-modal-ctrl-fit" id="treeFitBtn" title="Fit to Screen">Fit to screen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -8,13 +8,18 @@ import os
 from enum import IntEnum
 from typing import Dict, List, Set, Tuple
 
-# Default save folder locations on Windows and Linux/Steam Deck
+# Default save folder locations on Windows, Linux, Steam Deck, Snap, and Flatpak
 DEFAULT_SAVE_DIRS: List[str] = [
     os.path.expandvars(r"%LOCALAPPDATA%\FieldsOfMistria\saves"),
     os.path.expandvars(r"%LOCALAPPDATA%\FieldsofMistria\saves"),
     os.path.expandvars(r"%APPDATA%\FieldsOfMistria\saves"),
     os.path.expanduser("~/.steam/steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves"),
     os.path.expanduser("~/.local/share/Steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves"),
+    os.path.expanduser("~/.local/share/FieldsOfMistria/saves"),
+    os.path.expanduser("~/snap/steam/common/.local/share/FieldsOfMistria/saves"),
+    os.path.expanduser("~/snap/steam/common/.local/share/Steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves"),
+    os.path.expanduser("~/.var/app/com.valvesoftware.Steam/.local/share/FieldsOfMistria/saves"),
+    os.path.expanduser("~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves"),
 ]
 
 # Save file entry keys that store global game state / metadata rather than location inventories

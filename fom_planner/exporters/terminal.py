@@ -4,11 +4,96 @@ terminal.py
 Terminal presentation and formatted CLI report generator for Fields of Mistria gift planner.
 """
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from fom_planner.constants import ANIMAL_FESTIVAL_ATTENDING_VENDORS
 from fom_planner.models import InGameDate, SaveData
 from fom_planner.optimizer import compute_focus_suggestions
+
+ALT_SOURCE_EMOJI: Dict[str, str] = {
+    "shop": "🛒",
+    "inn": "🍽️",
+    "market_stall": "🛒",
+    "chicken_statue": "🐔",
+    "mimic": "⛏️",
+    "mill": "⚙️",
+    "fishing": "🎣",
+    "wishing_well": "💫",
+    "festival": "🎪",
+    "date": "💕",
+    "quest": "📋",
+    "museum": "🏛️",
+}
+
+SOURCE_TYPE_NAMES: Dict[str, str] = {
+    "chicken_statue": "Chicken Statue",
+    "wishing_well": "Wishing Well",
+    "mill": "The Mill",
+    "fishing": "Fishing",
+    "mimic": "Mimic Chest",
+    "quest": "Quest Board",
+    "museum": "Museum",
+    "date": "Date",
+    "festival": "Festival Stall",
+    "market_stall": "Market Stall",
+    "inn": "Sleeping Dragon Inn",
+    "shop": "Shop",
+}
+
+
+def _format_alt_sources_terminal(sources: Optional[List[Dict[str, Any]]]) -> str:
+    """Formats alternate acquisition sources as compact badges for terminal."""
+    if not sources:
+        return ""
+    parts = []
+    for s in sources:
+        if not isinstance(s, dict):
+            continue
+        stype = s.get("type", "")
+        emoji = ALT_SOURCE_EMOJI.get(stype, "📍")
+        vendor = s.get("vendor") or s.get("location")
+        if not vendor:
+            vendor = SOURCE_TYPE_NAMES.get(stype, stype.replace("_", " ").title())
+        cost = s.get("cost")
+        note = s.get("note", "")
+        label = vendor
+        if cost is not None:
+            curr = s.get("currency", "tesserae")
+            if curr in ("shiny_beads", "beads"):
+                suffix = " beads"
+            elif curr in ("tesserae", "t"):
+                suffix = "t"
+            else:
+                suffix = f" {curr}"
+            label += f": {cost}{suffix}"
+        elif note:
+            label += f": {note}"
+        parts.append(f"{emoji} {label}")
+    if not parts:
+        return ""
+    return "  [" + " | ".join(parts) + "]"
+
+
+def _render_tree_terminal(node: Dict[str, Any], prefix: str = "      │ ", is_last: bool = True):
+    """Recursively renders a crafting tree node with box-drawing characters for terminal."""
+    if not isinstance(node, dict):
+        return
+    branch = "└── " if is_last else "├── "
+    name = node.get("item_name") or node.get("item_id", "").replace("_", " ").title()
+    gift_npcs = node.get("gift_npcs") or []
+    alt_sources = node.get("alt_sources") or []
+
+    recip_str = f" → {', '.join(gift_npcs)}" if gift_npcs else ""
+    badge_str = _format_alt_sources_terminal(alt_sources)
+    icon = "🎁 " if gift_npcs else ""
+
+    print(f"{prefix}{branch}{icon}{name}{recip_str}{badge_str}")
+
+    children = node.get("children") or []
+    new_prefix = prefix + ("    " if is_last else "│   ")
+    for idx, child in enumerate(children):
+        _render_tree_terminal(child, prefix=new_prefix, is_last=(idx == len(children) - 1))
+
 
 
 def _format_infused_summary(items: Any) -> Tuple[int, str]:
@@ -285,6 +370,21 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
     else:
         print(f" {'Rank':<5} │ {'Item Name':<22} │ {'Need':<14} │ {'Impact':<25} │ {'Location / Source'}")
         print("━" * 86)
+        focus_trees_list = plan_results.get("focus_trees") or []
+        focus_trees_by_id: Dict[str, Dict[str, Any]] = {}
+        for t in focus_trees_list:
+            if isinstance(t, dict) and t.get("item_id"):
+                tid = str(t["item_id"]).strip().lower()
+                focus_trees_by_id[tid] = t
+                if tid == "cow_milk":
+                    focus_trees_by_id.setdefault("milk", t)
+                elif tid == "milk":
+                    focus_trees_by_id.setdefault("cow_milk", t)
+                elif tid == "basic_wood":
+                    focus_trees_by_id.setdefault("wood", t)
+                elif tid == "wood":
+                    focus_trees_by_id.setdefault("basic_wood", t)
+
         for s in focus_suggestions:
             pairs = s.get("blocked_pairs")
             ready = s.get("ready_pairs", 0)
@@ -304,6 +404,16 @@ def print_terminal_plan(save: Optional[SaveData], plan_results: dict):
             rank_val = s.get("rank") if s.get("rank") is not None else 1
             item_name = s.get("item_name") or ""
             print(f"  {rank_val:<4} │ {item_name:<22} │ {need_str:<14} │ {impact_str:<25} │ {loc_str}")
+
+            item_id = str(s.get("item_id", "")).strip().lower()
+            if item_id in focus_trees_by_id:
+                tree = focus_trees_by_id[item_id]
+                root_alt = _format_alt_sources_terminal(tree.get("alt_sources", []))
+                children = tree.get("children", [])
+                if children or root_alt:
+                    print(f"      │ 🌳 Crafting Tree:{root_alt}")
+                    for idx, child in enumerate(children):
+                        _render_tree_terminal(child, prefix="      │ ", is_last=(idx == len(children) - 1))
     print("━" * 86)
 
     # Focus Recipes Section (Cooking progression)

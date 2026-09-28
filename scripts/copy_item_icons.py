@@ -211,7 +211,7 @@ MANUAL_REMAP: Dict[str, str] = {
     "iron_armor": "wearable_top_iron_armor",
 
     # 10. Placeables & Misc
-    "animal_currency": "currency",
+    "animal_currency": "shiny_bead",
     "shiny_bead": "shiny_bead",
     "spooky_haybale": "decor_spooky_haybale",
     "starter_bird_house_red": "decor_starter_bird_house_red",
@@ -436,14 +436,17 @@ def copy_icons(
         dst = dest_items_dir / src_path.name
         shutil.copy2(src_path, dst)
         copied_items_count += 1
+        if it == "animal_currency":
+            alias_dst = dest_items_dir / "spr_ui_item_animal_currency.png"
+            shutil.copy2(src_path, alias_dst)
 
-    # Copy NPC icons from both:
-    # 1. UI NEW/Generic/Icons/NPC/ (all 35 full-town NPC icons: spr_ui_generic_icon_npc_*.png)
-    # 2. _SUB ICONS/NPC/ (13 romanceable sub-icons: spr_ui_item_sub_npc_*.png)
+    # Copy NPC icons:
+    # Use UI NEW/Generic/Icons/NPC/ (all 35 full-town centered NPC portraits: spr_ui_generic_icon_npc_*.png)
+    # Also write spr_ui_item_sub_npc_<name>.png as copies of the centered generic portrait so
+    # all avatars remain centered and not offset to bottom-left corner badges.
     copied_npcs_count = 0
     copied_npc_names: List[str] = []
 
-    # 1. UI NEW generic NPC icons (all 35 townspeople)
     ui_npc_dir = asset_dir.parent / "UI NEW" / "Generic" / "Icons" / "NPC"
     if ui_npc_dir.exists():
         for p in sorted(ui_npc_dir.glob("spr_ui_generic_icon_npc_*.png")):
@@ -452,22 +455,21 @@ def copy_icons(
                 shutil.copy2(p, dst)
                 copied_npcs_count += 1
                 copied_npc_names.append(p.name)
-                # Also create a compatibility copy as spr_ui_item_sub_npc_<name>.png if not present
+                # Create centered compatibility copy as spr_ui_item_sub_npc_<name>.png
                 npc_name = p.stem.replace("spr_ui_generic_icon_npc_", "")
                 sub_dst = dest_npcs_dir / f"spr_ui_item_sub_npc_{npc_name}.png"
-                if not sub_dst.exists():
-                    shutil.copy2(p, sub_dst)
-
-    # 2. SUB ICONS NPC
-    npc_src_dir = asset_dir / "_SUB ICONS" / "NPC"
-    if npc_src_dir.exists():
-        for p in sorted(npc_src_dir.glob("spr_ui_item_sub_npc_*.png")):
-            if p.is_file() and not p.name.endswith("_outline.png"):
-                dst = dest_npcs_dir / p.name
-                shutil.copy2(p, dst)
-                if p.name not in copied_npc_names:
-                    copied_npcs_count += 1
-                    copied_npc_names.append(p.name)
+                shutil.copy2(p, sub_dst)
+    else:
+        # Fallback to _SUB ICONS/NPC if UI NEW is missing
+        npc_src_dir = asset_dir / "_SUB ICONS" / "NPC"
+        if npc_src_dir.exists():
+            for p in sorted(npc_src_dir.glob("spr_ui_item_sub_npc_*.png")):
+                if p.is_file() and not p.name.endswith("_outline.png"):
+                    dst = dest_npcs_dir / p.name
+                    shutil.copy2(p, dst)
+                    if p.name not in copied_npc_names:
+                        copied_npcs_count += 1
+                        copied_npc_names.append(p.name)
 
     return {
         "total_items_analyzed": len(item_ids),
