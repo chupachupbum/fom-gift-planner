@@ -36,6 +36,13 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
     - `impact` (default): Prioritizes items gating the highest number of NPC gifts across town.
     - `deficit`: Prioritizes items with the largest overall deficit/shortage in your storage.
     - `quick-wins`: Prioritizes items closest to completion (smallest deficit first) for immediate gift unlocks.
+- **Focus Crafting Trees & Downstream Dependency Breakdown**:
+  - Automatically calculates downstream crafting dependencies for top blocker items (e.g. `milk` → `cheese`, `wood` → `wooden_chest`).
+  - Displays recipient NPCs unlocked by each downstream craft and indicates required crafting stations (Kitchen, Mill, Crafting Bench, Smelter).
+  - Visualized as interactive tree nodes in the Companion Web UI, tree branches in Terminal output, and a dedicated "Focus Trees" sheet in Excel exports.
+- **Alternate Acquisition Sources (`data/alt_sources.json`)**:
+  - Maps items and ingredients to non-farming sources: shops (Balor's Wagon, General Store, Hayden's Ranch, Tack Shop, Sleeping Dragon Inn), Saturday Market stalls, Chicken Statue offerings, Wishing Well wishes, Mining chests & Mimics, Mill processing, Fishing, Quests, Museum rewards, and Festivals.
+  - Badges indicate vendor, buy cost, currency (`tesserae` vs `shiny_beads`), and special availability notes.
 - **Zero Mandatory Dependencies**: Runs entirely on Python's standard library. Optional Excel export via `openpyxl`.
 - **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 440+ giftable items by popularity across the 34 NPCs.
 
@@ -97,7 +104,7 @@ uv run fom-planner --save-file "path/to/your/save.sav"
 Run the companion on your second monitor or in the background while playing Fields of Mistria on Windows or Linux:
 
 ```bash
-# Install companion dependencies (FastAPI, uvicorn, watchdog)
+# Install companion dependencies (FastAPI, uvicorn, watchdog, python-multipart)
 uv sync --extra companion
 # or: pip install -e ".[companion]"
 
@@ -109,10 +116,11 @@ uv run fom-companion
 Then open **[http://localhost:8000](http://localhost:8000)** in any browser.
 
 - 📡 **Instant Live Sync**: Uses Server-Sent Events (SSE) and watchdog to automatically update the gift plan the moment you save or sleep in-game.
-- 🎒 **Optimal Daily Bag Cards**: Shows item status (`📦 HAVE`, `✅ CRAFT`, `❌ NEED`), quantities, and recipient NPC chips.
-- 🌾 **Focus Suggestions**: Pinpoints top blocker raw materials to gather or plant today.
+- 📂 **Save File Picker & Direct Upload**: Browse and select from auto-detected saves or upload any `.sav` file directly through the web UI without manual file paths.
+- 🎒 **Optimal Daily Bag Cards**: Shows item status (`📦 HAVE`, `✅ CRAFT`, `❌ NEED`), quantities, pixel-art item sprites, and recipient NPC avatar chips.
+- 🌾 **Focus Suggestions & Interactive Crafting Trees**: Pinpoints top blocker raw materials to gather or plant today, with expandable downstream crafting trees and vendor/alternate-source badges.
 - ⚙️ **All Parameters Configurable**: Change strategy (`journal` vs `max-relationship`), bag slot budget, date overrides, scoring multipliers, or NPC exclusions directly from the sidebar.
-- 🪟 **Windows Optimized**: Built with Windows filesystem semantics, atomic save rename handling, and file lock retry logic.
+- 🪟 **Cross-Platform & Windows Optimized**: Supports Windows filesystem semantics, atomic save rename handling, and Proton/Steam Deck/Linux save detection.
 
 ---
 
@@ -129,6 +137,14 @@ Fields of Mistria save files (`.sav`) are located at:
 - **Linux / Steam Deck (Proton)**:
   ```
   ~/.steam/steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves/
+  ~/.local/share/Steam/steamapps/compatdata/2142790/pfx/drive_c/users/steamuser/AppData/Local/FieldsOfMistria/saves/
+  ```
+
+- **Linux (Native, Snap, & Flatpak Steam)**:
+  ```
+  ~/.local/share/FieldsOfMistria/saves/
+  ~/snap/steam/common/.local/share/FieldsOfMistria/saves/
+  ~/.var/app/com.valvesoftware.Steam/.local/share/FieldsOfMistria/saves/
   ```
 
 ---
@@ -219,15 +235,21 @@ fom-gift-planner/
 │   ├── models.py             # Domain models (InGameDate, SaveData, CraftingPlan)
 │   ├── parser.py             # Binary save decompressor & parser
 │   ├── crafting.py           # Recursive DAG recipe calculator & material deduction
-│   ├── data_loader.py        # Database loaders (locations, recipes, metadata, prefs)
-│   ├── optimizer.py          # Greedy set-cover & max-relationship solvers, focus suggestions
+│   ├── data_loader.py        # Database loaders (locations, recipes, metadata, alt sources)
+│   ├── optimizer.py          # Greedy set-cover, max-relationship, focus suggestions & trees
 │   ├── rankings.py           # Gift popularity ranking builder
 │   ├── cli.py                # Unified CLI parser & execution dispatch
 │   └── exporters/
 │       ├── __init__.py       # Exporters package
-│       ├── terminal.py       # Terminal UI formatting (banners, badges, impact summary)
+│       ├── terminal.py       # Terminal UI formatting (banners, badges, focus trees)
 │       ├── csv_export.py     # CSV exporters
-│       └── excel_export.py   # Multi-sheet openpyxl Excel exporter
+│       └── excel_export.py   # Multi-sheet openpyxl Excel exporter (6 sheets)
+│
+├── companion/                # Live companion web app
+│   ├── server.py             # FastAPI backend & SSE event stream
+│   ├── config.py             # Companion configuration model
+│   ├── json_exporter.py      # Companion payload formatter
+│   └── static/               # Web client assets (HTML, CSS, JS, pixel-art sprites)
 │
 ├── gift_planner.py           # Backward-compatible shim
 ├── export_gift_rankings.py   # Backward-compatible shim
@@ -237,25 +259,33 @@ fom-gift-planner/
 ├── data/
 │   ├── item_data.json        # Database of 34 NPCs, 556 items, affinities, and tags
 │   ├── item_locations.json   # Database of 452 item spawn and acquisition locations
+│   ├── alt_sources.json      # Database of alternate acquisition paths (shops, wells, etc.)
 │   └── recipes.json          # Complete cooking, crafting, and milling recipes
 ├── samples/
 │   └── sample_save.sav       # Sample save file for quick testing
 ├── exports/                  # Directory where CSV/Excel exports are saved
-└── tests/                    # Unit & regression test suite (327 tests)
+└── tests/                    # Unit, regression & stress test suite (531 tests)
+    ├── test_alt_sources.py
+    ├── test_challenger_cli_and_exporters.py
+    ├── test_challenger_engine_stress.py
+    ├── test_challenger_stress_focus_recipes.py
     ├── test_cli.py
+    ├── test_companion.py
     ├── test_crafting_calculator.py
     ├── test_exporters.py
+    ├── test_focus_recipes.py
     ├── test_gift_planner.py
     ├── test_infused_items.py
     ├── test_max_relationship.py
-    └── test_save_parser.py
+    ├── test_save_parser.py
+    └── test_zorel_features.py
 ```
 
 ---
 
 ## Running the Test Suite
 
-Run the full automated test suite (350 tests):
+Run the full automated test suite (531 tests):
 
 ```bash
 # With uv (recommended)
