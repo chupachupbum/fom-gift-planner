@@ -110,7 +110,9 @@ function renderHeader(data) {
   const seasonTag = document.getElementById("seasonTag");
   const dateText = document.getElementById("dateText");
   const festivalPill = document.getElementById("festivalPill");
+  const overridePill = document.getElementById("overridePill");
   const playerFarmBadge = document.getElementById("playerFarmBadge");
+  const dateBadge = document.getElementById("dateBadge");
 
   const season = (dateInfo.season || "Spring").toLowerCase();
   if (seasonTag) {
@@ -132,6 +134,23 @@ function renderHeader(data) {
       festivalPill.style.display = "inline-block";
     } else {
       festivalPill.style.display = "none";
+    }
+  }
+
+  if (overridePill) {
+    if (dateInfo.is_overridden) {
+      overridePill.style.display = "inline-flex";
+      overridePill.title = dateInfo.save_date ? `Save Date: ${dateInfo.save_date.season} Day ${dateInfo.save_date.day}, Year ${dateInfo.save_date.year}` : "Date is overridden";
+    } else {
+      overridePill.style.display = "none";
+    }
+  }
+
+  if (dateBadge) {
+    if (dateInfo.is_overridden && dateInfo.save_date) {
+      dateBadge.title = `Target Date: Year ${dateInfo.year}, ${dateInfo.season} Day ${dateInfo.day} (OVERRIDDEN)\nGame Save: Year ${dateInfo.save_date.year}, ${dateInfo.save_date.season} Day ${dateInfo.save_date.day}\nClick to open Fields of Mistria Calendar`;
+    } else {
+      dateBadge.title = `Date: Year ${dateInfo.year || 1}, ${dateInfo.season || 'Spring'} Day ${dateInfo.day || 1}\nClick to open Fields of Mistria Calendar`;
     }
   }
 
@@ -1118,6 +1137,31 @@ function renderSettingsAccordion(schema, config) {
       }
     });
   });
+
+  // Attach listeners for sidebar date override card actions
+  const sidebarOpenCalBtn = document.getElementById("sidebarOpenCalBtn");
+  if (sidebarOpenCalBtn) {
+    sidebarOpenCalBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openCalendarModal();
+    });
+  }
+
+  const sidebarNextSatBtn = document.getElementById("sidebarNextSatBtn");
+  if (sidebarNextSatBtn) {
+    sidebarNextSatBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await jumpToNextSaturday();
+    });
+  }
+
+  const sidebarResetDateBtn = document.getElementById("sidebarResetDateBtn");
+  if (sidebarResetDateBtn) {
+    sidebarResetDateBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await resetDateOverride();
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1232,6 +1276,55 @@ function renderField(field, currentVal) {
     `;
   }
 
+  if (field.key === "date_override" || field.type === "date_override") {
+    const isOverridden = Boolean(currentPlan?.in_game_date?.is_overridden);
+    const dateInfo = currentPlan?.in_game_date || {};
+    const saveDate = dateInfo.save_date;
+    const targetDateStr = `${dateInfo.season || "Spring"} Day ${dateInfo.day || 1}, Year ${dateInfo.year || 1}`;
+    const overrideVal = (currentVal !== null && currentVal !== undefined) ? currentVal : "";
+
+    return `
+      <div class="field-group">
+        <label>${field.label}</label>
+        <div class="date-override-card">
+          <div class="date-override-status-row">
+            <div class="date-override-badge-active">
+              <span>📅</span>
+              <span>${targetDateStr}</span>
+            </div>
+            <span class="date-override-state-pill ${isOverridden ? 'pill-overridden' : 'pill-live'}">
+              ${isOverridden ? 'Overridden' : 'Save Date'}
+            </span>
+          </div>
+
+          ${isOverridden && saveDate ? `
+            <div class="date-override-note">
+              Using override instead of game save (Save: <strong>${saveDate.season} Day ${saveDate.day}, Year ${saveDate.year}</strong>)
+            </div>
+          ` : ''}
+
+          <div class="date-override-actions">
+            <button type="button" class="btn-cal-action btn-cal-primary" id="sidebarOpenCalBtn" title="Open interactive 28-day FoM calendar">
+              📅 Open Calendar
+            </button>
+            <button type="button" class="btn-cal-action btn-cal-sat" id="sidebarNextSatBtn" title="Jump to upcoming Saturday Market">
+              ★ Saturday
+            </button>
+            ${isOverridden ? `
+              <button type="button" class="btn-cal-action btn-cal-reset" id="sidebarResetDateBtn" title="Reset date override and follow game save">
+                ↺ Reset
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="date-manual-input-row">
+            <input type="text" id="${id}" class="date-manual-input" value="${overrideVal}" placeholder="Or type e.g. 'saturday', 'winter 10'..." title="Type custom date or festival" />
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   if (field.type === "range") {
     const val = currentVal ?? field.min;
     return `
@@ -1281,6 +1374,235 @@ async function submitSettingUpdate(key, value) {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. FoM 28-Day Seasonal Calendar Modal & Date Override
+// ---------------------------------------------------------------------------
+
+let calModalState = {
+  year: 1,
+  season: "spring",
+  selectedDay: 1,
+};
+
+const FOM_FESTIVALS = {
+  spring: { 17: "Spring Festival" },
+  summer: { 28: "Shooting Star Festival" },
+  fall: { 10: "Harvest Festival" },
+  winter: { 10: "Animal Festival" },
+};
+
+function openCalendarModal() {
+  const modal = document.getElementById("calendarModal");
+  if (!modal) return;
+
+  const inGame = currentPlan?.in_game_date || {};
+  calModalState.year = inGame.year || 1;
+  let s = (inGame.season || "spring").toLowerCase();
+  if (s === "autumn") s = "fall";
+  calModalState.season = s;
+  calModalState.selectedDay = inGame.day || 1;
+
+  updateCalendarToolbar();
+  renderCalendarDaysGrid();
+  updateCalendarStatusBar();
+
+  modal.classList.remove("closing");
+  modal.style.display = "flex";
+}
+
+function closeCalendarModal() {
+  const modal = document.getElementById("calendarModal");
+  if (!modal) return;
+  modal.classList.add("closing");
+  setTimeout(() => {
+    modal.style.display = "none";
+    modal.classList.remove("closing");
+  }, 200);
+}
+
+function updateCalendarToolbar() {
+  const yearDisplay = document.getElementById("calYearDisplay");
+  if (yearDisplay) {
+    yearDisplay.textContent = `Year ${calModalState.year}`;
+  }
+
+  document.querySelectorAll(".cal-season-tab").forEach(tab => {
+    const s = tab.getAttribute("data-season");
+    if (s === calModalState.season) {
+      tab.classList.add("active");
+    } else {
+      tab.classList.remove("active");
+    }
+  });
+}
+
+function updateCalendarStatusBar() {
+  const textEl = document.getElementById("calStatusDateText");
+  const badgeEl = document.getElementById("calStatusBadge");
+  const noteEl = document.getElementById("calSaveDateNote");
+  if (!textEl) return;
+
+  const inGame = currentPlan?.in_game_date || {};
+  const isOverridden = Boolean(inGame.is_overridden);
+  const saveDate = inGame.save_date;
+
+  const capSeason = calModalState.season.charAt(0).toUpperCase() + calModalState.season.slice(1);
+  const isSat = (calModalState.selectedDay % 7 === 6);
+  const fest = FOM_FESTIVALS[calModalState.season]?.[calModalState.selectedDay];
+
+  let desc = `${capSeason} Day ${calModalState.selectedDay}, Year ${calModalState.year}`;
+  if (isSat) desc += " ★ (Saturday Market)";
+  if (fest) desc += ` 🎉 (${fest})`;
+  textEl.textContent = desc;
+
+  if (badgeEl) {
+    if (isOverridden) {
+      badgeEl.textContent = "Date Overridden";
+      badgeEl.className = "cal-status-badge badge-override";
+    } else {
+      badgeEl.textContent = "Following Save Date";
+      badgeEl.className = "cal-status-badge badge-save";
+    }
+  }
+
+  if (noteEl) {
+    if (saveDate) {
+      noteEl.textContent = `Save: ${saveDate.season} Day ${saveDate.day}, Year ${saveDate.year}`;
+    } else {
+      noteEl.textContent = "";
+    }
+  }
+}
+
+function renderCalendarDaysGrid() {
+  const grid = document.getElementById("calendarDaysGrid");
+  if (!grid) return;
+
+  const inGame = currentPlan?.in_game_date || {};
+  const saveDate = inGame.save_date;
+  const currentSeason = (inGame.season || "spring").toLowerCase();
+  const currentDay = inGame.day || 1;
+  const currentYear = inGame.year || 1;
+
+  const festivals = FOM_FESTIVALS[calModalState.season] || {};
+
+  let html = "";
+  for (let day = 1; day <= 28; day++) {
+    const isSat = (day % 7 === 6);
+    const festName = festivals[day];
+
+    const isSaveDate = Boolean(
+      saveDate &&
+      saveDate.season.toLowerCase() === calModalState.season &&
+      saveDate.day === day &&
+      saveDate.year === calModalState.year
+    );
+
+    const isTargetDate = Boolean(
+      currentSeason === calModalState.season &&
+      currentDay === day &&
+      currentYear === calModalState.year
+    );
+
+    const isCurrentModalSelection = (day === calModalState.selectedDay);
+
+    let cellClasses = ["cal-day-cell"];
+    if (isSat) cellClasses.push("is-sat");
+    if (isSaveDate) cellClasses.push("is-save-date");
+    if (isTargetDate || isCurrentModalSelection) cellClasses.push("is-selected");
+
+    html += `
+      <div class="${cellClasses.join(' ')}" data-day="${day}" title="Day ${day}${isSat ? ' (Saturday Market)' : ''}${festName ? ' - ' + festName : ''}">
+        <div class="cal-cell-top">
+          <span class="cal-cell-number">${day}</span>
+          <div class="cal-cell-badges">
+            ${isSat ? '<span class="cal-cell-sat-tag">★ Sat</span>' : ''}
+            ${isSaveDate ? '<span class="cal-cell-save-tag">🎮 Save</span>' : ''}
+          </div>
+        </div>
+        <div class="cal-cell-content">
+          ${festName ? `<span class="cal-cell-fest-tag" title="${festName}">🎉 ${festName}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = html;
+
+  // Add click listeners to day cells
+  grid.querySelectorAll(".cal-day-cell").forEach(cell => {
+    cell.addEventListener("click", async () => {
+      const day = parseInt(cell.getAttribute("data-day"), 10);
+      await selectCalendarDate(calModalState.season, day, calModalState.year);
+    });
+  });
+}
+
+async function selectCalendarDate(season, day, year) {
+  calModalState.selectedDay = day;
+  calModalState.season = season;
+  calModalState.year = year;
+
+  const capSeason = season.charAt(0).toUpperCase() + season.slice(1);
+  const formatted = `${capSeason} ${day}, Year ${year}`;
+  const isSat = (day % 7 === 6);
+
+  showToast(`📅 Applying date override: ${formatted}...`, 2000);
+  await submitSettingUpdate("date_override", formatted);
+
+  updateCalendarToolbar();
+  renderCalendarDaysGrid();
+  updateCalendarStatusBar();
+  loadSettings();
+}
+
+async function jumpToNextSaturday() {
+  const inGame = currentPlan?.in_game_date || {};
+  let curSeason = (inGame.season || "spring").toLowerCase();
+  if (curSeason === "autumn") curSeason = "fall";
+  let curDay = inGame.day || 1;
+  let curYear = inGame.year || 1;
+
+  const seasonsList = ["spring", "summer", "fall", "winter"];
+  let sIdx = seasonsList.indexOf(curSeason);
+  if (sIdx === -1) sIdx = 0;
+
+  const satDays = [6, 13, 20, 27];
+  let nextDay = satDays.find(d => d > curDay);
+
+  let targetSeason = curSeason;
+  let targetYear = curYear;
+  let targetDay = 6;
+
+  if (nextDay) {
+    targetDay = nextDay;
+  } else {
+    sIdx = (sIdx + 1) % 4;
+    targetSeason = seasonsList[sIdx];
+    if (sIdx === 0) targetYear += 1;
+    targetDay = 6;
+  }
+
+  await selectCalendarDate(targetSeason, targetDay, targetYear);
+}
+
+async function resetDateOverride() {
+  showToast("↺ Reverting to game save date...", 2000);
+  await submitSettingUpdate("date_override", "");
+  const inGame = currentPlan?.in_game_date || {};
+  const saveDate = inGame.save_date;
+  calModalState.year = saveDate?.year || inGame.year || 1;
+  let s = (saveDate?.season || inGame.season || "spring").toLowerCase();
+  if (s === "autumn") s = "fall";
+  calModalState.season = s;
+  calModalState.selectedDay = saveDate?.day || inGame.day || 1;
+
+  updateCalendarToolbar();
+  renderCalendarDaysGrid();
+  updateCalendarStatusBar();
+  loadSettings();
+}
+
+// ---------------------------------------------------------------------------
 // 5. Initialisation
 // ---------------------------------------------------------------------------
 
@@ -1289,6 +1611,92 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchPlan();
   loadSettings();
   loadAvailableSaves();
+
+  // Calendar Modal Controls & Header Date Badge Interaction
+  const dateBadge = document.getElementById("dateBadge");
+  if (dateBadge) {
+    dateBadge.addEventListener("click", () => openCalendarModal());
+    dateBadge.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openCalendarModal();
+      }
+    });
+  }
+
+  const calCloseBtn = document.getElementById("calCloseBtn");
+  if (calCloseBtn) {
+    calCloseBtn.addEventListener("click", () => closeCalendarModal());
+  }
+
+  const calendarModalClose = document.getElementById("calendarModalClose");
+  if (calendarModalClose) {
+    calendarModalClose.addEventListener("click", () => closeCalendarModal());
+  }
+
+  const calendarModal = document.getElementById("calendarModal");
+  if (calendarModal) {
+    calendarModal.addEventListener("click", (e) => {
+      if (e.target === calendarModal) {
+        closeCalendarModal();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const calModal = document.getElementById("calendarModal");
+      if (calModal && calModal.style.display !== "none") {
+        closeCalendarModal();
+      }
+    }
+  });
+
+  const calYearPrev = document.getElementById("calYearPrev");
+  if (calYearPrev) {
+    calYearPrev.addEventListener("click", () => {
+      calModalState.year = Math.max(1, calModalState.year - 1);
+      updateCalendarToolbar();
+      renderCalendarDaysGrid();
+      updateCalendarStatusBar();
+    });
+  }
+
+  const calYearNext = document.getElementById("calYearNext");
+  if (calYearNext) {
+    calYearNext.addEventListener("click", () => {
+      calModalState.year += 1;
+      updateCalendarToolbar();
+      renderCalendarDaysGrid();
+      updateCalendarStatusBar();
+    });
+  }
+
+  document.querySelectorAll(".cal-season-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      const season = tab.getAttribute("data-season");
+      if (season) {
+        calModalState.season = season;
+        updateCalendarToolbar();
+        renderCalendarDaysGrid();
+        updateCalendarStatusBar();
+      }
+    });
+  });
+
+  const calJumpSaturdayBtn = document.getElementById("calJumpSaturdayBtn");
+  if (calJumpSaturdayBtn) {
+    calJumpSaturdayBtn.addEventListener("click", async () => {
+      await jumpToNextSaturday();
+    });
+  }
+
+  const calResetSaveBtn = document.getElementById("calResetSaveBtn");
+  if (calResetSaveBtn) {
+    calResetSaveBtn.addEventListener("click", async () => {
+      await resetDateOverride();
+    });
+  }
 
   const saveDropdown = document.getElementById("saveSelectDropdown");
   if (saveDropdown) {

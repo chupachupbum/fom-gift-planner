@@ -22,7 +22,7 @@ def _to_serializable(val: Any) -> Any:
     if isinstance(val, dict):
         return {str(k): _to_serializable(v) for k, v in val.items()}
     if isinstance(val, Path):
-        return str(val)
+        return val.as_posix()
     if hasattr(val, "value"):  # Enum support
         return val.value
     return val
@@ -50,6 +50,15 @@ def plan_to_json(
     else:
         date_info = InGameDate(year=1, season="spring", day=1)
 
+    save_date_info: Optional[InGameDate] = None
+    if save and hasattr(save, "original_in_game_date"):
+        try:
+            save_date_info = save.original_in_game_date
+        except Exception:
+            pass
+
+    is_overridden = bool(config.date_override and str(config.date_override).strip())
+
     player_name = save.player_name if (save and hasattr(save, "player_name")) else "Player"
     farm_name = save.farm_name if (save and hasattr(save, "farm_name")) else "Farm"
 
@@ -74,6 +83,17 @@ def plan_to_json(
         "festival_name": getattr(date_info, "festival_name", None),
         "days_until_saturday": getattr(date_info, "days_until_saturday", 0),
         "formatted": str(date_info),
+        "is_overridden": is_overridden,
+        "date_override": config.date_override or "",
+        "save_date": {
+            "year": getattr(save_date_info, "year", 1),
+            "season": getattr(save_date_info, "season", "spring").capitalize(),
+            "day": getattr(save_date_info, "day", 1),
+            "day_of_week": getattr(save_date_info, "day_of_week", "Sunday"),
+            "is_saturday": getattr(save_date_info, "is_saturday", False),
+            "festival_name": getattr(save_date_info, "festival_name", None),
+            "formatted": str(save_date_info),
+        } if save_date_info else None,
     }
 
     # Bag plan items

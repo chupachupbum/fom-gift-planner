@@ -21,10 +21,12 @@
       </div>
 
       <div class="date-status-bar">
-        <div class="date-badge" id="dateBadge">
+        <div class="date-badge interactive-badge" id="dateBadge" role="button" tabindex="0" title="Click to open Fields of Mistria Calendar & Date Override">
           <span class="season-tag season-spring" id="seasonTag">SPRING</span>
           <span id="dateText">Day 1</span>
           <span class="festival-pill" id="festivalPill" style="display: none;">FESTIVAL</span>
+          <span class="override-pill" id="overridePill" style="display: none;">OVERRIDE</span>
+          <span class="date-badge-calendar-btn" title="Open Calendar">📅</span>
         </div>
         <div id="playerFarmBadge" style="font-size: 0.85rem; opacity: 0.9;"></div>
       </div>
@@ -136,6 +138,86 @@
 
   <!-- Toast Notification -->
   <div id="toast">Settings updated</div>
+
+  <!-- FoM 28-Day Seasonal Calendar Modal Overlay -->
+  <div id="calendarModal" class="calendar-modal-backdrop" style="display: none;">
+    <div class="calendar-modal" onclick="event.stopPropagation()">
+      <div class="calendar-modal-header">
+        <div class="calendar-modal-title">
+          <span>📅</span>
+          <span>Fields of Mistria Calendar</span>
+        </div>
+        <button class="calendar-modal-close" id="calendarModalClose" title="Close (Esc)">✕</button>
+      </div>
+
+      <div class="calendar-modal-body">
+        <!-- Year Stepper & Season Tabs Toolbar -->
+        <div class="cal-toolbar">
+          <div class="cal-year-control">
+            <span class="cal-toolbar-label">Year</span>
+            <button class="cal-year-btn" id="calYearPrev" title="Previous Year">◀</button>
+            <span class="cal-year-display" id="calYearDisplay">Year 1</span>
+            <button class="cal-year-btn" id="calYearNext" title="Next Year">▶</button>
+          </div>
+
+          <div class="cal-season-tabs">
+            <button class="cal-season-tab active" data-season="spring" id="calTabSpring">🌸 Spring</button>
+            <button class="cal-season-tab" data-season="summer" id="calTabSummer">☀️ Summer</button>
+            <button class="cal-season-tab" data-season="fall" id="calTabFall">🍂 Fall</button>
+            <button class="cal-season-tab" data-season="winter" id="calTabWinter">❄️ Winter</button>
+          </div>
+        </div>
+
+        <!-- Selected Date Status Bar -->
+        <div class="cal-status-bar" id="calStatusBar">
+          <div class="cal-status-left">
+            <span class="cal-status-label">Target Date:</span>
+            <strong id="calStatusDateText">Spring Day 1, Year 1</strong>
+            <span class="cal-status-badge" id="calStatusBadge">Save Date</span>
+          </div>
+          <div class="cal-status-right" id="calSaveDateNote"></div>
+        </div>
+
+        <!-- 28-Day FoM Calendar Grid -->
+        <div class="cal-grid-wrapper">
+          <div class="cal-days-header">
+            <div>MON</div>
+            <div>TUE</div>
+            <div>WED</div>
+            <div>THU</div>
+            <div>FRI</div>
+            <div class="cal-hdr-sat">SAT ★</div>
+            <div>SUN</div>
+          </div>
+          <div class="cal-grid-days" id="calendarDaysGrid">
+            <!-- 28 interactive day cells rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="cal-legend">
+          <div class="cal-legend-item"><span class="cal-dot cal-dot-sat"></span> Saturday Market</div>
+          <div class="cal-legend-item"><span class="cal-dot cal-dot-fest"></span> Festival Day</div>
+          <div class="cal-legend-item"><span class="cal-dot cal-dot-save"></span> Save File Date</div>
+          <div class="cal-legend-item"><span class="cal-dot cal-dot-active"></span> Active / Selected</div>
+        </div>
+      </div>
+
+      <div class="calendar-modal-footer">
+        <div class="cal-footer-shortcuts">
+          <button class="cal-footer-btn cal-btn-saturday" id="calJumpSaturdayBtn" title="Jump to the next Saturday Market day">
+            ★ Next Saturday
+          </button>
+          <button class="cal-footer-btn cal-btn-reset" id="calResetSaveBtn" title="Clear override and follow game save calendar">
+            ↺ Follow Save Date
+          </button>
+        </div>
+        <div class="cal-footer-actions">
+          <button class="cal-footer-btn cal-btn-done" id="calCloseBtn">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Crafting Tree Modal Overlay -->
   <div id="treeModal" class="tree-modal-backdrop" style="display: none;">

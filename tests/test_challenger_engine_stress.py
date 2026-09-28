@@ -255,11 +255,11 @@ class TestLoadAltSourcesEdgeCases(unittest.TestCase):
             f.write(json.dumps({"test": [{"type": "shop"}]}))
             temp_path = f.name
         try:
-            os.chmod(temp_path, 0)
-            result = load_alt_sources(temp_path)
+            from unittest.mock import patch
+            with patch("builtins.open", side_effect=PermissionError("Permission denied")):
+                result = load_alt_sources(temp_path)
             self.assertEqual(result, {})
         finally:
-            os.chmod(temp_path, stat.S_IRWXU)
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 

@@ -7,6 +7,7 @@ Handles safe path resolution, Windows file lock retries, and data conversion.
 
 import json
 from pathlib import Path
+import re
 import time
 from typing import Any, Dict, Optional, Set, Tuple
 
@@ -61,6 +62,116 @@ def read_save_with_retry(save_path: Path, max_attempts: int = 5) -> SaveData:
             raise e
     if last_err:
         raise last_err
+
+
+def parse_date_override(
+    date_override: Optional[str],
+    default_date: Optional[InGameDate] = None,
+) -> Optional[InGameDate]:
+    """
+    Parses a user-defined date override string into an InGameDate object.
+    Supports:
+      - 'saturday', 'sat': Jumps to upcoming Saturday relative to default_date (or Spring 6).
+      - 'Spring 14', 'Year 2, Summer 6', 'Fall 10', 'Winter 28'
+      - Festivals: 'animal festival' (Winter 10), 'spring festival' (Spring 17),
+                   'shooting star' (Summer 28), 'harvest festival' (Fall 10)
+      - Numbers: '6', '13', '20', '27'
+      - JSON format: '{"season": "spring", "day": 14, "year": 1}'
+      - Empty / None / 'auto' / 'save' / 'default': Returns None (no override).
+    """
+    if not date_override:
+        return None
+    raw = str(date_override).strip()
+    if not raw or raw.lower() in ("none", "auto", "save", "default", "null", "false", "0"):
+        return None
+
+    # Try JSON format
+    if raw.startswith("{") and raw.endswith("}"):
+        try:
+            data = json.loads(raw)
+            season = str(data.get("season", "spring")).strip().lower()
+            if season == "autumn":
+                season = "fall"
+            day = int(data.get("day", 1))
+            day = max(1, min(28, day))
+            yr = int(data.get("year", default_date.year if default_date else 1))
+            yr = max(1, yr)
+            return InGameDate(year=yr, season=season, day=day, time_str="10:00")
+        except Exception:
+            pass
+
+    text = raw.lower()
+
+    # 1. Festival keywords
+    if "animal" in text or text in ("winter 10", "winter_10", "10 winter"):
+        yr = default_date.year if default_date else 1
+        return InGameDate(year=yr, season="winter", day=10, time_str="10:00")
+    if "shooting" in text or text in ("summer 28", "summer_28", "28 summer"):
+        yr = default_date.year if default_date else 1
+        return InGameDate(year=yr, season="summer", day=28, time_str="10:00")
+    if "harvest" in text:
+        yr = default_date.year if default_date else 1
+        return InGameDate(year=yr, season="fall", day=10, time_str="10:00")
+    if "spring fest" in text or text in ("spring 17", "spring_17", "17 spring"):
+        yr = default_date.year if default_date else 1
+        return InGameDate(year=yr, season="spring", day=17, time_str="10:00")
+
+    # 2. "saturday" or "sat" keyword
+    if text.startswith("sat"):
+        if default_date is not None:
+            yr = default_date.year
+            season = default_date.season.lower()
+            if season == "autumn":
+                season = "fall"
+            next_day = default_date.next_saturday_day
+            if next_day <= 28:
+                return InGameDate(year=yr, season=season, day=next_day, time_str="10:00")
+            else:
+                seasons_cycle = ["spring", "summer", "fall", "winter"]
+                curr_idx = seasons_cycle.index(season) if season in seasons_cycle else 0
+                next_idx = (curr_idx + 1) % 4
+                next_season = seasons_cycle[next_idx]
+                next_yr = yr + 1 if next_idx == 0 else yr
+                return InGameDate(year=next_yr, season=next_season, day=6, time_str="10:00")
+        else:
+            return InGameDate(year=1, season="spring", day=6, time_str="10:00")
+
+    # 3. Year, season, and day extraction
+    yr = default_date.year if default_date else 1
+    yr_match = re.search(r"(?:year|y)\s*[:=]?\s*(\d+)", text)
+    if yr_match:
+        try:
+            yr = int(yr_match.group(1))
+            text = text[:yr_match.start()] + " " + text[yr_match.end():]
+        except Exception:
+            pass
+
+    season = default_date.season.lower() if default_date else "spring"
+    if season == "autumn":
+        season = "fall"
+    if "spring" in text:
+        season = "spring"
+    elif "summer" in text:
+        season = "summer"
+    elif "fall" in text or "autumn" in text:
+        season = "fall"
+    elif "winter" in text:
+        season = "winter"
+
+    # Search for day number (1..28)
+    day_match = re.search(r"\b([1-9]|[12][0-9])\b", text)
+    if day_match:
+        day = int(day_match.group(1))
+        if 1 <= day <= 28:
+            return InGameDate(year=max(1, yr), season=season, day=day, time_str="10:00")
+
+    digits = re.findall(r"\d+", text)
+    if digits:
+        val = int(digits[0])
+        day = max(1, min(28, val))
+        return InGameDate(year=max(1, yr), season=season, day=day, time_str="10:00")
+
+    return None
 
 
 def execute_plan(
@@ -138,24 +249,33 @@ def execute_plan(
 
     # 5. Handle date override
     effective_mode = config.mode
-    if config.date_override:
-        d_lower = config.date_override.strip().lower()
-        if "sat" in d_lower or d_lower in ("6", "13", "20", "27"):
-            if effective_mode == "auto":
-                effective_mode = "saturday"
-        elif "animal" in d_lower or "winter 10" in d_lower or "10 winter" in d_lower or d_lower in ("winter_10", "animal_festival"):
-            yr = 1
-            if save is not None and hasattr(save, "in_game_date") and save.in_game_date:
-                yr = save.in_game_date.year
-            elif save is None:
-                cal_days = (yr - 1) * 112 + 3 * 28 + 9
-                dummy_entries = {
-                    "header": json.dumps({"name": "Player", "calendar_time": cal_days * 86400, "clock_time": 36000}),
-                    "player": json.dumps({"name": "Player", "inventory": []}),
-                    "npcs": json.dumps({}),
-                }
-                save = SaveData(Path("simulated.sav"), dummy_entries)
-            save.in_game_date = InGameDate(year=yr, season="winter", day=10, time_str="10:00")
+    current_ingame_date = save.in_game_date if (save and hasattr(save, "in_game_date")) else None
+    override_date = parse_date_override(config.date_override, current_ingame_date)
+
+    if override_date is not None:
+        yr = override_date.year
+        s_name = override_date.season.lower()
+        if s_name == "autumn":
+            s_name = "fall"
+        d_num = override_date.day
+
+        if save is None:
+            seasons_order = ["spring", "summer", "fall", "winter"]
+            s_idx = seasons_order.index(s_name) if s_name in seasons_order else 0
+            cal_days = (yr - 1) * 112 + s_idx * 28 + (d_num - 1)
+            dummy_entries = {
+                "header": json.dumps({"name": "Player", "calendar_time": cal_days * 86400, "clock_time": 36000}),
+                "player": json.dumps({"name": "Player", "inventory": []}),
+                "npcs": json.dumps({}),
+            }
+            save = SaveData(Path("simulated.sav"), dummy_entries)
+
+        save.in_game_date = InGameDate(year=yr, season=s_name, day=d_num, time_str="10:00")
+
+        # Saturday Market behavior:
+        # If effective_mode is "auto" and the effective date is a Saturday, activate Saturday mode!
+        if effective_mode == "auto" and save.in_game_date.is_saturday:
+            effective_mode = "saturday"
 
     # 6. Exclude NPCs
     excluded: Set[str] = set()

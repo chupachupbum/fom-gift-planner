@@ -153,8 +153,8 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                 },
                 {
                     "key": "date_override",
-                    "label": "Date Override (e.g. 'saturday', 'winter 10')",
-                    "type": "text",
+                    "label": "Date Override",
+                    "type": "date_override",
                     "placeholder": "Leave empty for save date",
                 },
             ],

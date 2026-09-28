@@ -183,10 +183,16 @@ class SaveData:
         Calculates the in-game year, season, and day from calendar_time (in seconds).
         FoM uses 28 days per season, 4 seasons per year (112 days / year).
         1 game day = 86,400 calendar_time units.
+        Returns override date if set, otherwise original date.
         """
         if self._override_date is not None:
             return self._override_date
 
+        return self.original_in_game_date
+
+    @property
+    def original_in_game_date(self) -> InGameDate:
+        """Calculates original save in-game date regardless of override."""
         cal_time = self.header.get("calendar_time")
         if cal_time is None:
             cal_time = self.gamedata.get("date", 0)
