@@ -59,11 +59,19 @@ from fom_planner.data_loader import (
     load_npc_preferences_from_json,
     load_recipe_sources,
 )
-from fom_planner.exporters.excel_export import export_plan_to_excel
-from fom_planner.exporters.terminal import print_terminal_plan
+from fom_planner.exporters.excel_export import (
+    _format_alt_sources_excel,
+    export_plan_to_excel,
+)
+from fom_planner.exporters.terminal import (
+    _format_alt_sources_terminal,
+    print_terminal_plan,
+)
 from fom_planner.models import SaveData
 from fom_planner.optimizer import (
     build_focus_crafting_trees,
+    classify_source_tier,
+    compute_source_priorities,
     plan_daily_gift_bag,
     plan_max_relationship,
 )
@@ -82,6 +90,7 @@ VALID_SOURCE_TYPES = {
     "date",
     "quest",
     "museum",
+    "living_off_the_land",
 }
 
 VALID_LOCATION_ICONS = {
@@ -100,6 +109,7 @@ VALID_LOCATION_ICONS = {
     "saturday_market",
     "tackle_shop",
     "wishing_well",
+    "living_off_the_land",
 }
 
 
@@ -256,6 +266,123 @@ class TestAltSourcesDataLoader(unittest.TestCase):
                 colloquial_types,
                 canonical_types,
                 f"Source types mismatch between '{colloquial}' and '{canonical}'",
+            )
+
+    def test_chicken_statue_100_offering_accuracy(self):
+        """Verify Chicken Statue 100 offering only includes verified items and excludes mistaken items."""
+        data = load_alt_sources()
+        allowed_100_items = {
+            "golden_cookies",
+            "golden_cheesecake",
+            "golden_egg",
+            "golden_cow_milk",
+            "golden_milk",
+            "golden_mayonnaise",
+            "golden_cheese",
+            "golden_butter",
+            "ultimate_hay",
+            "ultimate_small_animal_feed",
+        }
+        mistaken_items = [
+            "golden_duck_egg",
+            "golden_duck_mayonnaise",
+            "golden_duck_feather",
+            "golden_sheep_wool",
+            "golden_alpaca_wool",
+            "cheesecake",
+        ]
+
+        for item in mistaken_items:
+            sources = data.get(item, [])
+            statue_sources = [
+                s for s in sources if s.get("type") == "chicken_statue" and s.get("cost") == 100
+            ]
+            self.assertEqual(
+                statue_sources,
+                [],
+                f"Item '{item}' mistakenly listed as Chicken Statue 100-bead offering",
+            )
+
+        for item_id, sources in data.items():
+            for s in sources:
+                if s.get("type") == "chicken_statue" and s.get("cost") == 100:
+                    self.assertIn(
+                        item_id,
+                        allowed_100_items,
+                        f"Unexpected item '{item_id}' has Chicken Statue 100-bead offering",
+                    )
+
+        # Ensure ultimate feeds explicitly include chicken_statue 100-bead offering
+        for feed in ("ultimate_hay", "ultimate_small_animal_feed"):
+            feed_sources = data.get(feed, [])
+            self.assertTrue(
+                any(
+                    s.get("type") == "chicken_statue" and s.get("cost") == 100
+                    for s in feed_sources
+                ),
+                f"Item '{feed}' missing Chicken Statue 100-bead offering",
+            )
+
+    def test_chicken_statue_10_offering_accuracy(self):
+        """Verify Chicken Statue 10 offering only includes verified items and excludes mistaken items."""
+        data = load_alt_sources()
+        allowed_10_items = {
+            "vegetable_quiche",
+            "cow_milk",
+            "milk",
+            "deluxe_hay",
+            "quality_hay",
+            "deluxe_small_animal_feed",
+            "quality_small_animal_feed",
+            "pudding",
+            "omelet",
+            "quiche",
+            "egg",
+            "mayonnaise",
+            "cheese",
+            "butter",
+        }
+        mistaken_items = [
+            "duck_feather",
+            "duck_egg",
+            "duck_mayonnaise",
+            "deviled_eggs",
+        ]
+
+        for item in mistaken_items:
+            sources = data.get(item, [])
+            statue_sources = [
+                s for s in sources if s.get("type") == "chicken_statue" and s.get("cost") == 10
+            ]
+            self.assertEqual(
+                statue_sources,
+                [],
+                f"Item '{item}' mistakenly listed as Chicken Statue 10-bead offering",
+            )
+
+        for item_id, sources in data.items():
+            for s in sources:
+                if s.get("type") == "chicken_statue" and s.get("cost") == 10:
+                    self.assertIn(
+                        item_id,
+                        allowed_10_items,
+                        f"Unexpected item '{item_id}' has Chicken Statue 10-bead offering",
+                    )
+
+        # Ensure lower-tier feeds explicitly include chicken_statue 10-bead offering
+        for feed in (
+            "deluxe_hay",
+            "quality_hay",
+            "deluxe_small_animal_feed",
+            "quality_small_animal_feed",
+        ):
+            feed_sources = data.get(feed, [])
+            self.assertTrue(
+                any(
+                    s.get("type") == "chicken_statue" and s.get("cost") == 10
+                    for s in feed_sources
+                ),
+                f"Item '{feed}' missing Chicken Statue 10-bead offering",
             )
 
     def test_load_alt_sources_explicit_path(self):
@@ -886,5 +1013,204 @@ class TestPresentationSurfaces(unittest.TestCase):
             self.assertEqual(len(data_rows), 0)
 
 
+class TestLivingOffTheLandPerk(unittest.TestCase):
+    """
+    Dedicated test suite for the 'Living off the Land' Farming perk (Requirement R7).
+    Validates that:
+    - Exactly 45 canonical cooked dishes are configured with the alternate source.
+    - Each source entry matches strict schema: type='living_off_the_land', location='Living Off The Land',
+      icon='living_off_the_land', and note='Harvesting: <Crops>'.
+    - Tier classification maps living_off_the_land to 'Farm'.
+    - compute_source_priorities aggregates Living Off The Land into the 'Farm' tier.
+    - Focus crafting trees propagate Living Off The Land annotations to downstream cooked dishes.
+    - Terminal and Excel exporters render 🌱 emoji badges and descriptive notes.
+    - Companion server correctly serves the living_off_the_land.png location icon.
+    """
+
+    CANONICAL_LOTL_45 = [
+        "apple_honey_curry", "beet_salad", "beet_soup", "braised_carrots", "buttered_peas",
+        "cabbage_slaw", "candied_strawberries", "cauliflower_curry", "chili_coconut_curry",
+        "cod_with_thyme", "cranberry_orange_scone", "cucumber_salad", "cucumber_sandwich",
+        "fish_tacos", "fried_rice", "gazpacho", "grilled_corn", "harvest_plate",
+        "herb_butter_pasta", "loaded_baked_potato", "mushroom_steak_dinner", "pizza",
+        "potato_soup", "pumpkin_pie", "pumpkin_stew", "roasted_cauliflower",
+        "roasted_sweet_potato", "salted_watermelon", "seafood_boil",
+        "seafood_snow_pea_noodles", "sesame_broccoli", "sesame_tuna_bowl",
+        "simmered_daikon", "sliced_turnip", "spicy_cheddar_biscuit",
+        "spicy_water_chestnuts", "summer_salad", "sweet_potato_pie",
+        "toasted_sunflower_seeds", "tomato_soup", "turnip_and_potato_gratin",
+        "vegetable_pot_pie", "vegetable_quiche", "veggie_sub_sandwich", "winter_stew",
+    ]
+
+    def setUp(self):
+        self.alt_sources = load_alt_sources()
+        self.recipes = load_recipes()
+        with open(REPO_ROOT / "data" / "item_locations.json", "r", encoding="utf-8") as f:
+            locs = json.load(f)
+        self.crops = set(k for k, v in locs.items() if "crop" in v.lower() or k == "sunflower")
+
+    def test_canonical_45_dishes_have_living_off_the_land(self):
+        """All 45 canonical dishes must possess a valid living_off_the_land source entry."""
+        self.assertEqual(len(self.CANONICAL_LOTL_45), 45)
+        for item_id in self.CANONICAL_LOTL_45:
+            self.assertIn(
+                item_id,
+                self.alt_sources,
+                f"Dish '{item_id}' missing entirely from alt_sources.json",
+            )
+            sources = self.alt_sources[item_id]
+            lotl_entries = [s for s in sources if s.get("type") == "living_off_the_land"]
+            self.assertEqual(
+                len(lotl_entries),
+                1,
+                f"Dish '{item_id}' must have exactly 1 living_off_the_land entry, got {len(lotl_entries)}",
+            )
+            entry = lotl_entries[0]
+            self.assertEqual(entry["location"], "Living Off The Land")
+            self.assertEqual(entry["icon"], "living_off_the_land")
+            self.assertTrue(
+                entry.get("note", "").startswith("Harvesting: "),
+                f"Dish '{item_id}' note must start with 'Harvesting: ', got '{entry.get('note')}'",
+            )
+            self.assertGreater(
+                len(entry["note"]),
+                len("Harvesting: "),
+                f"Dish '{item_id}' note is empty after prefix",
+            )
+
+    def test_living_off_the_land_crops_match_recipes(self):
+        """Crops listed in note must correspond to recipe ingredients in recipes.json."""
+        for item_id in self.CANONICAL_LOTL_45:
+            self.assertIn(item_id, self.recipes, f"Dish '{item_id}' not in recipes.json")
+            recipe = self.recipes[item_id]
+            expected_crops = [
+                ing["display_name"]
+                for ing in recipe.get("ingredients", [])
+                if ing.get("item_id") in self.crops
+            ]
+            self.assertTrue(
+                len(expected_crops) > 0,
+                f"Dish '{item_id}' expected to have crop ingredients, found none",
+            )
+            sources = self.alt_sources[item_id]
+            lotl_entry = next(s for s in sources if s.get("type") == "living_off_the_land")
+            note_crop_part = lotl_entry["note"][len("Harvesting: "):]
+            note_crops = [c.strip() for c in note_crop_part.split(",")]
+            self.assertEqual(
+                note_crops,
+                expected_crops,
+                f"Crops in note for '{item_id}' {note_crops} != recipe crops {expected_crops}",
+            )
+
+    def test_classify_source_tier_living_off_the_land(self):
+        """Living off the land source type must always be classified into the 'Farm' tier."""
+        self.assertEqual(
+            classify_source_tier("Living Off The Land", source_type="living_off_the_land"),
+            "Farm",
+        )
+        self.assertEqual(
+            classify_source_tier("Sweetwater Farm", source_type="living_off_the_land"),
+            "Farm",
+        )
+        self.assertEqual(
+            classify_source_tier("Arbitrary Name", source_type="living_off_the_land"),
+            "Farm",
+        )
+
+    def test_compute_source_priorities_with_living_off_the_land(self):
+        """compute_source_priorities properly aggregates dishes into Living Off The Land (Farm tier)."""
+        focus_suggestions = [
+            {
+                "item_id": "pumpkin_stew",
+                "item_name": "Pumpkin Stew",
+                "deficit": 2,
+                "blocked_pairs": 5,
+                "blocked_npcs": ["celine", "valen"],
+            },
+            {
+                "item_id": "beet_salad",
+                "item_name": "Beet Salad",
+                "deficit": 1,
+                "blocked_pairs": 3,
+                "blocked_npcs": ["adeline"],
+            },
+        ]
+        npc_names = {"celine": "Celine", "valen": "Valen", "adeline": "Adeline"}
+
+        priorities = compute_source_priorities(
+            focus_suggestions=focus_suggestions,
+            item_locations={},
+            alt_sources=self.alt_sources,
+            npc_names=npc_names,
+        )
+
+        lotl_source = next((s for s in priorities if s["source_name"] == "Living Off The Land"), None)
+        self.assertIsNotNone(lotl_source, "Living Off The Land missing from computed priorities")
+        self.assertEqual(lotl_source["tier"], "Farm")
+        self.assertEqual(lotl_source["total_score"], 8)
+        item_ids = [it["item_id"] for it in lotl_source["items"]]
+        self.assertIn("pumpkin_stew", item_ids)
+        self.assertIn("beet_salad", item_ids)
+        self.assertEqual(sorted(lotl_source["benefited_npcs"]), ["Adeline", "Celine", "Valen"])
+
+    def test_build_focus_crafting_trees_includes_living_off_the_land(self):
+        """build_focus_crafting_trees attaches living_off_the_land alt_source to downstream dishes."""
+        focus_suggestions = [
+            {
+                "item_id": "pumpkin",
+                "item_name": "Pumpkin",
+                "deficit": 3,
+                "blocked_pairs": 8,
+                "blocked_npcs": ["celine"],
+            }
+        ]
+        trees = build_focus_crafting_trees(
+            focus_suggestions=focus_suggestions,
+            recipes=self.recipes,
+            remaining_items_map={
+                "pumpkin_stew": {"loved": ["celine"], "liked": []},
+            },
+            alt_sources=self.alt_sources,
+        )
+        self.assertEqual(len(trees), 1)
+        root = trees[0]
+        self.assertEqual(root["item_id"], "pumpkin")
+        # Find pumpkin_stew in children
+        stew_node = next((c for c in root["children"] if c["item_id"] == "pumpkin_stew"), None)
+        self.assertIsNotNone(stew_node, "Downstream pumpkin_stew node not found under pumpkin")
+        lotl = [s for s in stew_node["alt_sources"] if s.get("type") == "living_off_the_land"]
+        self.assertEqual(len(lotl), 1)
+        self.assertEqual(lotl[0]["location"], "Living Off The Land")
+        self.assertEqual(lotl[0]["icon"], "living_off_the_land")
+        self.assertIn("Pumpkin", lotl[0]["note"])
+
+    def test_format_alt_sources_terminal_and_excel(self):
+        """Terminal and Excel export formatters render 🌱 and Living Off The Land labels."""
+        sources = [
+            {
+                "type": "living_off_the_land",
+                "location": "Living Off The Land",
+                "note": "Harvesting: Pumpkin, Onion, Rosemary",
+                "icon": "living_off_the_land",
+            }
+        ]
+        term_formatted = _format_alt_sources_terminal(sources)
+        self.assertIn("🌱", term_formatted)
+        self.assertIn("Living Off The Land: Harvesting: Pumpkin, Onion, Rosemary", term_formatted)
+
+        excel_formatted = _format_alt_sources_excel(sources)
+        self.assertIn("🌱", excel_formatted)
+        self.assertIn("Living Off The Land [Harvesting: Pumpkin, Onion, Rosemary]", excel_formatted)
+
+    def test_companion_serves_living_off_the_land_icon(self):
+        """Companion static location endpoint serves living_off_the_land.png as a 200 PNG."""
+        client = TestClient(app)
+        response = client.get("/assets/sprites/locations/living_off_the_land")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get("content-type"), "image/png")
+        self.assertTrue(response.content.startswith(b"\x89PNG\r\n\x1a\n"))
+
+
 if __name__ == "__main__":
     unittest.main()
+

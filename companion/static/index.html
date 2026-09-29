@@ -42,6 +42,129 @@
       <!-- Error Banner -->
       <div id="errorBanner" class="error-banner"></div>
 
+      <!-- Section 0: Overview Statistics Dashboard -->
+      <section id="section-stats" class="stats-dashboard-section">
+        <div class="section-header">
+          <h2><span>📊</span> Mistria Progress &amp; Statistics</h2>
+          <span class="badge-counter" id="statsOverallBadge">0% Discovered</span>
+        </div>
+
+        <!-- 4-Card Metric Grid -->
+        <div class="stats-overview-grid">
+          
+          <!-- Card 1: Overall Gift Progress -->
+          <div class="stat-card" id="cardGiftProgress">
+            <div class="stat-card-header">
+              <span class="stat-icon">🎁</span>
+              <span class="stat-title">Gift Progress</span>
+            </div>
+            <div class="stat-metric-value" id="statGiftProgressVal">0%</div>
+            <div class="stat-progress-track">
+              <div class="stat-progress-fill" id="statGiftProgressFill" style="width: 0%;"></div>
+            </div>
+            <div class="stat-subtext" id="statGiftProgressSub">0 / 0 preferences recorded</div>
+          </div>
+
+          <!-- Card 2: Completed NPCs -->
+          <div class="stat-card" id="cardCompletedNpcs">
+            <div class="stat-card-header">
+              <span class="stat-icon">🌟</span>
+              <span class="stat-title">Completed NPCs</span>
+            </div>
+            <div class="stat-metric-value" id="statCompletedNpcsVal">0 / 0</div>
+            <div class="stat-subtext" id="statCompletedNpcsSub">100% gift journal complete</div>
+            <button class="stat-drawer-toggle-btn" id="toggleCompletedBtn" aria-expanded="false">
+              <span>View Completed</span> <span class="arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- Card 3: Incompleted NPCs -->
+          <div class="stat-card" id="cardIncompleteNpcs">
+            <div class="stat-card-header">
+              <span class="stat-icon">👥</span>
+              <span class="stat-title">Incomplete NPCs</span>
+            </div>
+            <div class="stat-metric-value" id="statIncompleteNpcsVal">0 / 0</div>
+            <div class="stat-subtext" id="statIncompleteNpcsSub">Pending loved/liked gifts</div>
+            <button class="stat-drawer-toggle-btn" id="toggleIncompleteBtn" aria-expanded="false">
+              <span>View Details</span> <span class="arrow">▼</span>
+            </button>
+          </div>
+
+          <!-- Card 4: Un-obtained Food Recipes -->
+          <div class="stat-card" id="cardRecipes">
+            <div class="stat-card-header">
+              <span class="stat-icon">🍳</span>
+              <span class="stat-title">Un-obtained Recipes</span>
+            </div>
+            <div class="stat-metric-value" id="statRecipesVal">0 Locked</div>
+            <div class="stat-subtext" id="statRecipesSub">Cooking recipes to discover</div>
+            <button class="stat-drawer-toggle-btn" id="toggleRecipesBtn" aria-expanded="false">
+              <span>View Recipes</span> <span class="arrow">▼</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Drawer 1: Completed NPCs Drawer -->
+        <div class="stats-drawer" id="drawerCompleted" style="display: none;">
+          <div class="drawer-header">
+            <div class="drawer-title-group">
+              <h3><span>🌟</span> Completed NPCs (<span id="drawerCompletedCount">0</span>)</h3>
+              <p class="drawer-subtitle">All loved and liked preferences have been gifted &amp; recorded in your journal.</p>
+            </div>
+            <button class="drawer-close-btn" id="closeCompletedDrawerBtn">Collapse ▲</button>
+          </div>
+          <div id="completedGrid" class="completed-npcs-grid">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Drawer 2: Incompleted NPCs Drawer -->
+        <div class="stats-drawer" id="drawerIncomplete" style="display: none;">
+          <div class="drawer-header">
+            <div class="drawer-title-group">
+              <h3><span>👥</span> Incomplete NPCs (<span id="drawerIncompleteCount">0</span>)</h3>
+              <p class="drawer-subtitle">Remaining loved and liked gift preferences yet to be recorded in your journal.</p>
+            </div>
+            <div class="drawer-actions">
+              <input type="text" id="incompleteSearchInput" class="drawer-search-input" placeholder="🔍 Search NPC..." autocomplete="off" />
+              <button class="drawer-close-btn" id="closeIncompleteDrawerBtn">Collapse ▲</button>
+            </div>
+          </div>
+          <div id="incompleteGrid" class="incomplete-npcs-grid">
+            <!-- Populated dynamically with rich NPC cards -->
+          </div>
+          <div class="drawer-footer">
+            <button class="drawer-close-btn" id="closeIncompleteDrawerBottomBtn">Collapse Incomplete NPCs ▲</button>
+          </div>
+        </div>
+
+        <!-- Drawer 3: Un-obtained Food Recipes Drawer -->
+        <div class="stats-drawer" id="drawerRecipes" style="display: none;">
+          <div class="drawer-header">
+            <div class="drawer-title-group">
+              <h3><span>🍳</span> Un-obtained Food Recipes (<span id="drawerRecipesCount">0</span>)</h3>
+              <p class="drawer-subtitle">Sorted by impact on NPC gift preferences. Shows where to obtain each recipe.</p>
+            </div>
+            <div class="drawer-actions">
+              <input type="text" id="recipeSearchInput" class="drawer-search-input" placeholder="🔍 Filter recipes..." autocomplete="off" style="display: none;" />
+              <button class="drawer-close-btn" id="closeRecipesDrawerBtn">Collapse ▲</button>
+            </div>
+          </div>
+          <div id="recipesGrid" class="recipes-grid">
+            <!-- Populated dynamically: top 5 by default, or all if expanded -->
+          </div>
+          <div class="drawer-pagination-row" id="recipesPaginationRow" style="display: none;">
+            <button class="recipes-more-btn" id="toggleMoreRecipesBtn">
+              <span>Show More Recipes ▼</span>
+            </button>
+            <button class="drawer-close-btn" id="closeRecipesDrawerBottomBtn">Collapse Recipes ▲</button>
+          </div>
+        </div>
+
+      </section>
+
       <!-- Section 1: Optimal Daily Bag Loadout -->
       <section id="section-bag">
         <div class="section-header">
@@ -60,6 +183,9 @@
           <h2><span>🌾</span> Focus Suggestions (Raw Material Blockers)</h2>
           <span class="badge-counter" id="focusCountBadge">0 Items</span>
         </div>
+
+        <!-- Source Priority Summary Panel -->
+        <div id="sourceSummaryPanel" class="source-summary-panel" style="display: none;"></div>
 
         <div id="focusGrid" class="focus-grid">
           <p style="color: var(--text-muted); font-style: italic;">Loading focus suggestions...</p>
@@ -205,9 +331,6 @@
 
       <div class="calendar-modal-footer">
         <div class="cal-footer-shortcuts">
-          <button class="cal-footer-btn cal-btn-saturday" id="calJumpSaturdayBtn" title="Jump to the next Saturday Market day">
-            ★ Next Saturday
-          </button>
           <button class="cal-footer-btn cal-btn-reset" id="calResetSaveBtn" title="Clear override and follow game save calendar">
             ↺ Follow Save Date
           </button>

@@ -41,6 +41,8 @@ class CompanionConfig:
     seasonal_boost: float = 2.0
 
     # 3. NPC Filters
+    focus_mode_enabled: bool = False
+    focus_npcs: str = ""        # Comma-separated list of NPC IDs
     exclude_npcs: str = ""      # Comma-separated list of NPC IDs
     force_all_npcs: bool = False
     max_relationship_points: Optional[float] = None  # None uses default (1755.0)
@@ -67,6 +69,10 @@ class CompanionConfig:
     def from_dict(cls, data: Dict[str, Any]) -> "CompanionConfig":
         valid_fields = {f for f in cls.__dataclass_fields__}
         filtered = {k: v for k, v in data.items() if k in valid_fields}
+        if "focus_npcs" in filtered and isinstance(filtered["focus_npcs"], (list, set, tuple)):
+            filtered["focus_npcs"] = ",".join(str(x).strip() for x in filtered["focus_npcs"] if str(x).strip())
+        if "focus_mode_enabled" in filtered and not isinstance(filtered["focus_mode_enabled"], bool):
+            filtered["focus_mode_enabled"] = bool(filtered["focus_mode_enabled"])
         return cls(**filtered)
 
 
@@ -201,6 +207,17 @@ def get_settings_schema() -> List[Dict[str, Any]]:
             "group": "NPC Filters",
             "id": "npc_filters",
             "fields": [
+                {
+                    "key": "focus_mode_enabled",
+                    "label": "Focus Mode",
+                    "type": "checkbox",
+                },
+                {
+                    "key": "focus_npcs",
+                    "label": "Focus NPCs",
+                    "type": "focus_npc_picker",
+                    "placeholder": "e.g. adeline, balor",
+                },
                 {
                     "key": "exclude_npcs",
                     "label": "Exclude NPCs (comma-separated IDs)",

@@ -72,6 +72,7 @@ class AppState:
                     "generated_at": None,
                     "bag_plan": [],
                     "focus_suggestions": [],
+                    "source_priority": [],
                     "npc_progress": {},
                     "stats": {},
                     "config": self.config.to_dict(),
@@ -203,6 +204,8 @@ async def update_settings(payload: Dict[str, Any]):
                 setattr(state.config, k, None)
             elif k == "save_file" and isinstance(v, str) and not v.strip():
                 setattr(state.config, k, None)
+            elif k == "focus_npcs" and isinstance(v, (list, set, tuple)):
+                setattr(state.config, k, ",".join(str(x).strip() for x in v if str(x).strip()))
             elif target_type is bool:
                 setattr(state.config, k, bool(v))
             elif target_type is int:

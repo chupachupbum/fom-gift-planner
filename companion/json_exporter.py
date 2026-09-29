@@ -207,24 +207,96 @@ def plan_to_json(
             "sprite_url": f"/assets/sprites/items/{f_id}",
         })
 
-    # NPC Overview
+    # NPC Overview & Completed / Incomplete Breakdown
     npc_progress: Dict[str, Any] = {}
+    completed_npcs_details: List[Dict[str, Any]] = []
+    incomplete_npcs_details: List[Dict[str, Any]] = []
+
     for nid, p in npc_progress_raw.items():
         nid_clean = str(nid).strip().lower()
-        npc_progress[nid_clean] = {
+        rem_loved_raw = p.get("remaining_loved", [])
+        rem_liked_raw = p.get("remaining_liked", [])
+
+        rem_loved = []
+        for item_id in sorted(rem_loved_raw):
+            item_clean = str(item_id).strip().lower()
+            item_meta = metadata.get(item_clean, {}) if metadata else {}
+            rem_loved.append({
+                "item_id": item_clean,
+                "name": item_meta.get("display_name") or item_clean.replace("_", " ").title(),
+                "sprite_url": f"/assets/sprites/items/{item_clean}",
+            })
+
+        rem_liked = []
+        for item_id in sorted(rem_liked_raw):
+            item_clean = str(item_id).strip().lower()
+            item_meta = metadata.get(item_clean, {}) if metadata else {}
+            rem_liked.append({
+                "item_id": item_clean,
+                "name": item_meta.get("display_name") or item_clean.replace("_", " ").title(),
+                "sprite_url": f"/assets/sprites/items/{item_clean}",
+            })
+
+        is_completed = bool(p.get("is_completed", False) or (len(rem_loved) == 0 and len(rem_liked) == 0 and p.get("gifts_given_count", 0) > 0))
+        pct_done = round(float(p.get("pct_total_done", 100.0 if is_completed else 0.0)), 1)
+        hearts_val = p.get("hp", 0) if "hp" in p else p.get("hearts", 0)
+
+        npc_info = {
             "npc_id": nid_clean,
             "name": p.get("name") or nid_clean.capitalize(),
             "is_vendor": bool(p.get("is_vendor", False)),
             "is_unlocked": bool(p.get("is_unlocked", True)),
+            "is_completed": is_completed,
             "gifted_today": bool(p.get("gifted_today", False)),
-            "hearts": p.get("hearts", 0),
+            "hearts": hearts_val,
             "relationship_points": p.get("relationship_points", 0),
             "max_relationship": bool(p.get("is_max_relationship", False)),
             "gifts_given_count": p.get("gifts_given_count", 0),
-            "total_remaining": p.get("total_remaining", 0),
-            "pct_total_done": p.get("pct_total_done", 0.0),
+            "total_remaining": p.get("total_remaining", len(rem_loved) + len(rem_liked)),
+            "remaining_loved_count": len(rem_loved),
+            "remaining_liked_count": len(rem_liked),
+            "pct_total_done": pct_done,
             "portrait_url": f"/assets/sprites/npcs/{nid_clean}",
+            "remaining_loved": rem_loved,
+            "remaining_liked": rem_liked,
         }
+
+        npc_progress[nid_clean] = npc_info
+        if is_completed:
+            completed_npcs_details.append(npc_info)
+        else:
+            incomplete_npcs_details.append(npc_info)
+
+    completed_npcs_details.sort(key=lambda x: str(x["name"]).lower())
+    incomplete_npcs_details.sort(key=lambda x: (-x["pct_total_done"], str(x["name"]).lower()))
+
+    # Un-obtained recipes & unlock stats
+    raw_unobtained = plan_results.get("all_unobtained_recipes") or plan_results.get("focus_recipes") or []
+    unobtained_recipes: List[Dict[str, Any]] = []
+    for r in raw_unobtained:
+        rid = str(r.get("recipe_id", "")).strip().lower()
+        unobtained_recipes.append({
+            "rank": r.get("rank", len(unobtained_recipes) + 1),
+            "recipe_id": rid,
+            "display_name": r.get("display_name") or rid.replace("_", " ").title(),
+            "impact": r.get("impact", 0),
+            "unlock_source": r.get("unlock_source", "Unknown"),
+            "sprite_url": f"/assets/sprites/items/{rid}",
+        })
+
+    raw_recipe_stats = plan_results.get("recipe_unlock_stats") or {}
+    recipe_stats = {
+        "total_cooking": raw_recipe_stats.get("total_cooking_recipes", len(unobtained_recipes)),
+        "unlocked_count": raw_recipe_stats.get("unlocked_recipes_count", 0),
+        "locked_count": len(unobtained_recipes),
+        "unlocked_percentage": round(float(raw_recipe_stats.get("unlocked_percentage", 0.0)), 1),
+        "has_unlock_data": bool(raw_recipe_stats.get("has_unlock_data", False)),
+    }
+
+    # Overall Gift Progress percentage
+    total_preferences = stats.get("game_total_preferences", 0)
+    given_total = stats.get("game_given_total", 0)
+    overall_progress_pct = round((given_total / total_preferences * 100.0), 1) if total_preferences > 0 else 0.0
 
     # Infused items summary
     infused_items = plan_results.get("infused_items")
@@ -233,6 +305,34 @@ def plan_to_json(
             infused_items = save.get_infused_items()
         except Exception:
             infused_items = None
+
+    # Source Priority Summary (R2/R4)
+    source_priority_raw = plan_results.get("source_priority", [])
+    source_priority: List[Dict[str, Any]] = []
+    if isinstance(source_priority_raw, list):
+        for entry in source_priority_raw:
+            if not isinstance(entry, dict):
+                continue
+            entry_dict = dict(entry)
+            items_raw = entry.get("items", [])
+            if isinstance(items_raw, dict):
+                items_raw = list(items_raw.values())
+            items_clean = []
+            if isinstance(items_raw, list):
+                for it in items_raw:
+                    if isinstance(it, dict):
+                        it_dict = dict(it)
+                        i_id = str(it_dict.get("item_id", "")).strip().lower()
+                        if i_id:
+                            it_dict["sprite_url"] = f"/assets/sprites/items/{i_id}"
+                        items_clean.append(_to_serializable(it_dict))
+                    else:
+                        items_clean.append(_to_serializable(it))
+            entry_dict["items"] = items_clean
+            entry_dict["benefited_npcs"] = _to_serializable(entry.get("benefited_npcs", []))
+            source_priority.append(_to_serializable(entry_dict))
+    else:
+        source_priority = _to_serializable(source_priority_raw)
 
     return {
         "generated_at": datetime.now().isoformat(),
@@ -247,19 +347,30 @@ def plan_to_json(
             "covered_npcs_count": stats.get("covered_npcs_count", len(plan_results.get("covered_npcs", []))),
             "target_npcs_count": stats.get("target_npcs_count", len(plan_results.get("target_npcs", []))),
             "total_relationship_points": stats.get("total_relationship_points", 0),
-            "game_total_preferences": stats.get("game_total_preferences", 0),
-            "game_given_total": stats.get("game_given_total", 0),
+            "game_total_preferences": total_preferences,
+            "game_given_total": given_total,
             "game_given_loved": stats.get("game_given_loved", 0),
             "game_given_liked": stats.get("game_given_liked", 0),
-            "locked_npcs": _to_serializable(stats.get("locked_npcs", [])),
+            "overall_gift_progress_pct": overall_progress_pct,
+            "completed_npcs_count": len(completed_npcs_details),
+            "incomplete_npcs_count": len(incomplete_npcs_details),
+            "total_npcs_count": len(npc_progress_raw),
             "completed_npcs": _to_serializable(stats.get("completed_npcs", [])),
+            "completed_npcs_details": completed_npcs_details,
+            "incomplete_npcs_details": incomplete_npcs_details,
+            "locked_npcs": _to_serializable(stats.get("locked_npcs", [])),
             "ungiftable_npcs": _to_serializable(stats.get("ungiftable_npcs", [])),
             "max_relationship_npcs": _to_serializable(stats.get("max_relationship_npcs", [])),
         },
+        "completed_npcs_details": completed_npcs_details,
+        "incomplete_npcs_details": incomplete_npcs_details,
+        "unobtained_recipes": unobtained_recipes,
+        "recipe_stats": recipe_stats,
         "infused_items": _to_serializable(infused_items),
         "bag_plan": bag_plan,
         "focus_suggestions": focus_suggestions,
         "focus_trees": _to_serializable(plan_results.get("focus_trees", [])),
+        "source_priority": source_priority,
         "npc_progress": npc_progress,
         "error": None,
     }

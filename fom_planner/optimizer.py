@@ -7,6 +7,8 @@ Greedy weighted set-cover optimizer and focus suggestions calculator for Fields 
 - plan_daily_gift_bag
 """
 
+import json
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from fom_planner.constants import (
@@ -30,6 +32,28 @@ from fom_planner.models import SaveData
 
 ITEM_LOCATIONS: Dict[str, str] = load_item_locations()
 ITEM_SEASONS: Dict[str, List[str]] = load_item_seasons()
+
+_NPC_NAMES_CACHE: Optional[Dict[str, str]] = None
+
+
+def _get_default_npc_names() -> Dict[str, str]:
+    """Loads NPC display names from data/item_data.json if available, with memoization."""
+    global _NPC_NAMES_CACHE
+    if _NPC_NAMES_CACHE is not None:
+        return _NPC_NAMES_CACHE
+    names: Dict[str, str] = {}
+    item_data_path = Path("data/item_data.json")
+    if item_data_path.exists():
+        try:
+            with open(item_data_path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                npcs = d.get("npcs", {})
+                for k, v in npcs.items():
+                    names[str(k).strip().lower()] = str(v).strip()
+        except Exception:
+            pass
+    _NPC_NAMES_CACHE = names
+    return names
 
 
 def resolve_root_raw_materials(
@@ -82,6 +106,59 @@ def resolve_root_raw_materials(
         call_stack.remove(item_id)
 
 
+def filter_remaining_items_for_focus(
+    remaining_items_map: Optional[Dict[str, Dict[str, Any]]],
+    focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
+) -> Dict[str, Dict[str, Set[str]]]:
+    """
+    Filters remaining_items_map to only include preferences for the specified focus NPCs.
+    If focus_npcs is empty/None/falsy, returns remaining_items_map untouched.
+    """
+    if not remaining_items_map or not isinstance(remaining_items_map, dict):
+        return remaining_items_map if remaining_items_map is not None else {}
+
+    if not focus_npcs:
+        return remaining_items_map
+
+    if isinstance(focus_npcs, (str, bytes)):
+        norm_npcs = {x.strip().lower() for x in str(focus_npcs).split(",") if x.strip()}
+    elif hasattr(focus_npcs, "__iter__"):
+        norm_npcs = {str(x).strip().lower() for x in focus_npcs if x is not None and str(x).strip()}
+    else:
+        norm_npcs = set()
+
+    if not norm_npcs:
+        return remaining_items_map
+
+    def _norm_set(val: Any) -> Set[str]:
+        if val is None:
+            return set()
+        if isinstance(val, (str, bytes)):
+            s = str(val).strip().lower()
+            return {s} if s else set()
+        if hasattr(val, "__iter__"):
+            return {str(x).strip().lower() for x in val if x is not None and str(x).strip()}
+        return set()
+
+    filtered_map: Dict[str, Dict[str, Set[str]]] = {}
+    for item_id, targets in remaining_items_map.items():
+        if not item_id or not isinstance(targets, dict):
+            continue
+        item_clean = str(item_id).strip().lower()
+        if not item_clean:
+            continue
+        loved = _norm_set(targets.get("loved")) & norm_npcs
+        liked = _norm_set(targets.get("liked")) & norm_npcs
+
+        if loved or liked:
+            entry = {k: v for k, v in targets.items() if k not in ("loved", "liked")}
+            entry["loved"] = loved
+            entry["liked"] = liked
+            filtered_map[item_clean] = entry
+
+    return filtered_map
+
+
 def compute_focus_suggestions(
     remaining_items_map: Dict[str, Dict[str, Set[str]]],
     inventory: Optional[Dict[str, int]] = None,
@@ -93,14 +170,16 @@ def compute_focus_suggestions(
     current_season: Optional[str] = None,
     item_seasons: Optional[Dict[str, List[str]]] = None,
     seasonal_boost: float = 2.0,
+    focus_mode_enabled: bool = False,
+    focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Computes a ranked list of top insufficient items (raw materials and direct gifts)
     blocking pending NPC gift opportunities.
 
     Algorithm:
-      1. For each item in remaining_items_map, recursively resolves its recipe tree
-         to identify all root raw material ingredients needed.
+      1. For each item in remaining_items_map (optionally filtered by focus NPCs),
+         recursively resolves its recipe tree to identify all root raw material ingredients needed.
       2. Sums total demand for each raw ingredient across ALL pending gift-NPC pairs.
       3. Accounts for player's owned inventory, including:
          - Pre-crafted/finished gifts in inventory that directly satisfy pending NPC preferences.
@@ -118,10 +197,15 @@ def compute_focus_suggestions(
          - 'quick-wins': (1) deficit count ascending,
                          (2) blocked NPC-gift pairs count descending (tiebreaker),
                          (3) display name ascending (tiebreaker).
-      7. Returns top N items with 1-based rank, deficit, and location hints.
+      7. Returns top N items with 1-based rank, deficit, location hints, and blocked NPCs list.
     """
     if top_n <= 0:
         return []
+
+    if focus_mode_enabled and focus_npcs:
+        effective_remaining_map = filter_remaining_items_for_focus(remaining_items_map, focus_npcs)
+    else:
+        effective_remaining_map = remaining_items_map
 
     if recipes is None:
         recipes = load_recipes()
@@ -175,8 +259,8 @@ def compute_focus_suggestions(
 
     # Track direct gift demand for intermediate items to reserve them before converting surplus
     direct_gift_demand: Dict[str, int] = {}
-    if remaining_items_map and isinstance(remaining_items_map, dict):
-        for item_id, targets in remaining_items_map.items():
+    if effective_remaining_map and isinstance(effective_remaining_map, dict):
+        for item_id, targets in effective_remaining_map.items():
             if item_id and isinstance(targets, dict):
                 item_clean = str(item_id).strip().lower()
                 pending = _normalize_npc_set(targets.get("loved")) | _normalize_npc_set(targets.get("liked"))
@@ -198,8 +282,8 @@ def compute_focus_suggestions(
     raw_blocked_pairs: Dict[str, Set[Tuple[str, str]]] = {}
     raw_pair_costs: Dict[str, Dict[Tuple[str, str], int]] = {}
 
-    if remaining_items_map and isinstance(remaining_items_map, dict):
-        for item_id, targets in remaining_items_map.items():
+    if effective_remaining_map and isinstance(effective_remaining_map, dict):
+        for item_id, targets in effective_remaining_map.items():
             if not item_id or not isinstance(targets, dict):
                 continue
             item_clean = str(item_id).strip().lower()
@@ -267,12 +351,16 @@ def compute_focus_suggestions(
             sorted_pairs = sorted(pair_map.items(), key=lambda x: (x[0][1], x[0][0]))
             remaining_inv = inv_count
             ready_count = 0
+            blocked_pairs_list = []
             for pair, cost in sorted_pairs:
                 if remaining_inv >= cost:
                     ready_count += 1
                     remaining_inv -= cost
+                else:
+                    blocked_pairs_list.append(pair)
             total_pairs = len(sorted_pairs)
             blocked_count = total_pairs - ready_count
+            blocked_npcs = sorted(list({p[0] for p in blocked_pairs_list}))
 
             meta = item_metadata.get(raw_id, {}) if isinstance(item_metadata, dict) else {}
             if isinstance(meta, dict):
@@ -311,6 +399,7 @@ def compute_focus_suggestions(
                 "weighted_impact": weighted_impact,
                 "seasons": item_seasons_list,
                 "is_seasonal": is_seasonal,
+                "blocked_npcs": blocked_npcs,
             })
 
     # Sort based on configured focus_sort mode
@@ -339,7 +428,7 @@ def compute_focus_recipes(
     unlocked_recipe_ids: Optional[Set[str]] = None,
     remaining_items_map: Optional[Dict[str, Dict[str, Any]]] = None,
     recipe_sources: Optional[Dict[str, str]] = None,
-    top_n: int = 10,
+    top_n: Optional[int] = 10,
     recipes: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
@@ -354,7 +443,7 @@ def compute_focus_recipes(
       remaining_items_map: Mapping of item_id -> {"loved": set(), "liked": set()}
                            representing ungifted NPC preferences.
       recipe_sources: Mapping of recipe_id -> unlock location string.
-      top_n: Maximum number of ranked suggestions to return (default: 10).
+      top_n: Maximum number of ranked suggestions to return (default: 10). If None, returns all.
       recipes: Alias for all_recipes for keyword compatibility.
 
     Returns:
@@ -408,7 +497,7 @@ def compute_focus_recipes(
     #    - No save data / no unlock data provided (unlocked_recipe_ids is None)
     #    - All cooking recipes unlocked
     #    - top_n <= 0 or total_cooking == 0
-    if not has_unlock_data or unlocked_cooking_count >= total_cooking or top_n <= 0 or total_cooking == 0:
+    if not has_unlock_data or unlocked_cooking_count >= total_cooking or (top_n is not None and top_n <= 0) or total_cooking == 0:
         return [], recipe_unlock_stats
 
     # Helper to safely parse NPC sets from remaining_items_map
@@ -459,7 +548,8 @@ def compute_focus_recipes(
 
     # 6. Assign 1-indexed rank and truncate to top_n
     ranked_recipes: List[Dict[str, Any]] = []
-    for rank, item in enumerate(candidates[:top_n], start=1):
+    limit = len(candidates) if top_n is None else top_n
+    for rank, item in enumerate(candidates[:limit], start=1):
         entry = dict(item)
         entry["rank"] = rank
         ranked_recipes.append(entry)
@@ -671,6 +761,255 @@ def build_focus_crafting_trees(
     return trees
 
 
+def _split_compound_locations(loc_str: str) -> List[str]:
+    """
+    Splits compound location strings on ' / ' ONLY when outside parentheses ().
+    Preserves seasonal/conditional slashes inside () such as 'Fishing (River, Spring / Fall)'.
+    """
+    if not loc_str or not isinstance(loc_str, str):
+        return []
+    s = loc_str.strip()
+    if not s:
+        return []
+    parts: List[str] = []
+    current: List[str] = []
+    depth = 0
+    i = 0
+    n = len(s)
+    while i < n:
+        char = s[i]
+        if char == "(":
+            depth += 1
+            current.append(char)
+            i += 1
+        elif char == ")":
+            depth = max(0, depth - 1)
+            current.append(char)
+            i += 1
+        elif depth == 0 and s[i:i + 3] == " / ":
+            part = "".join(current).strip()
+            if part:
+                parts.append(part)
+            current = []
+            i += 3
+        else:
+            current.append(char)
+            i += 1
+    part = "".join(current).strip()
+    if part:
+        parts.append(part)
+    return parts
+
+
+def normalize_source_name(name: str) -> str:
+    """
+    Normalizes location and vendor strings into canonical physical source names.
+    Merges mine biomes, 'The Mill (...)', 'Hayden's Ranch Shop', 'Sleeping Dragon Inn', etc.
+    """
+    s = name.strip()
+    if not s:
+        return s
+
+    for prefix in (
+        "The Upper Mines", "Upper Mines",
+        "The Tide Caverns", "Tide Caverns",
+        "The Deep Earth", "Deep Earth",
+        "The Lava Caves", "Lava Caves",
+        "The Ancient Ruins", "Ancient Ruins",
+    ):
+        if s.startswith(prefix):
+            clean_prefix = prefix[4:] if prefix.startswith("The ") else prefix
+            suffix = s[len(prefix):].strip()
+            return f"{clean_prefix} {suffix}".strip()
+
+    s_lower = s.lower()
+    if s_lower.startswith("the mill") or s_lower.startswith("mill (") or s_lower == "mill":
+        return "The Mill"
+    if "hayden" in s_lower and ("shop" in s_lower or "ranch" in s_lower):
+        return "Hayden's Ranch Shop"
+    if "sleeping dragon" in s_lower:
+        return "Sleeping Dragon Inn"
+    if "smelter" in s_lower or "blacksmith smelter" in s_lower:
+        return "Blacksmith Smelter"
+    if "dragon forge" in s_lower:
+        return "The Dragon Forge"
+    if "stone refinery" in s_lower:
+        return "Stone Refinery"
+
+    return s
+
+
+def classify_source_tier(source_name: str, source_type: Optional[str] = None) -> str:
+    """
+    Classifies a source into 'Quick', 'Grind', or 'Farm' tiers.
+    """
+    if source_type in ("mimic", "fishing"):
+        return "Grind"
+    if source_type in ("living_off_the_land",):
+        return "Farm"
+    if source_type in (
+        "shop", "inn", "market_stall", "festival", "mill", "quest",
+        "museum", "date", "chicken_statue", "wishing_well"
+    ):
+        return "Quick"
+
+    nl = source_name.lower().strip()
+
+    # Quick: shops, mill, smelter/forge, inn, cooking, bug catching, quest, museum, festivals, apiary
+    quick_keywords = (
+        "general store", "balor", "hayden", "tackle shop", "darcy", "stall", "shop",
+        "the mill", "mill", "smelter", "forge", "refinery", "sleeping dragon", "inn",
+        "cooking", "kitchen", "catching", "bug catching", "quest", "request board",
+        "museum", "festival", "market", "chicken statue", "wishing well", "date", "apiary"
+    )
+    if any(k in nl for k in quick_keywords):
+        return "Quick"
+
+    # Grind activities that take place in wild/farm areas
+    grind_starts = (
+        "foraging", "digging", "fishing", "diving", "woodcutting",
+        "chopping", "breaking rocks", "shaking trees"
+    )
+    if any(nl.startswith(k) or f" {k}" in nl for k in grind_starts):
+        return "Grind"
+
+    # Farm: ranch, animal care, farm crops/flowers/orchard
+    farm_keywords = (
+        "ranch", "animal care", "farm", "crop", "flower", "orchard",
+        "fruit tree", "coop", "barn"
+    )
+    if any(k in nl for k in farm_keywords):
+        return "Farm"
+
+    # Grind: mines, caves, caverns, default for wild locations
+    return "Grind"
+
+
+def compute_source_priorities(
+    focus_suggestions: List[Dict[str, Any]],
+    item_locations: Optional[Dict[str, str]] = None,
+    alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    npc_names: Optional[Dict[str, str]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Groups focus suggestions by physical acquisition source (primary + alternate),
+    scores each source by the sum of blocked_pairs of items obtainable there,
+    classifies sources into Quick/Grind/Farm tiers, and returns a structured list.
+    """
+    if not focus_suggestions or not isinstance(focus_suggestions, list):
+        return []
+
+    loc_map = item_locations if item_locations is not None else ITEM_LOCATIONS
+    alt_map = load_alt_sources() if alt_sources is None else alt_sources
+    if not npc_names:
+        npc_names = _get_default_npc_names()
+
+    sources_acc: Dict[str, Dict[str, Any]] = {}
+
+    for item in focus_suggestions:
+        if not isinstance(item, dict):
+            continue
+        item_id = str(item.get("item_id", "")).strip().lower()
+        if not item_id:
+            continue
+        item_name = item.get("item_name") or item_id.replace("_", " ").title()
+        deficit = int(item.get("deficit", 0))
+        blocked_pairs = int(item.get("blocked_pairs", 0))
+        blocked_npcs = item.get("blocked_npcs", [])
+
+        disp_npcs: List[str] = []
+        for nid in blocked_npcs:
+            if not nid:
+                continue
+            n_str = str(nid).strip()
+            if npc_names and n_str.lower() in npc_names:
+                disp_npcs.append(npc_names[n_str.lower()])
+            elif npc_names and n_str in npc_names:
+                disp_npcs.append(npc_names[n_str])
+            else:
+                disp_npcs.append(n_str.capitalize())
+
+        item_sources: Set[Tuple[str, str]] = set()
+
+        # Primary locations
+        raw_loc = loc_map.get(item_id, "")
+        if not raw_loc and item_id in _TREE_ITEM_ALIASES:
+            raw_loc = loc_map.get(_TREE_ITEM_ALIASES[item_id], "")
+        if raw_loc:
+            for sub in _split_compound_locations(raw_loc):
+                norm = normalize_source_name(sub)
+                tier = classify_source_tier(norm)
+                item_sources.add((norm, tier))
+
+        # Alternate sources
+        alt_list = alt_map.get(item_id, [])
+        if not alt_list and item_id in _TREE_ITEM_ALIASES:
+            alt_list = alt_map.get(_TREE_ITEM_ALIASES[item_id], [])
+        for src in (alt_list or []):
+            st = src.get("type")
+            v = src.get("vendor") or src.get("location")
+            if not v:
+                if st == "chicken_statue":
+                    v = "Chicken Statue"
+                elif st == "wishing_well":
+                    v = "Wishing Well"
+                elif st == "living_off_the_land":
+                    v = "Living Off The Land"
+                else:
+                    v = str(st).replace("_", " ").title()
+            norm = normalize_source_name(v)
+            tier = classify_source_tier(norm, source_type=st)
+            item_sources.add((norm, tier))
+
+        # Fallback if no location found
+        if not item_sources:
+            item_sources.add(("Other / Unknown", "Grind"))
+
+        for src_name, tier in item_sources:
+            if src_name not in sources_acc:
+                sources_acc[src_name] = {
+                    "source_name": src_name,
+                    "tier": tier,
+                    "items": {},
+                    "benefited_npcs": set(),
+                }
+            entry = sources_acc[src_name]
+            if item_id not in entry["items"]:
+                entry["items"][item_id] = {
+                    "item_id": item_id,
+                    "item_name": item_name,
+                    "deficit": deficit,
+                    "blocked_pairs": blocked_pairs,
+                }
+            for d in disp_npcs:
+                entry["benefited_npcs"].add(d)
+
+    result: List[Dict[str, Any]] = []
+    for src_name, data in sources_acc.items():
+        items_list = list(data["items"].values())
+        items_list.sort(key=lambda x: (
+            -x.get("blocked_pairs", 0),
+            -x.get("deficit", 0),
+            str(x.get("item_name", "")).lower(),
+        ))
+        total_score = sum(it.get("blocked_pairs", 0) for it in items_list)
+        result.append({
+            "source_name": data["source_name"],
+            "tier": data["tier"],
+            "total_score": total_score,
+            "items": items_list,
+            "benefited_npcs": sorted(list(data["benefited_npcs"])),
+        })
+
+    tier_order = {"Quick": 0, "Grind": 1, "Farm": 2}
+    result.sort(key=lambda x: (
+        tier_order.get(x["tier"], 99),
+        -x["total_score"],
+        str(x["source_name"]).lower(),
+    ))
+    return result
+
+
 def plan_daily_gift_bag(
     save: Optional[SaveData] = None,
     npc_gift_definitions: Optional[Dict[str, dict]] = None,
@@ -694,6 +1033,8 @@ def plan_daily_gift_bag(
     seasonal_boost: float = 2.0,
     focus_top_n: int = 20,
     alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    focus_mode_enabled: bool = False,
+    focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -1157,6 +1498,12 @@ def plan_daily_gift_bag(
     overall_stats["all_seasons"] = all_seasons or (effective_season is None)
     overall_stats["seasonal_boost"] = seasonal_boost
 
+    focus_remaining_map = (
+        filter_remaining_items_for_focus(all_remaining_items_map, focus_npcs)
+        if (focus_mode_enabled and focus_npcs)
+        else all_remaining_items_map
+    )
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
@@ -1168,24 +1515,41 @@ def plan_daily_gift_bag(
         current_season=effective_season,
         item_seasons=item_seasons,
         seasonal_boost=seasonal_boost,
+        focus_mode_enabled=focus_mode_enabled,
+        focus_npcs=focus_npcs,
     )
 
-    focus_recipes, recipe_unlock_stats = compute_focus_recipes(
+    all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
         all_recipes=all_recipes,
         unlocked_recipe_ids=unlocked if (save is not None) else None,
         remaining_items_map=all_remaining_items_map,
         recipe_sources=recipe_sources,
-        top_n=10,
+        top_n=None,
     )
+    focus_recipes = all_unobtained_recipes[:10]
 
     alt_sources_data = load_alt_sources() if alt_sources is None else alt_sources
+
+    npc_names_map = {
+        nid.lower(): data.get("name", nid.capitalize())
+        for nid, data in npc_gift_definitions.items()
+        if isinstance(data, dict)
+    }
 
     focus_trees = build_focus_crafting_trees(
         focus_suggestions=focus_suggestions,
         recipes=all_recipes,
-        remaining_items_map=all_remaining_items_map,
+        remaining_items_map=focus_remaining_map,
         alt_sources=alt_sources_data,
         item_metadata=item_metadata,
+        npc_names=npc_names_map,
+    )
+
+    source_priority = compute_source_priorities(
+        focus_suggestions=focus_suggestions,
+        item_locations=item_locations,
+        alt_sources=alt_sources_data,
+        npc_names=npc_names_map,
     )
 
     return {
@@ -1198,8 +1562,10 @@ def plan_daily_gift_bag(
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
         "focus_recipes": focus_recipes,
+        "all_unobtained_recipes": all_unobtained_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
         "focus_trees": focus_trees,
+        "source_priority": source_priority,
         "alt_sources": alt_sources_data,
         "focus_sort": focus_sort,
         "current_season": effective_season,
@@ -1312,6 +1678,8 @@ def plan_max_relationship(
     seasonal_boost: float = 2.0,
     focus_top_n: int = 20,
     alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    focus_mode_enabled: bool = False,
+    focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -2115,6 +2483,12 @@ def plan_max_relationship(
     overall_stats["all_seasons"] = all_seasons or (effective_season is None)
     overall_stats["seasonal_boost"] = seasonal_boost
 
+    focus_remaining_map = (
+        filter_remaining_items_for_focus(all_remaining_items_map, focus_npcs)
+        if (focus_mode_enabled and focus_npcs)
+        else all_remaining_items_map
+    )
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
@@ -2126,24 +2500,41 @@ def plan_max_relationship(
         current_season=effective_season,
         item_seasons=item_seasons,
         seasonal_boost=seasonal_boost,
+        focus_mode_enabled=focus_mode_enabled,
+        focus_npcs=focus_npcs,
     )
 
-    focus_recipes, recipe_unlock_stats = compute_focus_recipes(
+    all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
         all_recipes=all_recipes,
         unlocked_recipe_ids=unlocked if (save is not None) else None,
         remaining_items_map=all_remaining_items_map,
         recipe_sources=recipe_sources,
-        top_n=10,
+        top_n=None,
     )
+    focus_recipes = all_unobtained_recipes[:10]
 
     alt_sources_data = load_alt_sources() if alt_sources is None else alt_sources
+
+    npc_names_map = {
+        nid.lower(): data.get("name", nid.capitalize())
+        for nid, data in npc_gift_definitions.items()
+        if isinstance(data, dict)
+    }
 
     focus_trees = build_focus_crafting_trees(
         focus_suggestions=focus_suggestions,
         recipes=all_recipes,
-        remaining_items_map=all_remaining_items_map,
+        remaining_items_map=focus_remaining_map,
         alt_sources=alt_sources_data,
         item_metadata=item_metadata,
+        npc_names=npc_names_map,
+    )
+
+    source_priority = compute_source_priorities(
+        focus_suggestions=focus_suggestions,
+        item_locations=item_locations,
+        alt_sources=alt_sources_data,
+        npc_names=npc_names_map,
     )
 
     return {
@@ -2156,8 +2547,10 @@ def plan_max_relationship(
         "today_remaining_items_map": today_remaining_items_map,
         "focus_suggestions": focus_suggestions,
         "focus_recipes": focus_recipes,
+        "all_unobtained_recipes": all_unobtained_recipes,
         "recipe_unlock_stats": recipe_unlock_stats,
         "focus_trees": focus_trees,
+        "source_priority": source_priority,
         "alt_sources": alt_sources_data,
         "focus_sort": focus_sort,
         "current_season": effective_season,

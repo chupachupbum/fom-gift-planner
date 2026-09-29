@@ -43,6 +43,7 @@ VALID_SOURCE_TYPES = {
     "date",
     "quest",
     "museum",
+    "living_off_the_land",
 }
 
 

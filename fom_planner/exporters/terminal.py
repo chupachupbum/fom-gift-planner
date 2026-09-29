@@ -23,6 +23,7 @@ ALT_SOURCE_EMOJI: Dict[str, str] = {
     "date": "💕",
     "quest": "📋",
     "museum": "🏛️",
+    "living_off_the_land": "🌱",
 }
 
 SOURCE_TYPE_NAMES: Dict[str, str] = {
@@ -38,6 +39,7 @@ SOURCE_TYPE_NAMES: Dict[str, str] = {
     "market_stall": "Market Stall",
     "inn": "Sleeping Dragon Inn",
     "shop": "Shop",
+    "living_off_the_land": "Living Off The Land",
 }
 
 

@@ -92,11 +92,14 @@ function renderPlan(data) {
   // 1. Date & Header
   renderHeader(data);
 
+  // 1.5 Overview Statistics Dashboard
+  renderStatsDashboard(data);
+
   // 2. Bag Plan Section
   renderBagPlan(data.bag_plan || [], data.stats || {});
 
   // 3. Focus Suggestions Section
-  renderFocusSuggestions(data.focus_suggestions || [], data.focus_trees || []);
+  renderFocusSuggestions(data.focus_suggestions || [], data.focus_trees || [], data.source_priority || null);
 
   // 4. Infused Items
   renderInfusedItems(data.infused_items);
@@ -105,6 +108,9 @@ function renderPlan(data) {
   renderSidebarSummary(data);
 }
 
+// ---------------------------------------------------------------------------
+// 1. Header & Calendar Bar
+// ---------------------------------------------------------------------------
 function renderHeader(data) {
   const dateInfo = data.in_game_date || {};
   const seasonTag = document.getElementById("seasonTag");
@@ -159,6 +165,290 @@ function renderHeader(data) {
     const fName = data.save_info.farm_name || "Farm";
     playerFarmBadge.textContent = `🌾 ${pName} @ ${fName}`;
   }
+}
+
+// ---------------------------------------------------------------------------
+// 1.5 Statistics Dashboard State & Renderers
+// ---------------------------------------------------------------------------
+let activeStatsDrawer = null; // 'completed' | 'incomplete' | 'recipes' | null
+let recipesExpanded = false;
+let incompleteSearchFilter = "";
+let recipeSearchFilter = "";
+
+function renderStatsDashboard(data) {
+  const stats = data.stats || {};
+  const overallBadge = document.getElementById("statsOverallBadge");
+  const giftProgressVal = document.getElementById("statGiftProgressVal");
+  const giftProgressFill = document.getElementById("statGiftProgressFill");
+  const giftProgressSub = document.getElementById("statGiftProgressSub");
+
+  const completedVal = document.getElementById("statCompletedNpcsVal");
+  const completedSub = document.getElementById("statCompletedNpcsSub");
+  const drawerCompletedCount = document.getElementById("drawerCompletedCount");
+
+  const incompleteVal = document.getElementById("statIncompleteNpcsVal");
+  const incompleteSub = document.getElementById("statIncompleteNpcsSub");
+  const drawerIncompleteCount = document.getElementById("drawerIncompleteCount");
+
+  const recipesVal = document.getElementById("statRecipesVal");
+  const recipesSub = document.getElementById("statRecipesSub");
+  const drawerRecipesCount = document.getElementById("drawerRecipesCount");
+
+  // 1. Overall Gift Progress
+  const overallPct = stats.overall_gift_progress_pct !== undefined ? stats.overall_gift_progress_pct : 0;
+  const givenTotal = stats.game_given_total || 0;
+  const totalPrefs = stats.game_total_preferences || 0;
+
+  if (overallBadge) overallBadge.textContent = `${overallPct}% Discovered`;
+  if (giftProgressVal) giftProgressVal.textContent = `${overallPct}%`;
+  if (giftProgressFill) giftProgressFill.style.width = `${Math.min(100, Math.max(0, overallPct))}%`;
+  if (giftProgressSub) giftProgressSub.textContent = `${givenTotal} / ${totalPrefs} preferences recorded`;
+
+  // 2. Completed NPCs
+  const completedList = data.completed_npcs_details || stats.completed_npcs_details || [];
+  const completedCount = stats.completed_npcs_count !== undefined ? stats.completed_npcs_count : completedList.length;
+  const incompleteList = data.incomplete_npcs_details || stats.incomplete_npcs_details || [];
+  const incompleteCount = stats.incomplete_npcs_count !== undefined ? stats.incomplete_npcs_count : incompleteList.length;
+  const totalNpcs = stats.total_npcs_count || (completedCount + incompleteCount);
+
+  if (completedVal) completedVal.textContent = `${completedCount} / ${totalNpcs}`;
+  if (completedSub) completedSub.textContent = (completedCount === totalNpcs && totalNpcs > 0) ? "🎉 All NPCs 100% completed!" : "100% gift journal complete";
+  if (drawerCompletedCount) drawerCompletedCount.textContent = completedCount;
+
+  // 3. Incomplete NPCs
+  if (incompleteVal) incompleteVal.textContent = `${incompleteCount} / ${totalNpcs}`;
+  if (incompleteSub) incompleteSub.textContent = incompleteCount === 0 ? "All NPC gifts discovered!" : `${incompleteCount} NPCs pending loved/liked gifts`;
+  if (drawerIncompleteCount) drawerIncompleteCount.textContent = incompleteCount;
+
+  // 4. Recipes
+  const recipeStats = data.recipe_stats || {};
+  const unobtainedRecipes = data.unobtained_recipes || [];
+  const lockedCount = recipeStats.locked_count !== undefined ? recipeStats.locked_count : unobtainedRecipes.length;
+  const unlockedCount = recipeStats.unlocked_count || 0;
+  const totalCooking = recipeStats.total_cooking || (lockedCount + unlockedCount);
+
+  if (recipesVal) recipesVal.textContent = `${lockedCount} Locked`;
+  if (recipesSub) recipesSub.textContent = `${unlockedCount} / ${totalCooking} cooking recipes unlocked`;
+  if (drawerRecipesCount) drawerRecipesCount.textContent = lockedCount;
+
+  // Refresh active drawer content if open
+  if (activeStatsDrawer === "completed") {
+    renderCompletedDrawerContent(completedList);
+  } else if (activeStatsDrawer === "incomplete") {
+    renderIncompleteDrawerContent(incompleteList);
+  } else if (activeStatsDrawer === "recipes") {
+    renderRecipesDrawerContent(unobtainedRecipes);
+  }
+}
+
+function setStatsDrawer(drawerName) {
+  if (activeStatsDrawer === drawerName) {
+    activeStatsDrawer = null; // Toggle closed
+  } else {
+    activeStatsDrawer = drawerName;
+  }
+
+  const drawerCompleted = document.getElementById("drawerCompleted");
+  const drawerIncomplete = document.getElementById("drawerIncomplete");
+  const drawerRecipes = document.getElementById("drawerRecipes");
+
+  const btnCompleted = document.getElementById("toggleCompletedBtn");
+  const btnIncomplete = document.getElementById("toggleIncompleteBtn");
+  const btnRecipes = document.getElementById("toggleRecipesBtn");
+
+  if (drawerCompleted) drawerCompleted.style.display = activeStatsDrawer === "completed" ? "block" : "none";
+  if (drawerIncomplete) drawerIncomplete.style.display = activeStatsDrawer === "incomplete" ? "block" : "none";
+  if (drawerRecipes) drawerRecipes.style.display = activeStatsDrawer === "recipes" ? "block" : "none";
+
+  if (btnCompleted) {
+    btnCompleted.classList.toggle("active", activeStatsDrawer === "completed");
+    btnCompleted.innerHTML = activeStatsDrawer === "completed" ? `<span>Collapse</span> <span class="arrow">▲</span>` : `<span>View Completed</span> <span class="arrow">▼</span>`;
+    btnCompleted.setAttribute("aria-expanded", activeStatsDrawer === "completed");
+  }
+  if (btnIncomplete) {
+    btnIncomplete.classList.toggle("active", activeStatsDrawer === "incomplete");
+    btnIncomplete.innerHTML = activeStatsDrawer === "incomplete" ? `<span>Collapse</span> <span class="arrow">▲</span>` : `<span>View Details</span> <span class="arrow">▼</span>`;
+    btnIncomplete.setAttribute("aria-expanded", activeStatsDrawer === "incomplete");
+  }
+  if (btnRecipes) {
+    btnRecipes.classList.toggle("active", activeStatsDrawer === "recipes");
+    btnRecipes.innerHTML = activeStatsDrawer === "recipes" ? `<span>Collapse</span> <span class="arrow">▲</span>` : `<span>View Recipes</span> <span class="arrow">▼</span>`;
+    btnRecipes.setAttribute("aria-expanded", activeStatsDrawer === "recipes");
+  }
+
+  if (currentPlan) {
+    if (activeStatsDrawer === "completed") {
+      renderCompletedDrawerContent(currentPlan.completed_npcs_details || (currentPlan.stats && currentPlan.stats.completed_npcs_details) || []);
+    } else if (activeStatsDrawer === "incomplete") {
+      renderIncompleteDrawerContent(currentPlan.incomplete_npcs_details || (currentPlan.stats && currentPlan.stats.incomplete_npcs_details) || []);
+    } else if (activeStatsDrawer === "recipes") {
+      renderRecipesDrawerContent(currentPlan.unobtained_recipes || []);
+    }
+  }
+
+  // Smooth scroll into view when opened
+  if (activeStatsDrawer) {
+    const targetEl = document.getElementById(`drawer${drawerName.charAt(0).toUpperCase() + drawerName.slice(1)}`);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+}
+
+function renderCompletedDrawerContent(list) {
+  const container = document.getElementById("completedGrid");
+  if (!container) return;
+
+  if (!list || list.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">No NPCs have 100% completed gift journals yet. Keep gifting!</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(npc => `
+    <div class="completed-npc-chip">
+      <img class="completed-npc-avatar" src="${npc.portrait_url}" alt="${npc.name}" onerror="this.src='/assets/sprites/npcs/fallback'" />
+      <div class="completed-npc-info">
+        <span class="completed-npc-name" title="${npc.name}">${npc.name}</span>
+        <span class="completed-npc-badge">✓ 100% Complete</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderIncompleteDrawerContent(list) {
+  const container = document.getElementById("incompleteGrid");
+  if (!container) return;
+
+  if (!list || list.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">🎉 All NPCs have their gift journals 100% completed!</div>`;
+    return;
+  }
+
+  const query = (incompleteSearchFilter || "").trim().toLowerCase();
+  const filtered = query
+    ? list.filter(npc => (npc.name && npc.name.toLowerCase().includes(query)) || (npc.npc_id && npc.npc_id.toLowerCase().includes(query)))
+    : list;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">No incomplete NPCs found matching "${incompleteSearchFilter}".</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(npc => {
+    const lovedChips = (npc.remaining_loved || []).map(item => `
+      <span class="gift-item-chip loved" title="${item.name}">
+        <img class="gift-item-chip-img" src="${item.sprite_url}" alt="${item.name}" onerror="this.src='/assets/sprites/items/fallback'" />
+        <span>${item.name}</span>
+      </span>
+    `).join("");
+
+    const likedChips = (npc.remaining_liked || []).map(item => `
+      <span class="gift-item-chip liked" title="${item.name}">
+        <img class="gift-item-chip-img" src="${item.sprite_url}" alt="${item.name}" onerror="this.src='/assets/sprites/items/fallback'" />
+        <span>${item.name}</span>
+      </span>
+    `).join("");
+
+    const vendorPill = npc.is_vendor ? `<span class="festival-pill" style="font-size: 0.65rem; padding: 1px 5px; margin-left: 4px;">Market</span>` : "";
+
+    return `
+      <div class="incomplete-npc-card">
+        <div class="incomplete-card-top">
+          <img class="incomplete-npc-avatar" src="${npc.portrait_url}" alt="${npc.name}" onerror="this.src='/assets/sprites/npcs/fallback'" />
+          <div class="incomplete-npc-meta">
+            <div class="incomplete-npc-title-row">
+              <span class="incomplete-npc-name" title="${npc.name}">${npc.name}${vendorPill}</span>
+              <span class="incomplete-npc-pct">${npc.pct_total_done}% done</span>
+            </div>
+            <div class="incomplete-mini-bar">
+              <div class="incomplete-mini-fill" style="width: ${Math.min(100, Math.max(0, npc.pct_total_done))}%"></div>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-light); margin-top: 2px;">
+              ${npc.total_remaining} gift${npc.total_remaining === 1 ? '' : 's'} remaining
+            </div>
+          </div>
+        </div>
+
+        <div class="incomplete-npc-gifts-section">
+          <div class="gift-type-row">
+            <span class="gift-type-label loved">💖 Remaining Loved (${(npc.remaining_loved || []).length})</span>
+            <div class="gift-chips-container">
+              ${lovedChips || '<span style="font-size: 0.72rem; color: var(--text-light); font-style: italic;">All loved gifts discovered!</span>'}
+            </div>
+          </div>
+          <div class="gift-type-row" style="margin-top: 4px;">
+            <span class="gift-type-label liked">💜 Remaining Liked (${(npc.remaining_liked || []).length})</span>
+            <div class="gift-chips-container">
+              ${likedChips || '<span style="font-size: 0.72rem; color: var(--text-light); font-style: italic;">All liked gifts discovered!</span>'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRecipesDrawerContent(allRecipes) {
+  const container = document.getElementById("recipesGrid");
+  const moreBtn = document.getElementById("toggleMoreRecipesBtn");
+  const paginationRow = document.getElementById("recipesPaginationRow");
+  const searchInput = document.getElementById("recipeSearchInput");
+  if (!container) return;
+
+  if (!allRecipes || allRecipes.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">🎉 All cooking recipes have been obtained!</div>`;
+    if (paginationRow) paginationRow.style.display = "none";
+    if (searchInput) searchInput.style.display = "none";
+    return;
+  }
+
+  const query = (recipeSearchFilter || "").trim().toLowerCase();
+  let toDisplay = allRecipes;
+
+  if (recipesExpanded) {
+    if (searchInput) searchInput.style.display = "inline-block";
+    if (query) {
+      toDisplay = allRecipes.filter(r => 
+        (r.display_name && r.display_name.toLowerCase().includes(query)) ||
+        (r.unlock_source && r.unlock_source.toLowerCase().includes(query))
+      );
+    }
+  } else {
+    if (searchInput) searchInput.style.display = "none";
+    toDisplay = allRecipes.slice(0, 5);
+  }
+
+  if (paginationRow) {
+    paginationRow.style.display = allRecipes.length > 5 ? "flex" : "none";
+    if (moreBtn) {
+      if (recipesExpanded) {
+        moreBtn.innerHTML = `<span>Collapse to Top 5 ▲</span>`;
+      } else {
+        moreBtn.innerHTML = `<span>Show More Recipes (${allRecipes.length - 5} more) ▼</span>`;
+      }
+    }
+  }
+
+  if (toDisplay.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">No un-obtained recipes found matching "${recipeSearchFilter}".</div>`;
+    return;
+  }
+
+  container.innerHTML = toDisplay.map(r => `
+    <div class="recipe-card">
+      <img class="recipe-card-sprite" src="${r.sprite_url}" alt="${r.display_name}" onerror="this.src='/assets/sprites/items/fallback'" />
+      <div class="recipe-card-body">
+        <div class="recipe-card-top">
+          <span class="recipe-card-name" title="${r.display_name}">${r.display_name}</span>
+          ${r.impact > 0 ? `<span class="recipe-impact-badge" title="Unlocks gift preferences for ${r.impact} NPC(s)">🎁 Unlocks ${r.impact} NPC${r.impact === 1 ? '' : 's'}</span>` : ''}
+        </div>
+        <div class="recipe-source-row">
+          <span>📍</span>
+          <span class="recipe-source-badge" title="How to obtain: ${r.unlock_source}">${r.unlock_source || 'Unknown'}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
 }
 
 function renderBagPlan(bagPlan, stats) {
@@ -324,6 +614,7 @@ const ALT_SOURCE_EMOJI = {
   date: "💕",
   quest: "📋",
   museum: "🏛️",
+  living_off_the_land: "🌱",
 };
 
 function renderCraftingTree(tree, depth = 0) {
@@ -518,7 +809,7 @@ function openCraftingTreeModal(rawTreeData, deficit) {
         bodyHtml += `<div class="d3-node-alt-sources">`;
         data.alt_sources.slice(0, 3).forEach(s => {
           const iconUrl = `/assets/sprites/locations/${s.icon || s.type}`;
-          const label = s.vendor || s.location || (s.type === 'chicken_statue' ? 'Chicken Statue' : (s.type === 'wishing_well' ? 'Wishing Well' : (s.type || '').replace(/_/g, ' ')));
+          const label = s.vendor || s.location || (s.type === 'chicken_statue' ? 'Chicken Statue' : (s.type === 'wishing_well' ? 'Wishing Well' : (s.type === 'living_off_the_land' ? 'Living Off The Land' : (s.type || '').replace(/_/g, ' '))));
           const cost = (s.cost !== null && s.cost !== undefined)
             ? ` ${s.cost}${s.currency === 'tesserae' ? 't' : (s.currency === 'shiny_beads' ? ' beads' : ' ' + (s.currency || ''))}`
             : '';
@@ -937,13 +1228,133 @@ window.openCraftingTreeModal = openCraftingTreeModal;
 window.closeTreeModal = closeTreeModal;
 window.renderCraftingTree = renderCraftingTree;
 
-function renderFocusSuggestions(focusItems, focusTrees = []) {
+function renderSourceSummary(sourcePriority, focusItemsCount) {
+  const panel = document.getElementById("sourceSummaryPanel");
+  if (!panel) return;
+
+  // Visibility rule: If !focusItemsCount || !sourcePriority || sourcePriority.length === 0: hide panel
+  if (!focusItemsCount || !sourcePriority) {
+    panel.style.display = "none";
+    panel.innerHTML = "";
+    return;
+  }
+
+  let quickSources = [];
+  let grindSources = [];
+  let farmSources = [];
+
+  if (Array.isArray(sourcePriority)) {
+    sourcePriority.forEach(s => {
+      const t = String(s.tier || 'grind').toLowerCase();
+      if (t === 'quick') quickSources.push(s);
+      else if (t === 'farm') farmSources.push(s);
+      else grindSources.push(s);
+    });
+  } else if (typeof sourcePriority === 'object' && sourcePriority !== null) {
+    quickSources = sourcePriority.quick || [];
+    grindSources = sourcePriority.grind || [];
+    farmSources = sourcePriority.farm || [];
+  }
+
+  const totalSources = quickSources.length + grindSources.length + farmSources.length;
+  if (totalSources === 0) {
+    panel.style.display = "none";
+    panel.innerHTML = "";
+    return;
+  }
+
+  panel.style.display = "block";
+
+  const renderTier = (tierKey, title, icon, subtext, sources) => {
+    if (!sources || sources.length === 0) return "";
+    const tierScore = sources.reduce((acc, s) => acc + (s.total_score || 0), 0);
+
+    const sourceCardsHtml = sources.map(s => {
+      const itemsHtml = (s.items || []).map(item => `
+        <div class="source-item-chip">
+          <img class="source-item-sprite" src="${item.sprite_url || '/assets/sprites/items/' + item.item_id}" alt="${item.item_name}" onerror="this.style.display='none'" />
+          <span class="source-item-name">${item.item_name}</span>
+          <span class="source-item-deficit">Need: ${item.deficit}</span>
+          <span class="source-item-pairs" title="${item.blocked_pairs} blocked NPC-gift combinations">(${item.blocked_pairs} pairs)</span>
+        </div>
+      `).join("");
+
+      const npcsHtml = renderBlockedNpcs(s.benefited_npcs || []);
+
+      return `
+        <div class="source-card">
+          <div class="source-card-header">
+            <div class="source-card-title">
+              <span class="source-icon">📍</span>
+              <strong>${s.source_name}</strong>
+            </div>
+            <div class="source-card-badges">
+              <span class="tier-badge-pill tier-pill-${tierKey}">${tierKey.toUpperCase()}</span>
+              <span class="source-score-badge" title="Total blocked NPC gifts unlocked">Score: ${s.total_score || 0}</span>
+            </div>
+          </div>
+
+          <div class="source-items-section">
+            <div class="source-label">Blocker Items (${(s.items || []).length}):</div>
+            <div class="source-items-chips">${itemsHtml}</div>
+          </div>
+
+          <div class="source-benefited-section">
+            <div class="source-label">Benefited NPCs:</div>
+            <div class="source-npcs-chips">${npcsHtml}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <details class="source-tier-accordion tier-${tierKey}" open>
+        <summary class="source-tier-summary">
+          <div class="tier-summary-title">
+            <span class="tier-icon">${icon}</span>
+            <span class="tier-name">${title}</span>
+            <span class="tier-subtext">${subtext}</span>
+          </div>
+          <div class="tier-summary-stats">
+            <span class="tier-stat-badge">${sources.length} sources</span>
+            <span class="tier-stat-badge tier-score-badge">Score: ${tierScore}</span>
+            <span class="tier-chevron">▼</span>
+          </div>
+        </summary>
+        <div class="source-tier-content">
+          ${sourceCardsHtml}
+        </div>
+      </details>
+    `;
+  };
+
+  panel.innerHTML = `
+    <div class="source-summary-header">
+      <div class="source-summary-title">
+        <span class="source-summary-icon">📍</span>
+        <h3>Acquisition Source Priority</h3>
+      </div>
+      <span class="source-summary-subtitle">Ranked by blocked NPC gift impact</span>
+    </div>
+    <div class="source-tiers-wrapper">
+      ${renderTier("quick", "Quick Acquisition", "⚡", "— Instant / Purchasable (Shops, Mill, Forge, Cook)", quickSources)}
+      ${renderTier("grind", "Grind Acquisition", "⛏️", "— Repeatable / Exploration (Mines, Fishing, Foraging)", grindSources)}
+      ${renderTier("farm", "Farm & Ranch", "🌱", "— Seasonal / Planning (Crops, Animals, Feed)", farmSources)}
+    </div>
+  `;
+}
+window.renderSourceSummary = renderSourceSummary;
+
+function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = null) {
   const grid = document.getElementById("focusGrid");
   const badge = document.getElementById("focusCountBadge");
 
   if (badge) {
     badge.textContent = `${focusItems.length} Blocker Items`;
   }
+
+  // Render Source Priority Summary panel (visibility handled inside renderSourceSummary)
+  renderSourceSummary(sourcePriority, focusItems ? focusItems.length : 0);
 
   if (!grid) return;
   if (focusItems.length === 0) {
@@ -1091,7 +1502,7 @@ function renderSettingsAccordion(schema, config) {
 
   accordion.innerHTML = schema.map((group, idx) => {
     const openAttr = idx === 0 ? "open" : "";
-    const fieldsHtml = (group.fields || []).map(f => renderField(f, config[f.key])).join("");
+    const fieldsHtml = (group.fields || []).map(f => renderField(f, config[f.key], config)).join("");
 
     return `
       <details class="settings-group" ${openAttr}>
@@ -1108,6 +1519,17 @@ function renderSettingsAccordion(schema, config) {
     (group.fields || []).forEach(f => {
       const el = document.getElementById(`setting_${f.key}`);
       if (!el) return;
+
+      if (f.key === "focus_mode_enabled") {
+        el.addEventListener("change", () => {
+          const container = document.getElementById("focusNpcContainer");
+          if (container) {
+            container.style.display = el.checked ? "" : "none";
+          }
+          submitSettingUpdate("focus_mode_enabled", el.checked);
+        });
+        return;
+      }
 
       if (f.type === "checkbox") {
         el.addEventListener("change", () => {
@@ -1138,20 +1560,82 @@ function renderSettingsAccordion(schema, config) {
     });
   });
 
+  // Focus Mode Toggle (defensive listener if not attached in schema loop)
+  const focusModeToggle = document.getElementById("setting_focus_mode_enabled");
+  const focusNpcContainer = document.getElementById("focusNpcContainer");
+  if (focusModeToggle && focusNpcContainer && !focusModeToggle._hasFocusListener) {
+    focusModeToggle._hasFocusListener = true;
+    focusModeToggle.addEventListener("change", () => {
+      focusNpcContainer.style.display = focusModeToggle.checked ? "" : "none";
+      submitSettingUpdate("focus_mode_enabled", focusModeToggle.checked);
+    });
+  }
+
+  // Focus NPC Checkbox changes
+  const focusNpcGrid = document.getElementById("focusNpcGrid");
+  const counterBadge = document.getElementById("focusNpcCounterBadge");
+  if (focusNpcGrid) {
+    focusNpcGrid.addEventListener("change", (e) => {
+      if (e.target && e.target.classList.contains("focus-npc-cb")) {
+        const card = e.target.closest(".focus-npc-card");
+        if (card) {
+          card.classList.toggle("is-checked", e.target.checked);
+          card.classList.toggle("active", e.target.checked);
+        }
+
+        const checkedBoxes = Array.from(focusNpcGrid.querySelectorAll(".focus-npc-cb:checked"));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (counterBadge) {
+          const total = focusNpcGrid.querySelectorAll(".focus-npc-cb").length;
+          counterBadge.textContent = `${selectedIds.length} / ${total}`;
+        }
+        submitSettingUpdate("focus_npcs", selectedIds.join(","));
+      }
+    });
+  }
+
+  // Select All & Deselect All Buttons
+  const selectAllBtn = document.getElementById("focusNpcSelectAll");
+  if (selectAllBtn && focusNpcGrid) {
+    selectAllBtn.addEventListener("click", () => {
+      const allBoxes = Array.from(focusNpcGrid.querySelectorAll(".focus-npc-cb"));
+      allBoxes.forEach(cb => {
+        cb.checked = true;
+        const card = cb.closest(".focus-npc-card");
+        if (card) {
+          card.classList.add("is-checked");
+          card.classList.add("active");
+        }
+      });
+      const allIds = allBoxes.map(cb => cb.value);
+      if (counterBadge) counterBadge.textContent = `${allIds.length} / ${allBoxes.length}`;
+      submitSettingUpdate("focus_npcs", allIds.join(","));
+    });
+  }
+
+  const deselectAllBtn = document.getElementById("focusNpcDeselectAll");
+  if (deselectAllBtn && focusNpcGrid) {
+    deselectAllBtn.addEventListener("click", () => {
+      const allBoxes = Array.from(focusNpcGrid.querySelectorAll(".focus-npc-cb"));
+      allBoxes.forEach(cb => {
+        cb.checked = false;
+        const card = cb.closest(".focus-npc-card");
+        if (card) {
+          card.classList.remove("is-checked");
+          card.classList.remove("active");
+        }
+      });
+      if (counterBadge) counterBadge.textContent = `0 / ${allBoxes.length}`;
+      submitSettingUpdate("focus_npcs", "");
+    });
+  }
+
   // Attach listeners for sidebar date override card actions
   const sidebarOpenCalBtn = document.getElementById("sidebarOpenCalBtn");
   if (sidebarOpenCalBtn) {
     sidebarOpenCalBtn.addEventListener("click", (e) => {
       e.preventDefault();
       openCalendarModal();
-    });
-  }
-
-  const sidebarNextSatBtn = document.getElementById("sidebarNextSatBtn");
-  if (sidebarNextSatBtn) {
-    sidebarNextSatBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      await jumpToNextSaturday();
     });
   }
 
@@ -1249,8 +1733,95 @@ async function uploadSaveFile(file) {
   }
 }
 
-function renderField(field, currentVal) {
+const DEFAULT_34_NPCS = [
+  { id: "adeline", name: "Adeline" },
+  { id: "balor", name: "Balor" },
+  { id: "caldarus", name: "Caldarus" },
+  { id: "celine", name: "Celine" },
+  { id: "darcy", name: "Darcy" },
+  { id: "dell", name: "Dell" },
+  { id: "dozy", name: "Dozy" },
+  { id: "eiland", name: "Eiland" },
+  { id: "elsie", name: "Elsie" },
+  { id: "errol", name: "Errol" },
+  { id: "hayden", name: "Hayden" },
+  { id: "hemlock", name: "Hemlock" },
+  { id: "henrietta", name: "Henrietta" },
+  { id: "holt", name: "Holt" },
+  { id: "josephine", name: "Josephine" },
+  { id: "juniper", name: "Juniper" },
+  { id: "landen", name: "Landen" },
+  { id: "louis", name: "Louis" },
+  { id: "luc", name: "Luc" },
+  { id: "maple", name: "Maple" },
+  { id: "march", name: "March" },
+  { id: "merri", name: "Merri" },
+  { id: "nora", name: "Nora" },
+  { id: "olric", name: "Olric" },
+  { id: "reina", name: "Reina" },
+  { id: "ryis", name: "Ryis" },
+  { id: "seridia", name: "Seridia" },
+  { id: "stillwell", name: "Stillwell" },
+  { id: "taliferro", name: "Taliferro" },
+  { id: "terithia", name: "Terithia" },
+  { id: "valen", name: "Valen" },
+  { id: "vera", name: "Vera" },
+  { id: "wheedle", name: "Wheedle" },
+  { id: "zorel", name: "Zorel" },
+];
+
+function renderField(field, currentVal, config = {}) {
   const id = `setting_${field.key}`;
+
+  if (field.type === "focus_npc_picker" || field.key === "focus_npcs") {
+    const isModeEnabled = Boolean((config && config.focus_mode_enabled !== undefined) ? config.focus_mode_enabled : currentSettings?.focus_mode_enabled);
+    const selectedNpcs = new Set(
+      (currentVal || "")
+        .split(",")
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    let npcList = field.options;
+    if (!npcList && currentPlan?.npc_progress) {
+      npcList = Object.values(currentPlan.npc_progress).map(n => ({
+        id: String(n.npc_id || '').toLowerCase(),
+        name: n.name || n.npc_id,
+      }));
+    }
+    if (!npcList || npcList.length === 0) {
+      npcList = DEFAULT_34_NPCS;
+    }
+
+    const cardsHtml = npcList.map(npc => {
+      const isChecked = selectedNpcs.has(npc.id.toLowerCase());
+      const activeClass = isChecked ? 'is-checked active' : '';
+      return `
+        <label class="focus-npc-card ${activeClass}" for="focus_npc_${npc.id}">
+          <input type="checkbox" class="focus-npc-cb" id="focus_npc_${npc.id}" value="${npc.id}" ${isChecked ? 'checked' : ''} />
+          <img class="focus-npc-portrait" src="/assets/sprites/npcs/${npc.id}" alt="${npc.name}" loading="lazy" />
+          <span class="focus-npc-name" title="${npc.name}">${npc.name}</span>
+        </label>
+      `;
+    }).join("");
+
+    return `
+      <div class="field-group focus-npc-picker-group">
+        <div id="focusNpcContainer" class="focus-npc-container" style="${isModeEnabled ? '' : 'display: none;'}">
+          <div class="focus-npc-toolbar">
+            <div class="focus-npc-actions">
+              <button type="button" class="focus-npc-btn" id="focusNpcSelectAll">Select All</button>
+              <button type="button" class="focus-npc-btn" id="focusNpcDeselectAll">Deselect All</button>
+            </div>
+            <span class="focus-npc-counter" id="focusNpcCounterBadge">${selectedNpcs.size} / ${npcList.length}</span>
+          </div>
+          <div class="focus-npc-grid" id="focusNpcGrid">
+            ${cardsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   if (field.type === "checkbox") {
     const checked = currentVal ? "checked" : "";
@@ -1306,9 +1877,6 @@ function renderField(field, currentVal) {
           <div class="date-override-actions">
             <button type="button" class="btn-cal-action btn-cal-primary" id="sidebarOpenCalBtn" title="Open interactive 28-day FoM calendar">
               📅 Open Calendar
-            </button>
-            <button type="button" class="btn-cal-action btn-cal-sat" id="sidebarNextSatBtn" title="Jump to upcoming Saturday Market">
-              ★ Saturday
             </button>
             ${isOverridden ? `
               <button type="button" class="btn-cal-action btn-cal-reset" id="sidebarResetDateBtn" title="Reset date override and follow game save">
@@ -1381,6 +1949,10 @@ let calModalState = {
   year: 1,
   season: "spring",
   selectedDay: 1,
+  selectedSeason: "spring",
+  selectedYear: 1,
+  pendingReset: false,
+  isDirty: false,
 };
 
 const FOM_FESTIVALS = {
@@ -1400,6 +1972,10 @@ function openCalendarModal() {
   if (s === "autumn") s = "fall";
   calModalState.season = s;
   calModalState.selectedDay = inGame.day || 1;
+  calModalState.selectedSeason = s;
+  calModalState.selectedYear = inGame.year || 1;
+  calModalState.pendingReset = false;
+  calModalState.isDirty = false;
 
   updateCalendarToolbar();
   renderCalendarDaysGrid();
@@ -1445,17 +2021,27 @@ function updateCalendarStatusBar() {
   const isOverridden = Boolean(inGame.is_overridden);
   const saveDate = inGame.save_date;
 
-  const capSeason = calModalState.season.charAt(0).toUpperCase() + calModalState.season.slice(1);
-  const isSat = (calModalState.selectedDay % 7 === 6);
-  const fest = FOM_FESTIVALS[calModalState.season]?.[calModalState.selectedDay];
+  const selSeason = calModalState.selectedSeason || calModalState.season;
+  const selDay = calModalState.selectedDay || 1;
+  const selYear = calModalState.selectedYear || calModalState.year;
 
-  let desc = `${capSeason} Day ${calModalState.selectedDay}, Year ${calModalState.year}`;
+  const capSeason = selSeason.charAt(0).toUpperCase() + selSeason.slice(1);
+  const isSat = (selDay % 7 === 6);
+  const fest = FOM_FESTIVALS[selSeason]?.[selDay];
+
+  let desc = `${capSeason} Day ${selDay}, Year ${selYear}`;
   if (isSat) desc += " ★ (Saturday Market)";
   if (fest) desc += ` 🎉 (${fest})`;
   textEl.textContent = desc;
 
   if (badgeEl) {
-    if (isOverridden) {
+    if (calModalState.pendingReset) {
+      badgeEl.textContent = "Revert to Save Date";
+      badgeEl.className = "cal-status-badge badge-save";
+    } else if (calModalState.isDirty) {
+      badgeEl.textContent = "Selected (Click Done to apply)";
+      badgeEl.className = "cal-status-badge badge-override";
+    } else if (isOverridden) {
       badgeEl.textContent = "Date Overridden";
       badgeEl.className = "cal-status-badge badge-override";
     } else {
@@ -1479,9 +2065,6 @@ function renderCalendarDaysGrid() {
 
   const inGame = currentPlan?.in_game_date || {};
   const saveDate = inGame.save_date;
-  const currentSeason = (inGame.season || "spring").toLowerCase();
-  const currentDay = inGame.day || 1;
-  const currentYear = inGame.year || 1;
 
   const festivals = FOM_FESTIVALS[calModalState.season] || {};
 
@@ -1497,18 +2080,16 @@ function renderCalendarDaysGrid() {
       saveDate.year === calModalState.year
     );
 
-    const isTargetDate = Boolean(
-      currentSeason === calModalState.season &&
-      currentDay === day &&
-      currentYear === calModalState.year
+    const isCurrentModalSelection = Boolean(
+      calModalState.selectedDay === day &&
+      calModalState.selectedSeason === calModalState.season &&
+      calModalState.selectedYear === calModalState.year
     );
-
-    const isCurrentModalSelection = (day === calModalState.selectedDay);
 
     let cellClasses = ["cal-day-cell"];
     if (isSat) cellClasses.push("is-sat");
     if (isSaveDate) cellClasses.push("is-save-date");
-    if (isTargetDate || isCurrentModalSelection) cellClasses.push("is-selected");
+    if (isCurrentModalSelection) cellClasses.push("is-selected");
 
     html += `
       <div class="${cellClasses.join(' ')}" data-day="${day}" title="Day ${day}${isSat ? ' (Saturday Market)' : ''}${festName ? ' - ' + festName : ''}">
@@ -1528,61 +2109,69 @@ function renderCalendarDaysGrid() {
 
   grid.innerHTML = html;
 
-  // Add click listeners to day cells
+  // Add click listeners to day cells: select day locally without updating backend yet
   grid.querySelectorAll(".cal-day-cell").forEach(cell => {
-    cell.addEventListener("click", async () => {
+    cell.addEventListener("click", () => {
       const day = parseInt(cell.getAttribute("data-day"), 10);
-      await selectCalendarDate(calModalState.season, day, calModalState.year);
+      selectCalendarDay(day);
     });
   });
 }
 
-async function selectCalendarDate(season, day, year) {
+function selectCalendarDay(day) {
   calModalState.selectedDay = day;
-  calModalState.season = season;
-  calModalState.year = year;
+  calModalState.selectedSeason = calModalState.season;
+  calModalState.selectedYear = calModalState.year;
+  calModalState.pendingReset = false;
+  calModalState.isDirty = true;
 
-  const capSeason = season.charAt(0).toUpperCase() + season.slice(1);
-  const formatted = `${capSeason} ${day}, Year ${year}`;
-  const isSat = (day % 7 === 6);
+  renderCalendarDaysGrid();
+  updateCalendarStatusBar();
+}
 
-  showToast(`📅 Applying date override: ${formatted}...`, 2000);
-  await submitSettingUpdate("date_override", formatted);
+async function applyCalendarModalDone() {
+  const pendingReset = calModalState.pendingReset;
+  const isDirty = calModalState.isDirty;
+  const selSeason = calModalState.selectedSeason || calModalState.season;
+  const selDay = calModalState.selectedDay || 1;
+  const selYear = calModalState.selectedYear || calModalState.year;
+
+  calModalState.pendingReset = false;
+  calModalState.isDirty = false;
+
+  closeCalendarModal();
+
+  if (pendingReset) {
+    showToast("↺ Reverting to game save date...", 2000);
+    await submitSettingUpdate("date_override", "");
+    await loadSettings();
+  } else if (isDirty) {
+    const capSeason = selSeason.charAt(0).toUpperCase() + selSeason.slice(1);
+    const formatted = `${capSeason} ${selDay}, Year ${selYear}`;
+    showToast(`📅 Applying date override: ${formatted}...`, 2000);
+    await submitSettingUpdate("date_override", formatted);
+    await loadSettings();
+  }
+}
+
+function stageResetToSaveDate() {
+  const inGame = currentPlan?.in_game_date || {};
+  const saveDate = inGame.save_date;
+  if (saveDate) {
+    calModalState.year = saveDate.year || 1;
+    let s = (saveDate.season || "spring").toLowerCase();
+    if (s === "autumn") s = "fall";
+    calModalState.season = s;
+    calModalState.selectedSeason = s;
+    calModalState.selectedYear = saveDate.year || 1;
+    calModalState.selectedDay = saveDate.day || 1;
+  }
+  calModalState.pendingReset = true;
+  calModalState.isDirty = true;
 
   updateCalendarToolbar();
   renderCalendarDaysGrid();
   updateCalendarStatusBar();
-  loadSettings();
-}
-
-async function jumpToNextSaturday() {
-  const inGame = currentPlan?.in_game_date || {};
-  let curSeason = (inGame.season || "spring").toLowerCase();
-  if (curSeason === "autumn") curSeason = "fall";
-  let curDay = inGame.day || 1;
-  let curYear = inGame.year || 1;
-
-  const seasonsList = ["spring", "summer", "fall", "winter"];
-  let sIdx = seasonsList.indexOf(curSeason);
-  if (sIdx === -1) sIdx = 0;
-
-  const satDays = [6, 13, 20, 27];
-  let nextDay = satDays.find(d => d > curDay);
-
-  let targetSeason = curSeason;
-  let targetYear = curYear;
-  let targetDay = 6;
-
-  if (nextDay) {
-    targetDay = nextDay;
-  } else {
-    sIdx = (sIdx + 1) % 4;
-    targetSeason = seasonsList[sIdx];
-    if (sIdx === 0) targetYear += 1;
-    targetDay = 6;
-  }
-
-  await selectCalendarDate(targetSeason, targetDay, targetYear);
 }
 
 async function resetDateOverride() {
@@ -1594,7 +2183,11 @@ async function resetDateOverride() {
   let s = (saveDate?.season || inGame.season || "spring").toLowerCase();
   if (s === "autumn") s = "fall";
   calModalState.season = s;
+  calModalState.selectedSeason = s;
+  calModalState.selectedYear = saveDate?.year || inGame.year || 1;
   calModalState.selectedDay = saveDate?.day || inGame.day || 1;
+  calModalState.pendingReset = false;
+  calModalState.isDirty = false;
 
   updateCalendarToolbar();
   renderCalendarDaysGrid();
@@ -1626,7 +2219,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const calCloseBtn = document.getElementById("calCloseBtn");
   if (calCloseBtn) {
-    calCloseBtn.addEventListener("click", () => closeCalendarModal());
+    calCloseBtn.addEventListener("click", async () => {
+      await applyCalendarModalDone();
+    });
   }
 
   const calendarModalClose = document.getElementById("calendarModalClose");
@@ -1684,17 +2279,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  const calJumpSaturdayBtn = document.getElementById("calJumpSaturdayBtn");
-  if (calJumpSaturdayBtn) {
-    calJumpSaturdayBtn.addEventListener("click", async () => {
-      await jumpToNextSaturday();
-    });
-  }
-
   const calResetSaveBtn = document.getElementById("calResetSaveBtn");
   if (calResetSaveBtn) {
-    calResetSaveBtn.addEventListener("click", async () => {
-      await resetDateOverride();
+    calResetSaveBtn.addEventListener("click", () => {
+      stageResetToSaveDate();
     });
   }
 
@@ -1776,6 +2364,61 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Error refreshing plan: " + err.message);
       } finally {
         refreshBtn.disabled = false;
+      }
+    });
+  }
+
+  // Statistics Dashboard Drawer Toggles & Search
+  const toggleCompletedBtn = document.getElementById("toggleCompletedBtn");
+  if (toggleCompletedBtn) toggleCompletedBtn.addEventListener("click", () => setStatsDrawer("completed"));
+
+  const toggleIncompleteBtn = document.getElementById("toggleIncompleteBtn");
+  if (toggleIncompleteBtn) toggleIncompleteBtn.addEventListener("click", () => setStatsDrawer("incomplete"));
+
+  const toggleRecipesBtn = document.getElementById("toggleRecipesBtn");
+  if (toggleRecipesBtn) toggleRecipesBtn.addEventListener("click", () => setStatsDrawer("recipes"));
+
+  const closeCompletedDrawerBtn = document.getElementById("closeCompletedDrawerBtn");
+  if (closeCompletedDrawerBtn) closeCompletedDrawerBtn.addEventListener("click", () => setStatsDrawer("completed"));
+
+  const closeIncompleteDrawerBtn = document.getElementById("closeIncompleteDrawerBtn");
+  if (closeIncompleteDrawerBtn) closeIncompleteDrawerBtn.addEventListener("click", () => setStatsDrawer("incomplete"));
+
+  const closeIncompleteDrawerBottomBtn = document.getElementById("closeIncompleteDrawerBottomBtn");
+  if (closeIncompleteDrawerBottomBtn) closeIncompleteDrawerBottomBtn.addEventListener("click", () => setStatsDrawer("incomplete"));
+
+  const closeRecipesDrawerBtn = document.getElementById("closeRecipesDrawerBtn");
+  if (closeRecipesDrawerBtn) closeRecipesDrawerBtn.addEventListener("click", () => setStatsDrawer("recipes"));
+
+  const closeRecipesDrawerBottomBtn = document.getElementById("closeRecipesDrawerBottomBtn");
+  if (closeRecipesDrawerBottomBtn) closeRecipesDrawerBottomBtn.addEventListener("click", () => setStatsDrawer("recipes"));
+
+  const toggleMoreRecipesBtn = document.getElementById("toggleMoreRecipesBtn");
+  if (toggleMoreRecipesBtn) {
+    toggleMoreRecipesBtn.addEventListener("click", () => {
+      recipesExpanded = !recipesExpanded;
+      if (currentPlan) {
+        renderRecipesDrawerContent(currentPlan.unobtained_recipes || []);
+      }
+    });
+  }
+
+  const incompleteSearchInput = document.getElementById("incompleteSearchInput");
+  if (incompleteSearchInput) {
+    incompleteSearchInput.addEventListener("input", (e) => {
+      incompleteSearchFilter = e.target.value;
+      if (currentPlan) {
+        renderIncompleteDrawerContent(currentPlan.incomplete_npcs_details || (currentPlan.stats && currentPlan.stats.incomplete_npcs_details) || []);
+      }
+    });
+  }
+
+  const recipeSearchInput = document.getElementById("recipeSearchInput");
+  if (recipeSearchInput) {
+    recipeSearchInput.addEventListener("input", (e) => {
+      recipeSearchFilter = e.target.value;
+      if (currentPlan) {
+        renderRecipesDrawerContent(currentPlan.unobtained_recipes || []);
       }
     });
   }

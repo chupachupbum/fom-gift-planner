@@ -349,13 +349,6 @@
       "vendor": "Balor's Wagon",
       "note": "Animal materials tab",
       "icon": "balor_wagon"
-    },
-    {
-      "type": "chicken_statue",
-      "cost": 10,
-      "currency": "shiny_beads",
-      "note": "10-bead offering",
-      "icon": "chicken_statue"
     }
   ],
   "vegetable_quiche": [
@@ -371,6 +364,12 @@
       "currency": "shiny_beads",
       "note": "10-bead offering",
       "icon": "chicken_statue"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Potato",
+      "icon": "living_off_the_land"
     }
   ],
   "cabbage_slaw": [
@@ -379,6 +378,12 @@
       "vendor": "Balor's Wagon",
       "note": "Rotating daily stock",
       "icon": "balor_wagon"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cabbage",
+      "icon": "living_off_the_land"
     }
   ],
   "red_snapper_sushi": [
@@ -591,6 +596,13 @@
       "location": "The Mill",
       "note": "Milling: Wheat",
       "icon": "mill"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "quality_hay": [
@@ -600,6 +612,13 @@
       "cost": 60,
       "currency": "tesserae",
       "icon": "ranch_shop"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "ultimate_hay": [
@@ -609,6 +628,13 @@
       "cost": 200,
       "currency": "tesserae",
       "icon": "ranch_shop"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "deluxe_small_animal_feed": [
@@ -618,6 +644,13 @@
       "cost": 80,
       "currency": "tesserae",
       "icon": "ranch_shop"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "quality_small_animal_feed": [
@@ -627,6 +660,13 @@
       "cost": 50,
       "currency": "tesserae",
       "icon": "ranch_shop"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 10,
+      "currency": "shiny_beads",
+      "note": "10-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "ultimate_small_animal_feed": [
@@ -636,6 +676,13 @@
       "cost": 150,
       "currency": "tesserae",
       "icon": "ranch_shop"
+    },
+    {
+      "type": "chicken_statue",
+      "cost": 100,
+      "currency": "shiny_beads",
+      "note": "100-bead offering",
+      "icon": "chicken_statue"
     }
   ],
   "animal_name_tag": [
@@ -795,15 +842,6 @@
       "icon": "chicken_statue"
     }
   ],
-  "deviled_eggs": [
-    {
-      "type": "chicken_statue",
-      "cost": 10,
-      "currency": "shiny_beads",
-      "note": "10-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
   "egg": [
     {
       "type": "chicken_statue",
@@ -858,23 +896,7 @@
       "icon": "mill"
     }
   ],
-  "duck_egg": [
-    {
-      "type": "chicken_statue",
-      "cost": 10,
-      "currency": "shiny_beads",
-      "note": "10-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
   "duck_mayonnaise": [
-    {
-      "type": "chicken_statue",
-      "cost": 10,
-      "currency": "shiny_beads",
-      "note": "10-bead offering",
-      "icon": "chicken_statue"
-    },
     {
       "type": "mill",
       "location": "The Mill",
@@ -964,60 +986,6 @@
     }
   ],
   "golden_mayonnaise": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "golden_duck_egg": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "golden_duck_mayonnaise": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "golden_duck_feather": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "golden_sheep_wool": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "golden_alpaca_wool": [
-    {
-      "type": "chicken_statue",
-      "cost": 100,
-      "currency": "shiny_beads",
-      "note": "100-bead offering",
-      "icon": "chicken_statue"
-    }
-  ],
-  "cheesecake": [
     {
       "type": "chicken_statue",
       "cost": 100,
@@ -1120,6 +1088,12 @@
       "location": "Deep Earth (Floors 41-59)",
       "note": "Requires Dungeon Delicacies perk",
       "icon": "mimic"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Potato, Turnip",
+      "icon": "living_off_the_land"
     }
   ],
   "vegetable_pot_pie": [
@@ -1128,6 +1102,12 @@
       "location": "Deep Earth (Floors 41-59)",
       "note": "Requires Dungeon Delicacies perk",
       "icon": "mimic"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Potato, Turnip, Carrot, Peas",
+      "icon": "living_off_the_land"
     }
   ],
   "summer_salad": [
@@ -1141,6 +1121,12 @@
       "type": "fishing",
       "location": "Silver Treasure Box",
       "icon": "fishing"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cucumber, Chili Pepper, Tomato, Corn",
+      "icon": "living_off_the_land"
     }
   ],
   "spicy_crab_sushi": [
@@ -1174,6 +1160,12 @@
       "type": "date",
       "location": "Inn Meal Date",
       "icon": "date"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Carrot, Peas",
+      "icon": "living_off_the_land"
     }
   ],
   "chili_coconut_curry": [
@@ -1182,6 +1174,12 @@
       "location": "Lava Caves (Floors 61-79)",
       "note": "Requires Dungeon Delicacies perk",
       "icon": "mimic"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Chili Pepper",
+      "icon": "living_off_the_land"
     }
   ],
   "incredibly_hot_pot": [
@@ -1198,6 +1196,12 @@
       "location": "Ancient Ruins (Floors 81-99)",
       "note": "Requires Dungeon Delicacies perk",
       "icon": "mimic"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Tomato",
+      "icon": "living_off_the_land"
     }
   ],
   "spicy_corn": [
@@ -1214,6 +1218,12 @@
       "location": "Ancient Ruins (Floors 81-99)",
       "note": "Requires Dungeon Delicacies perk",
       "icon": "mimic"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cucumber",
+      "icon": "living_off_the_land"
     }
   ],
   "spell_fruit_parfait": [
@@ -1271,6 +1281,12 @@
       "currency": "tesserae",
       "note": "500t donation",
       "icon": "wishing_well"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Sweet Potato",
+      "icon": "living_off_the_land"
     }
   ],
   "loaded_baked_potato": [
@@ -1279,6 +1295,12 @@
       "vendor": "Sleeping Dragon Inn",
       "note": "Rotating daily menu",
       "icon": "inn"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Potato",
+      "icon": "living_off_the_land"
     }
   ],
   "riceball": [
@@ -1345,6 +1367,12 @@
       "currency": "tesserae",
       "note": "500t donation",
       "icon": "wishing_well"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Chili Pepper",
+      "icon": "living_off_the_land"
     }
   ],
   "deluxe_curry": [
@@ -1482,6 +1510,12 @@
       "vendor": "Harvest Festival Stall",
       "note": "Fall 27",
       "icon": "festival_stall"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Pumpkin",
+      "icon": "living_off_the_land"
     }
   ],
   "ice_cream_sundae": [
@@ -1660,6 +1694,12 @@
       "type": "fishing",
       "location": "Golden Treasure Box",
       "icon": "fishing"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cucumber",
+      "icon": "living_off_the_land"
     }
   ],
   "sushi_platter": [
@@ -1805,6 +1845,12 @@
       "vendor": "Harvest Festival Stall",
       "note": "Fall 27",
       "icon": "festival_stall"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Sweet Potato, Onion",
+      "icon": "living_off_the_land"
     }
   ],
   "harvest_plate": [
@@ -1813,6 +1859,12 @@
       "vendor": "Harvest Festival Stall",
       "note": "Fall 27",
       "icon": "festival_stall"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Sweet Potato, Broccoli, Cranberry, Pumpkin, Onion, Rosemary",
+      "icon": "living_off_the_land"
     }
   ],
   "cider": [
@@ -1859,6 +1911,12 @@
       "type": "date",
       "location": "Inn Meal Date",
       "icon": "date"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Snow Peas",
+      "icon": "living_off_the_land"
     }
   ],
   "chocolate_cake": [
@@ -1896,6 +1954,12 @@
       "location": "Request Board",
       "note": "Reward for Valen's Request",
       "icon": "quest_board"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Tomato, Basil",
+      "icon": "living_off_the_land"
     }
   ],
   "potato_soup": [
@@ -1904,6 +1968,12 @@
       "location": "Request Board",
       "note": "Reward for Request Board Quest",
       "icon": "quest_board"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Potato",
+      "icon": "living_off_the_land"
     }
   ],
   "apple_pie": [
@@ -1996,6 +2066,12 @@
       "location": "Request Board",
       "note": "Reward for Request Board Quest",
       "icon": "quest_board"
+    },
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Beet, Carrot, Potato, Onion, Cabbage",
+      "icon": "living_off_the_land"
     }
   ],
   "mushroom_soup": [
@@ -2124,6 +2200,206 @@
       "location": "Museum Milestone",
       "note": "Grand Museum Milestone Reward",
       "icon": "museum"
+    }
+  ],
+  "beet_salad": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Beet",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "braised_carrots": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Carrot",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "buttered_peas": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Peas",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "candied_strawberries": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Strawberry",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "cauliflower_curry": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cauliflower",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "cod_with_thyme": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Thyme",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "cranberry_orange_scone": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cranberry",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "cucumber_salad": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cucumber, Dill",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "fish_tacos": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Corn, Chili Pepper",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "gazpacho": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cucumber, Tomato, Watermelon, Basil",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "grilled_corn": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Corn",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "herb_butter_pasta": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Thyme, Oregano",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "mushroom_steak_dinner": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cauliflower, Beet",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "pumpkin_stew": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Pumpkin, Onion, Rosemary",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "roasted_cauliflower": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Cauliflower",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "roasted_sweet_potato": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Sweet Potato",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "salted_watermelon": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Watermelon",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "seafood_boil": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Corn",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "sesame_broccoli": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Broccoli",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "simmered_daikon": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Daikon Radish",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "sliced_turnip": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Turnip",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "spicy_water_chestnuts": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Chili Pepper",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "toasted_sunflower_seeds": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Sunflower",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "veggie_sub_sandwich": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Tomato, Cucumber",
+      "icon": "living_off_the_land"
+    }
+  ],
+  "winter_stew": [
+    {
+      "type": "living_off_the_land",
+      "location": "Living Off The Land",
+      "note": "Harvesting: Daikon Radish, Burdock Root",
+      "icon": "living_off_the_land"
     }
   ]
 }

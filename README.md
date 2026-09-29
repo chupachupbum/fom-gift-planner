@@ -41,8 +41,8 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
   - Displays recipient NPCs unlocked by each downstream craft and indicates required crafting stations (Kitchen, Mill, Crafting Bench, Smelter).
   - Visualized as interactive tree nodes in the Companion Web UI, tree branches in Terminal output, and a dedicated "Focus Trees" sheet in Excel exports.
 - **Alternate Acquisition Sources (`data/alt_sources.json`)**:
-  - Maps items and ingredients to non-farming sources: shops (Balor's Wagon, General Store, Hayden's Ranch, Tack Shop, Sleeping Dragon Inn), Saturday Market stalls, Chicken Statue offerings, Wishing Well wishes, Mining chests & Mimics, Mill processing, Fishing, Quests, Museum rewards, and Festivals.
-  - Badges indicate vendor, buy cost, currency (`tesserae` vs `shiny_beads`), and special availability notes.
+  - Maps items and ingredients to alternate acquisition paths: shops (Balor's Wagon, General Store, Hayden's Ranch, Tack Shop, Sleeping Dragon Inn), Saturday Market stalls, Chicken Statue offerings, Wishing Well wishes, Mining chests & Mimics, Mill processing, Fishing, Quests, Museum rewards, Festivals, and Living off the Land Farming perk bonus drops.
+  - Badges indicate vendor/source, buy cost, currency (`tesserae` vs `shiny_beads`), and special availability notes.
 - **Zero Mandatory Dependencies**: Runs entirely on Python's standard library. Optional Excel export via `openpyxl`.
 - **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 440+ giftable items by popularity across the 34 NPCs.
 

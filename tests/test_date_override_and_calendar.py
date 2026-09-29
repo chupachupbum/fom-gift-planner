@@ -241,3 +241,38 @@ def test_api_date_override_integration():
     plan_cleared = res_clear.json()["plan"]
     assert plan_cleared["in_game_date"]["is_overridden"] is False
     assert plan_cleared["in_game_date"]["date_override"] == ""
+
+
+def test_calendar_ui_saturday_button_removed_and_done_applied(repo_root):
+    """Verify that Saturday quick buttons are removed from UI and selecting a day only commits on Done."""
+    app_js_path = repo_root / "companion" / "static" / "app.js"
+    index_html_path = repo_root / "companion" / "static" / "index.html"
+
+    assert app_js_path.exists()
+    assert index_html_path.exists()
+
+    app_js = app_js_path.read_text(encoding="utf-8")
+    index_html = index_html_path.read_text(encoding="utf-8")
+
+    # 1. Saturday buttons must NOT exist in the DOM or listeners
+    assert "sidebarNextSatBtn" not in app_js
+    assert "calJumpSaturdayBtn" not in app_js
+    assert "calJumpSaturdayBtn" not in index_html
+    assert "★ Saturday" not in app_js
+
+    # 2. Calendar button still exists in sidebar
+    assert "sidebarOpenCalBtn" in app_js
+    assert "📅 Open Calendar" in app_js
+
+    # 3. Calendar Done button applies the staged date override
+    assert "applyCalendarModalDone" in app_js
+    assert "calCloseBtn.addEventListener" in app_js
+    assert "applyCalendarModalDone()" in app_js
+
+    # 4. Selecting a day updates modal state and visual grid without calling submitSettingUpdate
+    assert "function selectCalendarDay(day)" in app_js
+    # Ensure selectCalendarDay does not directly submit
+    select_day_fn_body = app_js.split("function selectCalendarDay(day) {")[1].split("async function applyCalendarModalDone")[0]
+    assert "submitSettingUpdate" not in select_day_fn_body
+    assert "calModalState.isDirty = true" in select_day_fn_body
+

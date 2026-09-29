@@ -282,6 +282,15 @@ def execute_plan(
     if config.exclude_npcs:
         excluded = {x.strip().lower() for x in config.exclude_npcs.split(",") if x.strip()}
 
+    focus_mode_enabled = bool(getattr(config, "focus_mode_enabled", False))
+    focus_npcs: Set[str] = set()
+    raw_focus_npcs = getattr(config, "focus_npcs", "")
+    if raw_focus_npcs:
+        if isinstance(raw_focus_npcs, (list, set, tuple)):
+            focus_npcs = {str(x).strip().lower() for x in raw_focus_npcs if str(x).strip()}
+        elif isinstance(raw_focus_npcs, str):
+            focus_npcs = {x.strip().lower() for x in raw_focus_npcs.split(",") if x.strip()}
+
     # 7. Run optimization strategy
     focus_sort = config.focus_sort or "impact"
     all_seasons_flag = bool(config.all_seasons)
@@ -308,6 +317,8 @@ def execute_plan(
             item_seasons=item_seasons,
             all_seasons=all_seasons_flag,
             seasonal_boost=seasonal_boost_val,
+            focus_mode_enabled=focus_mode_enabled,
+            focus_npcs=focus_npcs,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -329,6 +340,8 @@ def execute_plan(
             item_seasons=item_seasons,
             all_seasons=all_seasons_flag,
             seasonal_boost=seasonal_boost_val,
+            focus_mode_enabled=focus_mode_enabled,
+            focus_npcs=focus_npcs,
         )
 
     return save, plan_results, metadata, save_path
