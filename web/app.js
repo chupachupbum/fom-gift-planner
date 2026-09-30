@@ -1992,7 +1992,7 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
     const sourceCardsHtml = sources.map(s => {
       const itemsHtml = (s.items || []).map(item => `
         <div class="source-item-chip">
-          <img class="source-item-sprite" src="${resolveItemSprite(item.item_id)}" onerror="this.onerror=null; this.src=generatePlaceholderSvg('${item.item_id}', 'item');" alt="${item.item_name}" onerror="this.style.display='none'" />
+          <img class="source-item-sprite" src="${resolveItemSprite(item.item_id)}" alt="${item.item_name}" onerror="this.onerror=null; this.src=generatePlaceholderSvg('${item.item_id}', 'item');" />
           <span class="source-item-name">${item.item_name}</span>
           <span class="source-item-deficit">Need: ${item.deficit}</span>
           <span class="source-item-pairs" title="${item.blocked_pairs} blocked villager-gift combinations">(${item.blocked_pairs} pairs)</span>
@@ -2147,7 +2147,7 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
     return `
       <div class="focus-card">
         <div class="focus-header">
-          <img class="item-sprite" src="${f.sprite_url}" alt="${f.item_name}" loading="lazy" />
+          <img class="item-sprite" src="${resolveItemSprite(f.item_id)}" alt="${f.item_name}" onerror="this.onerror=null; this.src=generatePlaceholderSvg('${f.item_id}', 'item');" loading="lazy" />
           <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
             <strong style="color: var(--text-main);">${f.item_name}</strong>
             <span class="deficit-badge">Need: ${f.deficit}</span>
