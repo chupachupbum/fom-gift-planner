@@ -1,0 +1,4200 @@
+{
+  "blackberry_jam": {
+    "item_id": "blackberry_jam",
+    "display_name": "Blackberry Jam",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "blackberry",
+        "display_name": "Blackberry",
+        "count": 6
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "blueberry_jam": {
+    "item_id": "blueberry_jam",
+    "display_name": "Blueberry Jam",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "blueberry",
+        "display_name": "Blueberry",
+        "count": 6
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "marmalade": {
+    "item_id": "marmalade",
+    "display_name": "Marmalade",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "orange",
+        "display_name": "Orange",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "rosehip_jam": {
+    "item_id": "rosehip_jam",
+    "display_name": "Rosehip Jam",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "rose_hip",
+        "display_name": "Rose Hip",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "wild_berry_jam": {
+    "item_id": "wild_berry_jam",
+    "display_name": "Wild Berry Jam",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 6
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "bread": {
+    "item_id": "bread",
+    "display_name": "Bread",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "noodles": {
+    "item_id": "noodles",
+    "display_name": "Noodles",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "berry_bowl": {
+    "item_id": "berry_bowl",
+    "display_name": "Berry Bowl",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "strawberry",
+        "display_name": "Strawberry",
+        "count": 2
+      },
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 4
+      },
+      {
+        "item_id": "blueberry",
+        "display_name": "Blueberry",
+        "count": 4
+      },
+      {
+        "item_id": "honey",
+        "display_name": "Honey",
+        "count": 2
+      }
+    ]
+  },
+  "canned_sardines": {
+    "item_id": "canned_sardines",
+    "display_name": "Canned Sardines",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sardine",
+        "display_name": "Sardine",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      }
+    ]
+  },
+  "crispy_fried_earthshroom": {
+    "item_id": "crispy_fried_earthshroom",
+    "display_name": "Crispy Fried Earthshroom",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "earthshroom",
+        "display_name": "Earthshroom",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "crunchy_chickpeas": {
+    "item_id": "crunchy_chickpeas",
+    "display_name": "Crunchy Chickpeas",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chickpea",
+        "display_name": "Chickpea",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      }
+    ]
+  },
+  "deviled_eggs": {
+    "item_id": "deviled_eggs",
+    "display_name": "Deviled Eggs",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      },
+      {
+        "item_id": "horseradish",
+        "display_name": "Horseradish",
+        "count": 1
+      }
+    ]
+  },
+  "dried_squid": {
+    "item_id": "dried_squid",
+    "display_name": "Dried Squid",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "squid",
+        "display_name": "Squid",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      }
+    ]
+  },
+  "hard_boiled_egg": {
+    "item_id": "hard_boiled_egg",
+    "display_name": "Hard Boiled Egg",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      }
+    ]
+  },
+  "pineshroom_toast": {
+    "item_id": "pineshroom_toast",
+    "display_name": "Pineshroom Toast",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "pineshroom",
+        "display_name": "Pineshroom",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "roasted_chestnuts": {
+    "item_id": "roasted_chestnuts",
+    "display_name": "Roasted Chestnuts",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chestnut",
+        "display_name": "Chestnut",
+        "count": 2
+      }
+    ]
+  },
+  "spicy_cheddar_biscuit": {
+    "item_id": "spicy_cheddar_biscuit",
+    "display_name": "Spicy Cheddar Biscuit",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "spicy_water_chestnuts": {
+    "item_id": "spicy_water_chestnuts",
+    "display_name": "Spicy Water Chestnuts",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 2
+      }
+    ]
+  },
+  "toasted_sunflower_seeds": {
+    "item_id": "toasted_sunflower_seeds",
+    "display_name": "Toasted Sunflower Seeds",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sunflower",
+        "display_name": "Sunflower",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "trail_mix": {
+    "item_id": "trail_mix",
+    "display_name": "Trail Mix",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 2
+      },
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 1
+      }
+    ]
+  },
+  "water_chestnut_fritters": {
+    "item_id": "water_chestnut_fritters",
+    "display_name": "Water Chestnut Fritters",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 2
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "beet_salad": {
+    "item_id": "beet_salad",
+    "display_name": "Beet Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "beet",
+        "display_name": "Beet",
+        "count": 1
+      }
+    ]
+  },
+  "broccoli_salad": {
+    "item_id": "broccoli_salad",
+    "display_name": "Broccoli Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "broccoli",
+        "display_name": "Broccoli",
+        "count": 1
+      },
+      {
+        "item_id": "cranberry",
+        "display_name": "Cranberry",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      }
+    ]
+  },
+  "cabbage_slaw": {
+    "item_id": "cabbage_slaw",
+    "display_name": "Cabbage Slaw",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cabbage",
+        "display_name": "Cabbage",
+        "count": 1
+      },
+      {
+        "item_id": "fennel",
+        "display_name": "Fennel",
+        "count": 1
+      }
+    ]
+  },
+  "cucumber_salad": {
+    "item_id": "cucumber_salad",
+    "display_name": "Cucumber Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "dill",
+        "display_name": "Dill",
+        "count": 1
+      },
+      {
+        "item_id": "sesame",
+        "display_name": "Sesame",
+        "count": 1
+      }
+    ]
+  },
+  "herb_salad": {
+    "item_id": "herb_salad",
+    "display_name": "Herb Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sage",
+        "display_name": "Sage",
+        "count": 1
+      },
+      {
+        "item_id": "basil",
+        "display_name": "Basil",
+        "count": 1
+      },
+      {
+        "item_id": "thyme",
+        "display_name": "Thyme",
+        "count": 1
+      },
+      {
+        "item_id": "oregano",
+        "display_name": "Oregano",
+        "count": 1
+      },
+      {
+        "item_id": "dill",
+        "display_name": "Dill",
+        "count": 1
+      }
+    ]
+  },
+  "seaweed_salad": {
+    "item_id": "seaweed_salad",
+    "display_name": "Seaweed Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 3
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "spring_salad": {
+    "item_id": "spring_salad",
+    "display_name": "Spring Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "fennel",
+        "display_name": "Fennel",
+        "count": 1
+      },
+      {
+        "item_id": "fiddlehead",
+        "display_name": "Fiddlehead",
+        "count": 1
+      },
+      {
+        "item_id": "nettle",
+        "display_name": "Nettle",
+        "count": 1
+      }
+    ]
+  },
+  "summer_salad": {
+    "item_id": "summer_salad",
+    "display_name": "Summer Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "count": 1
+      }
+    ]
+  },
+  "tide_salad": {
+    "item_id": "tide_salad",
+    "display_name": "Tide Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tide_lettuce",
+        "display_name": "Tide Lettuce",
+        "count": 1
+      },
+      {
+        "item_id": "sea_grapes",
+        "display_name": "Sea Grapes",
+        "count": 1
+      },
+      {
+        "item_id": "underseaweed",
+        "display_name": "Underseaweed",
+        "count": 1
+      },
+      {
+        "item_id": "cave_kelp",
+        "display_name": "Jade Dulse",
+        "count": 1
+      }
+    ]
+  },
+  "turnip_and_cabbage_salad": {
+    "item_id": "turnip_and_cabbage_salad",
+    "display_name": "Turnip and Cabbage Salad",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "turnip",
+        "display_name": "Turnip",
+        "count": 1
+      },
+      {
+        "item_id": "cabbage",
+        "display_name": "Cabbage",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "braised_carrots": {
+    "item_id": "braised_carrots",
+    "display_name": "Braised Carrots",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "carrot",
+        "display_name": "Carrot",
+        "count": 1
+      }
+    ]
+  },
+  "buttered_peas": {
+    "item_id": "buttered_peas",
+    "display_name": "Buttered Peas",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "peas",
+        "display_name": "Peas",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "grilled_corn": {
+    "item_id": "grilled_corn",
+    "display_name": "Grilled Corn",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "count": 1
+      }
+    ]
+  },
+  "sauteed_snow_peas": {
+    "item_id": "sauteed_snow_peas",
+    "display_name": "Sauteed Snow Peas",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "snow_peas",
+        "display_name": "Snow Peas",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      }
+    ]
+  },
+  "sesame_broccoli": {
+    "item_id": "sesame_broccoli",
+    "display_name": "Sesame Broccoli",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "broccoli",
+        "display_name": "Broccoli",
+        "count": 1
+      },
+      {
+        "item_id": "sesame",
+        "display_name": "Sesame",
+        "count": 1
+      }
+    ]
+  },
+  "sliced_turnip": {
+    "item_id": "sliced_turnip",
+    "display_name": "Sliced Turnip",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "turnip",
+        "display_name": "Turnip",
+        "count": 1
+      }
+    ]
+  },
+  "steamed_broccoli": {
+    "item_id": "steamed_broccoli",
+    "display_name": "Steamed Broccoli",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "broccoli",
+        "display_name": "Broccoli",
+        "count": 1
+      }
+    ]
+  },
+  "beet_soup": {
+    "item_id": "beet_soup",
+    "display_name": "Beet Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "beet",
+        "display_name": "Beet",
+        "count": 1
+      },
+      {
+        "item_id": "carrot",
+        "display_name": "Carrot",
+        "count": 1
+      },
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "onion",
+        "display_name": "Onion",
+        "count": 1
+      },
+      {
+        "item_id": "cabbage",
+        "display_name": "Cabbage",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "clam_chowder": {
+    "item_id": "clam_chowder",
+    "display_name": "Clam Chowder",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "clam",
+        "display_name": "Clam",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "deep_sea_soup": {
+    "item_id": "deep_sea_soup",
+    "display_name": "Deep Sea Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cave_kelp",
+        "display_name": "Jade Dulse",
+        "count": 1
+      },
+      {
+        "item_id": "mines_mussels",
+        "display_name": "Mines Mussels",
+        "count": 1
+      },
+      {
+        "item_id": "underseaweed",
+        "display_name": "Underseaweed",
+        "count": 1
+      }
+    ]
+  },
+  "gazpacho": {
+    "item_id": "gazpacho",
+    "display_name": "Gazpacho",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "watermelon",
+        "display_name": "Watermelon",
+        "count": 1
+      },
+      {
+        "item_id": "basil",
+        "display_name": "Basil",
+        "count": 1
+      }
+    ]
+  },
+  "onion_soup": {
+    "item_id": "onion_soup",
+    "display_name": "Onion Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "onion",
+        "display_name": "Onion",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      }
+    ]
+  },
+  "potato_soup": {
+    "item_id": "potato_soup",
+    "display_name": "Potato Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "pumpkin_stew": {
+    "item_id": "pumpkin_stew",
+    "display_name": "Pumpkin Stew",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pumpkin",
+        "display_name": "Pumpkin",
+        "count": 1
+      },
+      {
+        "item_id": "onion",
+        "display_name": "Onion",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "rosemary",
+        "display_name": "Rosemary",
+        "count": 1
+      }
+    ]
+  },
+  "smoked_trout_soup": {
+    "item_id": "smoked_trout_soup",
+    "display_name": "Smoked Trout Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "trout",
+        "display_name": "Trout",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "tomato_soup": {
+    "item_id": "tomato_soup",
+    "display_name": "Tomato Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "basil",
+        "display_name": "Basil",
+        "count": 1
+      }
+    ]
+  },
+  "vegetable_soup": {
+    "item_id": "vegetable_soup",
+    "display_name": "Vegetable Soup",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "basil",
+        "display_name": "Basil",
+        "count": 1
+      }
+    ]
+  },
+  "fish_stew": {
+    "item_id": "fish_stew",
+    "display_name": "Fish Stew",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "smallmouth_bass",
+        "display_name": "Smallmouth Bass",
+        "count": 1
+      },
+      {
+        "item_id": "red_snapper",
+        "display_name": "Red Snapper",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "miners_mushroom_stew": {
+    "item_id": "miners_mushroom_stew",
+    "display_name": "Miner's Mushroom Stew",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "upper_mines_mushroom",
+        "display_name": "Upper Mines Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "wild_mushroom",
+        "display_name": "Cave Mushroom",
+        "count": 1
+      }
+    ]
+  },
+  "winter_stew": {
+    "item_id": "winter_stew",
+    "display_name": "Winter Stew",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "daikon_radish",
+        "display_name": "Daikon Radish",
+        "count": 1
+      },
+      {
+        "item_id": "burdock_root",
+        "display_name": "Burdock Root",
+        "count": 1
+      },
+      {
+        "item_id": "oyster_mushroom",
+        "display_name": "Oyster Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "baked_potato": {
+    "item_id": "baked_potato",
+    "display_name": "Baked Potato",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      }
+    ]
+  },
+  "baked_sweetroot": {
+    "item_id": "baked_sweetroot",
+    "display_name": "Baked Sweetroot",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sweetroot",
+        "display_name": "Sweetroot",
+        "count": 1
+      }
+    ]
+  },
+  "cod_with_thyme": {
+    "item_id": "cod_with_thyme",
+    "display_name": "Cod with Thyme",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cod",
+        "display_name": "Cod",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "thyme",
+        "display_name": "Thyme",
+        "count": 1
+      }
+    ]
+  },
+  "garlic_bread": {
+    "item_id": "garlic_bread",
+    "display_name": "Garlic Bread",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "garlic",
+        "display_name": "Garlic",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "harvest_plate": {
+    "item_id": "harvest_plate",
+    "display_name": "Harvest Plate",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sweet_potato",
+        "display_name": "Sweet Potato",
+        "count": 1
+      },
+      {
+        "item_id": "broccoli",
+        "display_name": "Broccoli",
+        "count": 1
+      },
+      {
+        "item_id": "cranberry",
+        "display_name": "Cranberry",
+        "count": 1
+      },
+      {
+        "item_id": "pumpkin",
+        "display_name": "Pumpkin",
+        "count": 1
+      },
+      {
+        "item_id": "onion",
+        "display_name": "Onion",
+        "count": 1
+      },
+      {
+        "item_id": "rosemary",
+        "display_name": "Rosemary",
+        "count": 1
+      }
+    ]
+  },
+  "loaded_baked_potato": {
+    "item_id": "loaded_baked_potato",
+    "display_name": "Loaded Baked Potato",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "pizza": {
+    "item_id": "pizza",
+    "display_name": "Pizza",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "quiche": {
+    "item_id": "quiche",
+    "display_name": "Quiche",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "spring_galette": {
+    "item_id": "spring_galette",
+    "display_name": "Spring Galette",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "fiddlehead",
+        "display_name": "Fiddlehead",
+        "count": 1
+      },
+      {
+        "item_id": "morel_mushroom",
+        "display_name": "Morel Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      }
+    ]
+  },
+  "turnip_and_potato_gratin": {
+    "item_id": "turnip_and_potato_gratin",
+    "display_name": "Turnip and Potato Gratin",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "turnip",
+        "display_name": "Turnip",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      }
+    ]
+  },
+  "vegetable_quiche": {
+    "item_id": "vegetable_quiche",
+    "display_name": "Vegetable Quiche",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "breaded_catfish": {
+    "item_id": "breaded_catfish",
+    "display_name": "Breaded Catfish",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "catfish",
+        "display_name": "Catfish",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "horseradish_salmon": {
+    "item_id": "horseradish_salmon",
+    "display_name": "Horseradish Salmon",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "salmon",
+        "display_name": "Salmon",
+        "count": 1
+      },
+      {
+        "item_id": "horseradish",
+        "display_name": "Horseradish",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "omelet": {
+    "item_id": "omelet",
+    "display_name": "Omelet",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "pan_fried_bream": {
+    "item_id": "pan_fried_bream",
+    "display_name": "Pan-fried Bream",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bream",
+        "display_name": "Bream",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "pan_fried_salmon": {
+    "item_id": "pan_fried_salmon",
+    "display_name": "Pan-fried Salmon",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "salmon",
+        "display_name": "Salmon",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "pan_fried_snapper": {
+    "item_id": "pan_fried_snapper",
+    "display_name": "Pan-fried Snapper",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "red_snapper",
+        "display_name": "Red Snapper",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "fish_skewer": {
+    "item_id": "fish_skewer",
+    "display_name": "Fish Skewers",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "smallmouth_bass",
+        "display_name": "Smallmouth Bass",
+        "count": 1
+      },
+      {
+        "item_id": "pike",
+        "display_name": "Pike",
+        "count": 1
+      }
+    ]
+  },
+  "grilled_cheese": {
+    "item_id": "grilled_cheese",
+    "display_name": "Grilled Cheese",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "grilled_eel_rice_bowl": {
+    "item_id": "grilled_eel_rice_bowl",
+    "display_name": "Grilled Eel Rice Bowl",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "freshwater_eel",
+        "display_name": "Freshwater Eel",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "spicy_corn": {
+    "item_id": "spicy_corn",
+    "display_name": "Spicy Corn",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "count": 1
+      },
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      }
+    ]
+  },
+  "cucumber_sandwich": {
+    "item_id": "cucumber_sandwich",
+    "display_name": "Cucumber Sandwich",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      }
+    ]
+  },
+  "fish_tacos": {
+    "item_id": "fish_tacos",
+    "display_name": "Fish Tacos",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "count": 1
+      },
+      {
+        "item_id": "cod",
+        "display_name": "Cod",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      },
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "tide_lettuce",
+        "display_name": "Tide Lettuce",
+        "count": 1
+      }
+    ]
+  },
+  "jam_sandwich": {
+    "item_id": "jam_sandwich",
+    "display_name": "Jam Sandwich",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "wild_berry_jam",
+        "display_name": "Wild Berry Jam",
+        "count": 1
+      }
+    ]
+  },
+  "lobster_roll": {
+    "item_id": "lobster_roll",
+    "display_name": "Lobster Roll",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lobster",
+        "display_name": "Lobster",
+        "count": 1
+      },
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      },
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "mackerel_sashimi": {
+    "item_id": "mackerel_sashimi",
+    "display_name": "Mackerel Sashimi",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "mackerel",
+        "display_name": "Mackerel",
+        "count": 1
+      }
+    ]
+  },
+  "red_snapper_sushi": {
+    "item_id": "red_snapper_sushi",
+    "display_name": "Red Snapper Sushi",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "red_snapper",
+        "display_name": "Red Snapper",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "riceball": {
+    "item_id": "riceball",
+    "display_name": "Rice Ball",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      }
+    ]
+  },
+  "salmon_sashimi": {
+    "item_id": "salmon_sashimi",
+    "display_name": "Salmon Sashimi",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "salmon",
+        "display_name": "Salmon",
+        "count": 1
+      }
+    ]
+  },
+  "sesame_tuna_bowl": {
+    "item_id": "sesame_tuna_bowl",
+    "display_name": "Sesame Tuna Bowl",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tuna",
+        "display_name": "Tuna",
+        "count": 1
+      },
+      {
+        "item_id": "sesame",
+        "display_name": "Sesame",
+        "count": 1
+      },
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "spicy_crab_sushi": {
+    "item_id": "spicy_crab_sushi",
+    "display_name": "Spicy Crab Sushi",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "crab",
+        "display_name": "Crab",
+        "count": 1
+      },
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 1
+      },
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "sushi_platter": {
+    "item_id": "sushi_platter",
+    "display_name": "Sushi Platter",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tuna",
+        "display_name": "Tuna",
+        "count": 1
+      },
+      {
+        "item_id": "salmon",
+        "display_name": "Salmon",
+        "count": 1
+      },
+      {
+        "item_id": "mackerel",
+        "display_name": "Mackerel",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "tuna_sashimi": {
+    "item_id": "tuna_sashimi",
+    "display_name": "Tuna Sashimi",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tuna",
+        "display_name": "Tuna",
+        "count": 1
+      }
+    ]
+  },
+  "veggie_sub_sandwich": {
+    "item_id": "veggie_sub_sandwich",
+    "display_name": "Veggie Sub Sandwich",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bread",
+        "display_name": "Bread",
+        "count": 1
+      },
+      {
+        "item_id": "tide_lettuce",
+        "display_name": "Tide Lettuce",
+        "count": 1
+      },
+      {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "count": 1
+      },
+      {
+        "item_id": "cucumber",
+        "display_name": "Cucumber",
+        "count": 1
+      },
+      {
+        "item_id": "cheese",
+        "display_name": "Cheese",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      }
+    ]
+  },
+  "roasted_cauliflower": {
+    "item_id": "roasted_cauliflower",
+    "display_name": "Roasted Cauliflower",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cauliflower",
+        "display_name": "Cauliflower",
+        "count": 1
+      }
+    ]
+  },
+  "roasted_sweet_potato": {
+    "item_id": "roasted_sweet_potato",
+    "display_name": "Roasted Sweet Potato",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sweet_potato",
+        "display_name": "Sweet Potato",
+        "count": 1
+      }
+    ]
+  },
+  "fried_rice": {
+    "item_id": "fried_rice",
+    "display_name": "Fried Rice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "carrot",
+        "display_name": "Carrot",
+        "count": 1
+      },
+      {
+        "item_id": "peas",
+        "display_name": "Peas",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "mushroom_steak_dinner": {
+    "item_id": "mushroom_steak_dinner",
+    "display_name": "Mushroom Steak Dinner",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "oyster_mushroom",
+        "display_name": "Oyster Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "cauliflower",
+        "display_name": "Cauliflower",
+        "count": 1
+      },
+      {
+        "item_id": "beet",
+        "display_name": "Beet",
+        "count": 1
+      },
+      {
+        "item_id": "tide_lettuce",
+        "display_name": "Tide Lettuce",
+        "count": 1
+      }
+    ]
+  },
+  "perch_risotto": {
+    "item_id": "perch_risotto",
+    "display_name": "Perch Risotto",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "perch",
+        "display_name": "Perch",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "garlic",
+        "display_name": "Garlic",
+        "count": 1
+      },
+      {
+        "item_id": "rosemary",
+        "display_name": "Rosemary",
+        "count": 1
+      }
+    ]
+  },
+  "sea_bream_rice": {
+    "item_id": "sea_bream_rice",
+    "display_name": "Sea Bream Rice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sea_bream",
+        "display_name": "Sea Bream",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      },
+      {
+        "item_id": "wild_mushroom",
+        "display_name": "Cave Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "earthshroom",
+        "display_name": "Earthshroom",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "seafood_snow_pea_noodles": {
+    "item_id": "seafood_snow_pea_noodles",
+    "display_name": "Seafood Snow Pea Noodles",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "snow_peas",
+        "display_name": "Snow Peas",
+        "count": 1
+      },
+      {
+        "item_id": "noodles",
+        "display_name": "Noodles",
+        "count": 1
+      },
+      {
+        "item_id": "king_crab",
+        "display_name": "King Crab",
+        "count": 1
+      },
+      {
+        "item_id": "bonito",
+        "display_name": "Bonito",
+        "count": 1
+      },
+      {
+        "item_id": "herring",
+        "display_name": "Herring",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "vegetable_pot_pie": {
+    "item_id": "vegetable_pot_pie",
+    "display_name": "Vegetable Pot Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "turnip",
+        "display_name": "Turnip",
+        "count": 1
+      },
+      {
+        "item_id": "carrot",
+        "display_name": "Carrot",
+        "count": 1
+      },
+      {
+        "item_id": "peas",
+        "display_name": "Peas",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "apple_honey_curry": {
+    "item_id": "apple_honey_curry",
+    "display_name": "Apple Honey Curry",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "apple",
+        "display_name": "Apple",
+        "count": 1
+      },
+      {
+        "item_id": "honey",
+        "display_name": "Honey",
+        "count": 1
+      },
+      {
+        "item_id": "curry_powder",
+        "display_name": "Curry Powder",
+        "count": 1
+      },
+      {
+        "item_id": "sweet_potato",
+        "display_name": "Sweet Potato",
+        "count": 1
+      },
+      {
+        "item_id": "onion",
+        "display_name": "Onion",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "braised_burdock": {
+    "item_id": "braised_burdock",
+    "display_name": "Braised Burdock",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "burdock_root",
+        "display_name": "Burdock Root",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "cauliflower_curry": {
+    "item_id": "cauliflower_curry",
+    "display_name": "Cauliflower Curry",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cauliflower",
+        "display_name": "Cauliflower",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "curry_powder",
+        "display_name": "Curry Powder",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "chickpea_curry": {
+    "item_id": "chickpea_curry",
+    "display_name": "Chickpea Curry",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chickpea",
+        "display_name": "Chickpea",
+        "count": 1
+      },
+      {
+        "item_id": "curry_powder",
+        "display_name": "Curry Powder",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "chili_coconut_curry": {
+    "item_id": "chili_coconut_curry",
+    "display_name": "Chili Coconut Curry",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "coconut_milk",
+        "display_name": "Coconut Milk",
+        "count": 1
+      },
+      {
+        "item_id": "chili_pepper",
+        "display_name": "Chili Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "curry_powder",
+        "display_name": "Curry Powder",
+        "count": 1
+      },
+      {
+        "item_id": "wild_mushroom",
+        "display_name": "Cave Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "crab_cakes": {
+    "item_id": "crab_cakes",
+    "display_name": "Crab Cakes",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "crab",
+        "display_name": "Crab",
+        "count": 2
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "mayonnaise",
+        "display_name": "Mayonnaise",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "dill",
+        "display_name": "Dill",
+        "count": 1
+      }
+    ]
+  },
+  "crayfish_etouffee": {
+    "item_id": "crayfish_etouffee",
+    "display_name": "Crayfish Etouffee",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "crayfish",
+        "display_name": "Crayfish",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "wild_leek",
+        "display_name": "Wild Leek",
+        "count": 1
+      }
+    ]
+  },
+  "deluxe_curry": {
+    "item_id": "deluxe_curry",
+    "display_name": "Deluxe Curry",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "potato",
+        "display_name": "Potato",
+        "count": 1
+      },
+      {
+        "item_id": "shrimp",
+        "display_name": "Shrimp",
+        "count": 1
+      },
+      {
+        "item_id": "curry_powder",
+        "display_name": "Curry Powder",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "herb_butter_pasta": {
+    "item_id": "herb_butter_pasta",
+    "display_name": "Herb Butter Pasta",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "noodles",
+        "display_name": "Noodles",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "thyme",
+        "display_name": "Thyme",
+        "count": 1
+      },
+      {
+        "item_id": "oregano",
+        "display_name": "Oregano",
+        "count": 1
+      }
+    ]
+  },
+  "incredibly_hot_pot": {
+    "item_id": "incredibly_hot_pot",
+    "display_name": "Incredibly Hot Pot",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "flame_pepper",
+        "display_name": "Flame Pepper",
+        "count": 1
+      },
+      {
+        "item_id": "ash_mushroom",
+        "display_name": "Ash Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "lava_chestnuts",
+        "display_name": "Lava Chestnuts",
+        "count": 1
+      },
+      {
+        "item_id": "hot_potato",
+        "display_name": "Hot Potato",
+        "count": 1
+      },
+      {
+        "item_id": "earthshroom",
+        "display_name": "Earthshroom",
+        "count": 1
+      }
+    ]
+  },
+  "monster_mash": {
+    "item_id": "monster_mash",
+    "display_name": "Monster Mash",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "monster_fang",
+        "display_name": "Monster Fang",
+        "count": 1
+      },
+      {
+        "item_id": "monster_shell",
+        "display_name": "Monster Shell",
+        "count": 1
+      },
+      {
+        "item_id": "monster_horn",
+        "display_name": "Monster Horn",
+        "count": 1
+      },
+      {
+        "item_id": "monster_powder",
+        "display_name": "Monster Powder",
+        "count": 1
+      }
+    ]
+  },
+  "mushroom_rice": {
+    "item_id": "mushroom_rice",
+    "display_name": "Mushroom Rice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "morel_mushroom",
+        "display_name": "Morel Mushroom",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "rosemary_garlic_noodles": {
+    "item_id": "rosemary_garlic_noodles",
+    "display_name": "Rosemary Garlic Noodles",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "noodles",
+        "display_name": "Noodles",
+        "count": 1
+      },
+      {
+        "item_id": "rosemary",
+        "display_name": "Rosemary",
+        "count": 1
+      },
+      {
+        "item_id": "garlic",
+        "display_name": "Garlic",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "simmered_daikon": {
+    "item_id": "simmered_daikon",
+    "display_name": "Simmered Daikon",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "daikon_radish",
+        "display_name": "Daikon Radish",
+        "count": 1
+      },
+      {
+        "item_id": "soy_sauce",
+        "display_name": "Soy Sauce",
+        "count": 1
+      }
+    ]
+  },
+  "seafood_boil": {
+    "item_id": "seafood_boil",
+    "display_name": "Seafood Boil",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "crab",
+        "display_name": "Crab",
+        "count": 2
+      },
+      {
+        "item_id": "mines_mussels",
+        "display_name": "Mines Mussels",
+        "count": 2
+      },
+      {
+        "item_id": "crayfish",
+        "display_name": "Crayfish",
+        "count": 2
+      },
+      {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "count": 1
+      },
+      {
+        "item_id": "hot_potato",
+        "display_name": "Hot Potato",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "apple_pie": {
+    "item_id": "apple_pie",
+    "display_name": "Apple Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "apple",
+        "display_name": "Apple",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "bell_berry_bakewell_tart": {
+    "item_id": "bell_berry_bakewell_tart",
+    "display_name": "Bell Berry Bakewell Tart",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "bell_berry",
+        "display_name": "Bell Berry",
+        "count": 3
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "cherry_cobbler": {
+    "item_id": "cherry_cobbler",
+    "display_name": "Cherry Cobbler",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cherry",
+        "display_name": "Cherry",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "cherry_tart": {
+    "item_id": "cherry_tart",
+    "display_name": "Cherry Tart",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cherry",
+        "display_name": "Cherry",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "caldosian_chocolate_cake": {
+    "item_id": "caldosian_chocolate_cake",
+    "display_name": "Chocolate Cake",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chocolate",
+        "display_name": "Chocolate",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      }
+    ]
+  },
+  "coconut_cream_pie": {
+    "item_id": "coconut_cream_pie",
+    "display_name": "Coconut Cream Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "coconut",
+        "display_name": "Coconut",
+        "count": 1
+      },
+      {
+        "item_id": "coconut_milk",
+        "display_name": "Coconut Milk",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "cranberry_orange_scone": {
+    "item_id": "cranberry_orange_scone",
+    "display_name": "Cranberry Orange Scone",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "orange",
+        "display_name": "Orange",
+        "count": 1
+      },
+      {
+        "item_id": "cranberry",
+        "display_name": "Cranberry",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "crystal_berry_pie": {
+    "item_id": "crystal_berry_pie",
+    "display_name": "Crystal Berry Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "crystal_berries",
+        "display_name": "Crystal Berries",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "glowberry_cookies": {
+    "item_id": "glowberry_cookies",
+    "display_name": "Glowberry Cookies",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "glowberry",
+        "display_name": "Glowberry",
+        "count": 6
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "golden_cheesecake": {
+    "item_id": "golden_cheesecake",
+    "display_name": "Golden Cheesecake",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_cheese",
+        "display_name": "Golden Cheese",
+        "count": 2
+      },
+      {
+        "item_id": "golden_egg",
+        "display_name": "Golden Egg",
+        "count": 2
+      },
+      {
+        "item_id": "golden_cow_milk",
+        "display_name": "Golden Milk",
+        "count": 2
+      },
+      {
+        "item_id": "golden_butter",
+        "display_name": "Golden Butter",
+        "count": 2
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 2
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 2
+      }
+    ]
+  },
+  "golden_cookies": {
+    "item_id": "golden_cookies",
+    "display_name": "Golden Cookies",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_egg",
+        "display_name": "Golden Egg",
+        "count": 2
+      },
+      {
+        "item_id": "golden_cow_milk",
+        "display_name": "Golden Milk",
+        "count": 2
+      },
+      {
+        "item_id": "golden_butter",
+        "display_name": "Golden Butter",
+        "count": 2
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 2
+      },
+      {
+        "item_id": "chocolate",
+        "display_name": "Chocolate",
+        "count": 2
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 2
+      }
+    ]
+  },
+  "sour_lemon_cake": {
+    "item_id": "sour_lemon_cake",
+    "display_name": "Lemon Cake",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "lemon_pie": {
+    "item_id": "lemon_pie",
+    "display_name": "Lemon Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "monster_cookie": {
+    "item_id": "monster_cookie",
+    "display_name": "Monster Cookie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "monster_powder",
+        "display_name": "Monster Powder",
+        "count": 1
+      },
+      {
+        "item_id": "monster_core",
+        "display_name": "Monster Core",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "mont_blanc": {
+    "item_id": "mont_blanc",
+    "display_name": "Mont Blanc",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chestnut",
+        "display_name": "Chestnut",
+        "count": 4
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "moon_fruit_cake": {
+    "item_id": "moon_fruit_cake",
+    "display_name": "Moon Fruit Cake",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "moon_fruit",
+        "display_name": "Moon Fruit",
+        "count": 1
+      },
+      {
+        "item_id": "honey",
+        "display_name": "Honey",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "poached_pear": {
+    "item_id": "poached_pear",
+    "display_name": "Poached Pear",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pear",
+        "display_name": "Pear",
+        "count": 1
+      },
+      {
+        "item_id": "red_wine",
+        "display_name": "Red Wine",
+        "count": 1
+      },
+      {
+        "item_id": "honey",
+        "display_name": "Honey",
+        "count": 1
+      }
+    ]
+  },
+  "pumpkin_pie": {
+    "item_id": "pumpkin_pie",
+    "display_name": "Pumpkin Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pumpkin",
+        "display_name": "Pumpkin",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 1
+      }
+    ]
+  },
+  "strawberry_shortcake": {
+    "item_id": "strawberry_shortcake",
+    "display_name": "Strawberry Shortcake",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "strawberry",
+        "display_name": "Strawberry",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "sweet_potato_pie": {
+    "item_id": "sweet_potato_pie",
+    "display_name": "Sweet Potato Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sweet_potato",
+        "display_name": "Sweet Potato",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "wildberry_pie": {
+    "item_id": "wildberry_pie",
+    "display_name": "Wild Berry Pie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 6
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "wildberry_scone": {
+    "item_id": "wildberry_scone",
+    "display_name": "Wild Berry Scone",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 6
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "candied_lemon_peel": {
+    "item_id": "candied_lemon_peel",
+    "display_name": "Candied Lemon Peel",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "candied_strawberries": {
+    "item_id": "candied_strawberries",
+    "display_name": "Candied Strawberries",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "strawberry",
+        "display_name": "Strawberry",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "candied_walnuts": {
+    "item_id": "candied_walnuts",
+    "display_name": "Candied Walnuts",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "walnut",
+        "display_name": "Walnut",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "caramel_candy": {
+    "item_id": "caramel_candy",
+    "display_name": "Caramel Candy",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      }
+    ]
+  },
+  "caramelized_moon_fruit": {
+    "item_id": "caramelized_moon_fruit",
+    "display_name": "Caramelized Moon Fruit",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "moon_fruit",
+        "display_name": "Moon Fruit",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "pudding": {
+    "item_id": "pudding",
+    "display_name": "Pudding",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 2
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "sweet_sesame_balls": {
+    "item_id": "sweet_sesame_balls",
+    "display_name": "Sweet Sesame Balls",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sesame",
+        "display_name": "Sesame",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "display_name": "Oil",
+        "count": 1
+      }
+    ]
+  },
+  "ice_cream_sundae": {
+    "item_id": "ice_cream_sundae",
+    "display_name": "Ice Cream Sundae",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "ice_block",
+        "display_name": "Ice Block",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "chocolate",
+        "display_name": "Chocolate",
+        "count": 1
+      },
+      {
+        "item_id": "butter",
+        "display_name": "Butter",
+        "count": 1
+      },
+      {
+        "item_id": "flour",
+        "display_name": "Flour",
+        "count": 1
+      }
+    ]
+  },
+  "pomegranate_sorbet": {
+    "item_id": "pomegranate_sorbet",
+    "display_name": "Pomegranate Sorbet",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pomegranate",
+        "display_name": "Pomegranate",
+        "count": 1
+      },
+      {
+        "item_id": "ice_block",
+        "display_name": "Ice Block",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "spell_fruit_parfait": {
+    "item_id": "spell_fruit_parfait",
+    "display_name": "Spell Fruit Parfait",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "spell_fruit",
+        "display_name": "Spell Fruit",
+        "count": 1
+      },
+      {
+        "item_id": "lava_chestnuts",
+        "display_name": "Lava Chestnuts",
+        "count": 1
+      },
+      {
+        "item_id": "crystal_berries",
+        "display_name": "Crystal Berries",
+        "count": 1
+      },
+      {
+        "item_id": "sweetroot",
+        "display_name": "Sweetroot",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "golden_cow_milk",
+        "display_name": "Golden Milk",
+        "count": 1
+      }
+    ]
+  },
+  "wintergreen_ice_cream": {
+    "item_id": "wintergreen_ice_cream",
+    "display_name": "Wintergreen Ice Cream",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wintergreen_berry",
+        "display_name": "Wintergreen Berry",
+        "count": 8
+      },
+      {
+        "item_id": "ice_block",
+        "display_name": "Ice Block",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "berries_and_cream": {
+    "item_id": "berries_and_cream",
+    "display_name": "Berries and Cream",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wild_berries",
+        "display_name": "Wild Berries",
+        "count": 6
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "peaches_and_cream": {
+    "item_id": "peaches_and_cream",
+    "display_name": "Peaches and Cream",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "peach",
+        "display_name": "Peach",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "salted_watermelon": {
+    "item_id": "salted_watermelon",
+    "display_name": "Salted Watermelon",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "watermelon",
+        "display_name": "Watermelon",
+        "count": 1
+      },
+      {
+        "item_id": "rock_salt",
+        "display_name": "Rock Salt",
+        "count": 1
+      }
+    ]
+  },
+  "strawberries_and_cream": {
+    "item_id": "strawberries_and_cream",
+    "display_name": "Strawberries and Cream",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "strawberry",
+        "display_name": "Strawberry",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "apple_juice": {
+    "item_id": "apple_juice",
+    "display_name": "Apple Juice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "apple",
+        "display_name": "Apple",
+        "count": 1
+      }
+    ]
+  },
+  "cherry_smoothie": {
+    "item_id": "cherry_smoothie",
+    "display_name": "Cherry Smoothie",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cherry",
+        "display_name": "Cherry",
+        "count": 1
+      },
+      {
+        "item_id": "honey",
+        "display_name": "Honey",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "coconut_milk": {
+    "item_id": "coconut_milk",
+    "display_name": "Coconut Milk",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "coconut",
+        "display_name": "Coconut",
+        "count": 1
+      }
+    ]
+  },
+  "cranberry_juice": {
+    "item_id": "cranberry_juice",
+    "display_name": "Cranberry Juice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cranberry",
+        "display_name": "Cranberry",
+        "count": 1
+      }
+    ]
+  },
+  "grape_juice": {
+    "item_id": "grape_juice",
+    "display_name": "Grape Juice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wild_grapes",
+        "display_name": "Wild Grapes",
+        "count": 1
+      }
+    ]
+  },
+  "iced_coffee": {
+    "item_id": "iced_coffee",
+    "display_name": "Iced Coffee",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "ice_block",
+        "display_name": "Ice Block",
+        "count": 1
+      },
+      {
+        "item_id": "coffee",
+        "display_name": "Coffee",
+        "count": 1
+      }
+    ]
+  },
+  "lemonade": {
+    "item_id": "lemonade",
+    "display_name": "Lemonade",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      }
+    ]
+  },
+  "orange_juice": {
+    "item_id": "orange_juice",
+    "display_name": "Orange Juice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "orange",
+        "display_name": "Orange",
+        "count": 1
+      }
+    ]
+  },
+  "pomegranate_juice": {
+    "item_id": "pomegranate_juice",
+    "display_name": "Pomegranate Juice",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pomegranate",
+        "display_name": "Pomegranate",
+        "count": 1
+      }
+    ]
+  },
+  "cup_of_tea": {
+    "item_id": "cup_of_tea",
+    "display_name": "Tea with Lemon",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "tea",
+        "display_name": "Tea",
+        "count": 1
+      }
+    ]
+  },
+  "green_tea": {
+    "item_id": "green_tea",
+    "display_name": "Green Tea",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tea",
+        "display_name": "Tea",
+        "count": 1
+      }
+    ]
+  },
+  "hot_cocoa": {
+    "item_id": "hot_cocoa",
+    "display_name": "Hot Chocolate",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "chocolate",
+        "display_name": "Chocolate",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "sugar",
+        "display_name": "Sugar",
+        "count": 1
+      },
+      {
+        "item_id": "wintergreen_berry",
+        "display_name": "Wintergreen Berry",
+        "count": 2
+      }
+    ]
+  },
+  "jasmine_tea": {
+    "item_id": "jasmine_tea",
+    "display_name": "Jasmine Tea",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tea",
+        "display_name": "Tea",
+        "count": 1
+      },
+      {
+        "item_id": "jasmine",
+        "display_name": "Jasmine",
+        "count": 1
+      }
+    ]
+  },
+  "latte": {
+    "item_id": "latte",
+    "display_name": "Latte",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "coffee",
+        "display_name": "Coffee",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      }
+    ]
+  },
+  "mocha": {
+    "item_id": "mocha",
+    "display_name": "Mocha",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "coffee",
+        "display_name": "Coffee",
+        "count": 1
+      },
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 1
+      },
+      {
+        "item_id": "chocolate",
+        "display_name": "Chocolate",
+        "count": 1
+      }
+    ]
+  },
+  "roasted_rice_tea": {
+    "item_id": "roasted_rice_tea",
+    "display_name": "Roasted Rice Tea",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "green_tea",
+        "display_name": "Green Tea",
+        "count": 1
+      },
+      {
+        "item_id": "rice",
+        "display_name": "Rice",
+        "count": 1
+      }
+    ]
+  },
+  "rose_tea": {
+    "item_id": "rose_tea",
+    "display_name": "Rose Tea",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tea",
+        "display_name": "Tea",
+        "count": 1
+      },
+      {
+        "item_id": "rose",
+        "display_name": "Rose",
+        "count": 1
+      }
+    ]
+  },
+  "spirit_mushroom_tea": {
+    "item_id": "spirit_mushroom_tea",
+    "display_name": "Spirit Mushroom Tea",
+    "source": "cooking",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "tea",
+        "display_name": "Tea",
+        "count": 1
+      },
+      {
+        "item_id": "spirit_mushroom",
+        "display_name": "Spirit Mushroom",
+        "count": 1
+      }
+    ]
+  },
+  "cat_treat": {
+    "item_id": "cat_treat",
+    "display_name": "Cat Treat",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "smallmouth_bass",
+        "display_name": "Smallmouth Bass",
+        "count": 1
+      }
+    ]
+  },
+  "deluxe_hay": {
+    "item_id": "deluxe_hay",
+    "display_name": "Deluxe Large Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "hay",
+        "display_name": "Hay",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      },
+      {
+        "item_id": "acorn",
+        "display_name": "Acorn",
+        "count": 1
+      }
+    ]
+  },
+  "deluxe_small_animal_feed": {
+    "item_id": "deluxe_small_animal_feed",
+    "display_name": "Deluxe Small Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "grass_seed",
+        "display_name": "Grass Seed",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      },
+      {
+        "item_id": "acorn",
+        "display_name": "Acorn",
+        "count": 1
+      }
+    ]
+  },
+  "dog_treat": {
+    "item_id": "dog_treat",
+    "display_name": "Dog Treat",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "trout",
+        "display_name": "Trout",
+        "count": 1
+      }
+    ]
+  },
+  "quality_hay": {
+    "item_id": "quality_hay",
+    "display_name": "Quality Large Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "hay",
+        "display_name": "Hay",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      }
+    ]
+  },
+  "quality_small_animal_feed": {
+    "item_id": "quality_small_animal_feed",
+    "display_name": "Quality Small Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "grass_seed",
+        "display_name": "Grass Seed",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      }
+    ]
+  },
+  "ultimate_hay": {
+    "item_id": "ultimate_hay",
+    "display_name": "Ultimate Large Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "hay",
+        "display_name": "Hay",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      },
+      {
+        "item_id": "acorn",
+        "display_name": "Acorn",
+        "count": 1
+      },
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 1
+      }
+    ]
+  },
+  "ultimate_small_animal_feed": {
+    "item_id": "ultimate_small_animal_feed",
+    "display_name": "Ultimate Small Animal Feed",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "grass_seed",
+        "display_name": "Grass Seed",
+        "count": 1
+      },
+      {
+        "item_id": "water_chestnut",
+        "display_name": "Water Chestnut",
+        "count": 1
+      },
+      {
+        "item_id": "acorn",
+        "display_name": "Acorn",
+        "count": 1
+      },
+      {
+        "item_id": "seaweed",
+        "display_name": "Seaweed",
+        "count": 1
+      }
+    ]
+  },
+  "butter": {
+    "item_id": "butter",
+    "display_name": "Butter",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 2
+      }
+    ]
+  },
+  "golden_butter": {
+    "item_id": "golden_butter",
+    "display_name": "Golden Butter",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_cow_milk",
+        "display_name": "Golden Milk",
+        "count": 2
+      }
+    ]
+  },
+  "cheese": {
+    "item_id": "cheese",
+    "display_name": "Cheese",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cow_milk",
+        "display_name": "Milk",
+        "count": 2
+      }
+    ]
+  },
+  "golden_cheese": {
+    "item_id": "golden_cheese",
+    "display_name": "Golden Cheese",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_cow_milk",
+        "display_name": "Golden Milk",
+        "count": 2
+      }
+    ]
+  },
+  "mayonnaise": {
+    "item_id": "mayonnaise",
+    "display_name": "Mayonnaise",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "egg",
+        "display_name": "Chicken Egg",
+        "count": 2
+      }
+    ]
+  },
+  "golden_mayonnaise": {
+    "item_id": "golden_mayonnaise",
+    "display_name": "Golden Mayonnaise",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_egg",
+        "display_name": "Golden Egg",
+        "count": 2
+      }
+    ]
+  },
+  "duck_mayonnaise": {
+    "item_id": "duck_mayonnaise",
+    "display_name": "Duck Mayonnaise",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "duck_egg",
+        "display_name": "Duck Egg",
+        "count": 2
+      }
+    ]
+  },
+  "golden_duck_mayonnaise": {
+    "item_id": "golden_duck_mayonnaise",
+    "display_name": "Golden Duck Mayonnaise",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "golden_duck_egg",
+        "display_name": "Golden Duck Egg",
+        "count": 2
+      }
+    ]
+  },
+  "flour": {
+    "item_id": "flour",
+    "display_name": "Flour",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wheat",
+        "display_name": "Wheat",
+        "count": 1
+      }
+    ]
+  },
+  "rice": {
+    "item_id": "rice",
+    "display_name": "Rice",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "rice_stalk",
+        "display_name": "Rice Stalk",
+        "count": 1
+      }
+    ]
+  },
+  "sugar": {
+    "item_id": "sugar",
+    "display_name": "Sugar",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "sugar_cane",
+        "display_name": "Sugar Cane",
+        "count": 1
+      }
+    ]
+  },
+  "paper": {
+    "item_id": "paper",
+    "display_name": "Paper",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "fiber",
+        "display_name": "Fiber",
+        "count": 5
+      }
+    ]
+  },
+  "sapling_oak": {
+    "item_id": "sapling_oak",
+    "display_name": "Oak Sapling",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "acorn",
+        "display_name": "Acorn",
+        "count": 1
+      }
+    ]
+  },
+  "sapling_pine": {
+    "item_id": "sapling_pine",
+    "display_name": "Pine Sapling",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "pinecone",
+        "display_name": "Pinecone",
+        "count": 1
+      }
+    ]
+  },
+  "small_grass_starter": {
+    "item_id": "small_grass_starter",
+    "display_name": "Grass Starter",
+    "source": "milling",
+    "output_count": 1,
+    "ingredients": [
+      {
+        "item_id": "grass_seed",
+        "display_name": "Grass Seed",
+        "count": 2
+      },
+      {
+        "item_id": "sod",
+        "display_name": "Sod",
+        "count": 1
+      }
+    ]
+  }
+}
