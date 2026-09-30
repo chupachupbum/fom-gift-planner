@@ -343,6 +343,7 @@ let currentSaveBytes = null;
 let currentSaveFilename = null;
 let debounceTimers = {};
 let isEngineReady = false;
+let isAutoRestored = false;
 let worker = null;
 
 const SETTINGS_STORAGE_KEY = "fom_companion_settings_v1";
@@ -575,6 +576,11 @@ function handleWorkerMessage(event) {
         li.classList.add("connected");
       }
       if (lt) lt.textContent = "ENGINE READY";
+
+      // If an active save is already loaded from IndexedDB, compute the plan now
+      if (currentSaveBytes && !currentPlan) {
+        dispatchPlan(currentSaveBytes, currentSaveFilename);
+      }
       break;
     }
     case "result": {
@@ -591,7 +597,12 @@ function handleWorkerMessage(event) {
         li.classList.add("connected");
       }
       if (lt) lt.textContent = "READY";
-      showToast(`Plan computed in ${durationMs}ms`, 2000);
+      if (isAutoRestored) {
+        showToast(`Restored saved game "${currentSaveFilename}"`, 2500);
+        isAutoRestored = false;
+      } else {
+        showToast(`Plan computed in ${durationMs}ms`, 2000);
+      }
       break;
     }
     case "error": {
@@ -607,6 +618,10 @@ function handleWorkerMessage(event) {
         li.classList.add("error");
       }
       if (lt) lt.textContent = "ERROR";
+      if (isAutoRestored) {
+        isAutoRestored = false;
+        clearPersistedSave();
+      }
       break;
     }
     default:
@@ -624,6 +639,162 @@ function handleWorkerError(err) {
     li.classList.add("error");
   }
   if (lt) lt.textContent = "ERROR";
+}
+
+// ---------------------------------------------------------------------------
+// Client-Side IndexedDB Save File Persistence
+// ---------------------------------------------------------------------------
+
+const SAVE_DB_NAME = "fom_gift_planner_db";
+const SAVE_DB_VERSION = 1;
+const SAVE_STORE_NAME = "saves";
+const ACTIVE_SAVE_KEY = "active_save";
+
+function openSaveDB() {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      return reject(new Error("IndexedDB is not supported"));
+    }
+    const req = window.indexedDB.open(SAVE_DB_NAME, SAVE_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(SAVE_STORE_NAME)) {
+        db.createObjectStore(SAVE_STORE_NAME, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function persistActiveSave(filename, bytes) {
+  try {
+    const db = await openSaveDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVE_STORE_NAME, "readwrite");
+      const store = tx.objectStore(SAVE_STORE_NAME);
+      const req = store.put({
+        id: ACTIVE_SAVE_KEY,
+        filename: filename,
+        bytes: bytes,
+        savedAt: Date.now()
+      });
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("Could not save to IndexedDB:", err);
+    return false;
+  }
+}
+
+async function loadPersistedSave() {
+  try {
+    const db = await openSaveDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVE_STORE_NAME, "readonly");
+      const store = tx.objectStore(SAVE_STORE_NAME);
+      const req = store.get(ACTIVE_SAVE_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("Could not load from IndexedDB:", err);
+    return null;
+  }
+}
+
+async function clearPersistedSave() {
+  try {
+    const db = await openSaveDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(SAVE_STORE_NAME, "readwrite");
+      const store = tx.objectStore(SAVE_STORE_NAME);
+      const req = store.delete(ACTIVE_SAVE_KEY);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("Could not clear from IndexedDB:", err);
+    return false;
+  }
+}
+
+function dispatchPlan(saveBytes, filename) {
+  if (!worker || !saveBytes) return;
+
+  const li = document.getElementById("liveIndicator");
+  const lt = document.getElementById("liveText");
+  if (li) {
+    li.classList.remove("connected", "error");
+    li.classList.add("computing");
+  }
+  if (lt) lt.textContent = "COMPUTING...";
+
+  worker.postMessage({
+    action: "plan",
+    saveBytes: saveBytes,
+    config: currentSettings,
+    filename: filename || "upload.sav"
+  });
+}
+
+async function restorePersistedSave() {
+  try {
+    const saved = await loadPersistedSave();
+    if (saved && saved.bytes && saved.filename) {
+      currentSaveBytes = saved.bytes;
+      currentSaveFilename = saved.filename;
+      isAutoRestored = true;
+
+      const saveFilenameEl = document.getElementById("saveFilename");
+      if (saveFilenameEl) {
+        saveFilenameEl.textContent = saved.filename;
+        saveFilenameEl.title = saved.filename;
+      }
+
+      const statusLabel = document.getElementById("pyodideStatusLabel");
+      if (statusLabel && !isEngineReady) {
+        statusLabel.textContent = `Restoring saved game (${saved.filename})...`;
+      }
+
+      if (isEngineReady && worker && !currentPlan) {
+        dispatchPlan(currentSaveBytes, currentSaveFilename);
+      }
+    }
+  } catch (err) {
+    console.warn("Could not restore persisted save:", err);
+  }
+}
+
+async function unloadActiveSave() {
+  await clearPersistedSave();
+  currentSaveBytes = null;
+  currentSaveFilename = null;
+  currentPlan = null;
+  isAutoRestored = false;
+
+  const saveFilenameEl = document.getElementById("saveFilename");
+  if (saveFilenameEl) {
+    saveFilenameEl.textContent = "None";
+    saveFilenameEl.title = "";
+  }
+
+  const covSummary = document.getElementById("coverageSummary");
+  if (covSummary) covSummary.textContent = "0/0 Villagers";
+
+  document.body.classList.remove("mode-active");
+  document.body.classList.add("mode-welcome");
+
+  const li = document.getElementById("liveIndicator");
+  const lt = document.getElementById("liveText");
+  if (li) {
+    li.classList.remove("computing", "error");
+    li.classList.add("connected");
+  }
+  if (lt) lt.textContent = isEngineReady ? "ENGINE READY" : "INITIALIZING";
+
+  showToast("Active save cleared from browser memory.", 2500);
 }
 
 function handleFileSelected(file) {
@@ -645,14 +816,19 @@ function handleFileSelected(file) {
   if (lt) lt.textContent = "COMPUTING...";
 
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     currentSaveBytes = e.target.result;
     currentSaveFilename = file.name;
+    isAutoRestored = false;
     const saveFilenameEl = document.getElementById("saveFilename");
     if (saveFilenameEl) {
       saveFilenameEl.textContent = file.name;
       saveFilenameEl.title = file.name;
     }
+
+    // Persist to IndexedDB so page refreshes retain this save
+    await persistActiveSave(file.name, currentSaveBytes);
+
     if (worker) {
       worker.postMessage({
         action: "plan",
@@ -685,14 +861,19 @@ function loadDemo() {
       if (!res.ok) throw new Error("Could not fetch sample_save.sav: HTTP " + res.status);
       return res.arrayBuffer();
     })
-    .then(buf => {
+    .then(async buf => {
       currentSaveBytes = buf;
       currentSaveFilename = "sample_save.sav";
+      isAutoRestored = false;
       const saveFilenameEl = document.getElementById("saveFilename");
       if (saveFilenameEl) {
         saveFilenameEl.textContent = "sample_save.sav (Demo)";
         saveFilenameEl.title = "sample_save.sav";
       }
+
+      // Persist demo save into IndexedDB
+      await persistActiveSave("sample_save.sav (Demo)", buf);
+
       if (worker) {
         worker.postMessage({
           action: "plan",
@@ -3041,6 +3222,7 @@ async function resetDateOverride() {
 document.addEventListener("DOMContentLoaded", () => {
   initWorker();
   loadSettings();
+  restorePersistedSave();
 
   // Welcome Landing controls
   const welcomeBrowseBtn = document.getElementById("welcomeBrowseBtn");
@@ -3225,6 +3407,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (quickResetBtn) {
     quickResetBtn.addEventListener("click", () => {
       loadDemo();
+    });
+  }
+
+  const quickClearBtn = document.getElementById("quickClearBtn");
+  if (quickClearBtn) {
+    quickClearBtn.addEventListener("click", () => {
+      unloadActiveSave();
     });
   }
 

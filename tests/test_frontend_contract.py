@@ -250,3 +250,35 @@ def test_style_css_rules():
     assert "--border-outline" in css
     assert "--radius-plaque" in css
     assert "fnt_nosutaru.ttf" in css
+
+
+def test_indexeddb_save_persistence_contract():
+    """Verify IndexedDB client-side save persistence functions, DOM elements, and auto-restore wiring."""
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    js = APP_JS.read_text(encoding="utf-8")
+
+    # DOM elements for clearing / unloading save
+    assert 'id="quickClearBtn"' in html
+
+    # IndexedDB DB identifiers and keys
+    assert "fom_gift_planner_db" in js
+    assert "active_save" in js
+
+    # IndexedDB storage functions
+    assert "function openSaveDB(" in js
+    assert "async function persistActiveSave(" in js
+    assert "async function loadPersistedSave(" in js
+    assert "async function clearPersistedSave(" in js
+    assert "async function restorePersistedSave(" in js
+    assert "async function unloadActiveSave(" in js
+
+    # Reachability: Auto-restore called on DOMContentLoaded
+    assert "restorePersistedSave();" in js
+
+    # Reachability: Persist called in file handler and demo loader
+    assert "await persistActiveSave(file.name, currentSaveBytes);" in js
+    assert 'await persistActiveSave("sample_save.sav (Demo)", buf);' in js
+
+    # Reachability: quickClearBtn wired to unloadActiveSave
+    assert "unloadActiveSave();" in js
+

@@ -16,6 +16,7 @@ env/
 # Testing & coverage
 .coverage
 .pytest_cache/
+.ruff_cache/
 
 # Fields of Mistria Save files (ignore user saves, preserve sample fixture)
 *.sav
@@ -36,3 +37,4 @@ exports/*
 TEST_INFRA.md
 TEST_READY.md
 companion_config.json
+PROJECT.md
