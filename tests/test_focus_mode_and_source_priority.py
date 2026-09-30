@@ -124,16 +124,25 @@ class TestFocusModeConfig:
     def test_settings_schema(self):
         schema = get_settings_schema()
         assert isinstance(schema, list)
-        npc_group = next((g for g in schema if g.get("id") == "npc_filters"), None)
-        assert npc_group is not None, "npc_filters group must exist in settings schema"
+        focus_group = next((g for g in schema if g.get("id") == "focus_suggestions"), None)
+        assert focus_group is not None, "focus_suggestions group must exist in settings schema"
 
-        fields_by_key = {f["key"]: f for f in npc_group.get("fields", [])}
-        assert "focus_mode_enabled" in fields_by_key
-        assert "focus_npcs" in fields_by_key
-        assert "exclude_npcs" in fields_by_key
+        focus_fields = {f["key"]: f for f in focus_group.get("fields", [])}
+        assert "focus_mode_enabled" in focus_fields
+        assert "focus_npcs" in focus_fields
+        assert "focus_sort" in focus_fields
+        assert "all_seasons" in focus_fields
+        assert "seasonal_boost" in focus_fields
 
-        assert fields_by_key["focus_mode_enabled"]["type"] == "checkbox"
-        assert fields_by_key["focus_npcs"]["type"] == "focus_npc_picker"
+        assert focus_fields["focus_mode_enabled"]["type"] == "checkbox"
+        assert focus_fields["focus_npcs"]["type"] == "focus_npc_picker"
+
+        planning_group = next((g for g in schema if g.get("id") == "planning"), None)
+        assert planning_group is not None
+        planning_fields = {f["key"]: f for f in planning_group.get("fields", [])}
+        assert "exclude_npcs" in planning_fields
+        assert planning_fields["exclude_npcs"]["type"] == "exclude_npc_picker"
+        assert "max_relationship_points" not in planning_fields
 
     def test_config_file_save_and_load(self, tmp_path):
         config = CompanionConfig(

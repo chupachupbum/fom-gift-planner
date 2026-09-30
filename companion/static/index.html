@@ -3,30 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fields of Mistria — Live Companion</title>
+  <title>Mistria Gift Planner</title>
+  <meta name="description" content="Mistria Gift Planner — optimize daily gift bags, track villager gift preferences, follow crafting trees, and plan your farming journey.">
+  <meta property="og:title" content="Mistria Gift Planner">
+  <meta property="og:description" content="Daily gift planner, villager relationship tracker, and crafting dependency tree for Fields of Mistria.">
+  <meta property="og:image" content="/static/icons/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mistria Gift Planner">
+  <meta name="twitter:description" content="Daily gift planner, villager relationship tracker, and crafting dependency tree for Fields of Mistria.">
+  <meta name="twitter:image" content="/static/icons/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
 </head>
 <body>
 
   <!-- App Header -->
   <header class="app-header">
     <div class="header-inner">
-      <div class="brand-section">
-        <h1><span>🎁</span> Fields of Mistria Companion</h1>
-        <div class="live-indicator" id="liveIndicator" title="Watching save folder for changes">
+      <div class="brand-section brand-wrap">
+        <h1><img class="brand-icon" src="/static/icons/ui/icon_gift.png" alt="Gift"> Mistria Gift Planner</h1>
+        <div class="live-indicator sync-indicator" id="liveIndicator" title="Watching save folder for changes">
           <span class="live-dot"></span>
           <span id="liveText">LIVE SYNC</span>
         </div>
       </div>
 
-      <div class="date-status-bar">
+      <div class="date-status-bar date-badge-wrap header-actions">
         <div class="date-badge interactive-badge" id="dateBadge" role="button" tabindex="0" title="Click to open Fields of Mistria Calendar & Date Override">
           <span class="season-tag season-spring" id="seasonTag">SPRING</span>
           <span id="dateText">Day 1</span>
           <span class="festival-pill" id="festivalPill" style="display: none;">FESTIVAL</span>
           <span class="override-pill" id="overridePill" style="display: none;">OVERRIDE</span>
-          <span class="date-badge-calendar-btn" title="Open Calendar">📅</span>
+          <span class="date-badge-calendar-btn" title="Open Calendar"><img class="inline-icon" src="/static/icons/ui/icon_calendar.png" alt="Calendar"></span>
         </div>
         <div id="playerFarmBadge" style="font-size: 0.85rem; opacity: 0.9;"></div>
       </div>
@@ -45,17 +57,17 @@
       <!-- Section 0: Overview Statistics Dashboard -->
       <section id="section-stats" class="stats-dashboard-section">
         <div class="section-header">
-          <h2><span>📊</span> Mistria Progress &amp; Statistics</h2>
+          <h2><img class="section-icon" src="/static/icons/ui/icon_stats.png" alt="Statistics"> Mistria Progress &amp; Statistics</h2>
           <span class="badge-counter" id="statsOverallBadge">0% Discovered</span>
         </div>
 
         <!-- 4-Card Metric Grid -->
-        <div class="stats-overview-grid">
+        <div class="stats-overview-grid stat-grid">
           
           <!-- Card 1: Overall Gift Progress -->
           <div class="stat-card" id="cardGiftProgress">
             <div class="stat-card-header">
-              <span class="stat-icon">🎁</span>
+              <span class="stat-icon"><img class="stat-icon-img" src="/static/icons/ui/icon_gift.png" alt="Gift Progress"></span>
               <span class="stat-title">Gift Progress</span>
             </div>
             <div class="stat-metric-value" id="statGiftProgressVal">0%</div>
@@ -65,11 +77,11 @@
             <div class="stat-subtext" id="statGiftProgressSub">0 / 0 preferences recorded</div>
           </div>
 
-          <!-- Card 2: Completed NPCs -->
+          <!-- Card 2: Completed Villagers -->
           <div class="stat-card" id="cardCompletedNpcs">
             <div class="stat-card-header">
-              <span class="stat-icon">🌟</span>
-              <span class="stat-title">Completed NPCs</span>
+              <span class="stat-icon"><img class="stat-icon-img" src="/static/icons/ui/icon_star.png" alt="Completed Villagers"></span>
+              <span class="stat-title">Completed Villagers</span>
             </div>
             <div class="stat-metric-value" id="statCompletedNpcsVal">0 / 0</div>
             <div class="stat-subtext" id="statCompletedNpcsSub">100% gift journal complete</div>
@@ -78,11 +90,11 @@
             </button>
           </div>
 
-          <!-- Card 3: Incompleted NPCs -->
+          <!-- Card 3: Incompleted Villagers -->
           <div class="stat-card" id="cardIncompleteNpcs">
             <div class="stat-card-header">
-              <span class="stat-icon">👥</span>
-              <span class="stat-title">Incomplete NPCs</span>
+              <span class="stat-icon"><img class="stat-icon-img" src="/static/icons/ui/icon_npc_group.png" alt="Incomplete Villagers"></span>
+              <span class="stat-title">Incomplete Villagers</span>
             </div>
             <div class="stat-metric-value" id="statIncompleteNpcsVal">0 / 0</div>
             <div class="stat-subtext" id="statIncompleteNpcsSub">Pending loved/liked gifts</div>
@@ -94,7 +106,7 @@
           <!-- Card 4: Un-obtained Food Recipes -->
           <div class="stat-card" id="cardRecipes">
             <div class="stat-card-header">
-              <span class="stat-icon">🍳</span>
+              <span class="stat-icon"><img class="stat-icon-img" src="/static/icons/ui/icon_recipe.png" alt="Recipes"></span>
               <span class="stat-title">Un-obtained Recipes</span>
             </div>
             <div class="stat-metric-value" id="statRecipesVal">0 Locked</div>
@@ -106,11 +118,11 @@
 
         </div>
 
-        <!-- Drawer 1: Completed NPCs Drawer -->
+        <!-- Drawer 1: Completed Villagers Drawer -->
         <div class="stats-drawer" id="drawerCompleted" style="display: none;">
           <div class="drawer-header">
             <div class="drawer-title-group">
-              <h3><span>🌟</span> Completed NPCs (<span id="drawerCompletedCount">0</span>)</h3>
+              <h3><img class="section-icon" src="/static/icons/ui/icon_star.png" alt="Completed"> Completed Villagers (<span id="drawerCompletedCount">0</span>)</h3>
               <p class="drawer-subtitle">All loved and liked preferences have been gifted &amp; recorded in your journal.</p>
             </div>
             <button class="drawer-close-btn" id="closeCompletedDrawerBtn">Collapse ▲</button>
@@ -120,23 +132,23 @@
           </div>
         </div>
 
-        <!-- Drawer 2: Incompleted NPCs Drawer -->
+        <!-- Drawer 2: Incompleted Villagers Drawer -->
         <div class="stats-drawer" id="drawerIncomplete" style="display: none;">
           <div class="drawer-header">
             <div class="drawer-title-group">
-              <h3><span>👥</span> Incomplete NPCs (<span id="drawerIncompleteCount">0</span>)</h3>
+              <h3><img class="section-icon" src="/static/icons/ui/icon_npc_group.png" alt="Incomplete"> Incomplete Villagers (<span id="drawerIncompleteCount">0</span>)</h3>
               <p class="drawer-subtitle">Remaining loved and liked gift preferences yet to be recorded in your journal.</p>
             </div>
             <div class="drawer-actions">
-              <input type="text" id="incompleteSearchInput" class="drawer-search-input" placeholder="🔍 Search NPC..." autocomplete="off" />
+              <input type="text" id="incompleteSearchInput" class="drawer-search-input" placeholder="Search villager..." autocomplete="off" />
               <button class="drawer-close-btn" id="closeIncompleteDrawerBtn">Collapse ▲</button>
             </div>
           </div>
-          <div id="incompleteGrid" class="incomplete-npcs-grid">
-            <!-- Populated dynamically with rich NPC cards -->
+          <div id="incompleteGrid" class="incomplete-npcs-grid npc-card-grid">
+            <!-- Populated dynamically with rich cards -->
           </div>
           <div class="drawer-footer">
-            <button class="drawer-close-btn" id="closeIncompleteDrawerBottomBtn">Collapse Incomplete NPCs ▲</button>
+            <button class="drawer-close-btn" id="closeIncompleteDrawerBottomBtn">Collapse Incomplete Villagers ▲</button>
           </div>
         </div>
 
@@ -144,11 +156,11 @@
         <div class="stats-drawer" id="drawerRecipes" style="display: none;">
           <div class="drawer-header">
             <div class="drawer-title-group">
-              <h3><span>🍳</span> Un-obtained Food Recipes (<span id="drawerRecipesCount">0</span>)</h3>
-              <p class="drawer-subtitle">Sorted by impact on NPC gift preferences. Shows where to obtain each recipe.</p>
+              <h3><img class="section-icon" src="/static/icons/ui/icon_recipe.png" alt="Recipes"> Un-obtained Food Recipes (<span id="drawerRecipesCount">0</span>)</h3>
+              <p class="drawer-subtitle">Sorted by impact on villager gift preferences. Shows where to obtain each recipe.</p>
             </div>
             <div class="drawer-actions">
-              <input type="text" id="recipeSearchInput" class="drawer-search-input" placeholder="🔍 Filter recipes..." autocomplete="off" style="display: none;" />
+              <input type="text" id="recipeSearchInput" class="drawer-search-input" placeholder="Filter recipes..." autocomplete="off" style="display: none;" />
               <button class="drawer-close-btn" id="closeRecipesDrawerBtn">Collapse ▲</button>
             </div>
           </div>
@@ -168,11 +180,11 @@
       <!-- Section 1: Optimal Daily Bag Loadout -->
       <section id="section-bag">
         <div class="section-header">
-          <h2><span>🎒</span> Optimal Gift Bag Plan</h2>
+          <h2><img class="section-icon" src="/static/icons/ui/icon_bag.png" alt="Bag Plan"> Optimal Gift Bag Plan</h2>
           <span class="badge-counter" id="bagSlotsBadge">0 / 20 Slots</span>
         </div>
 
-        <div id="bagGrid" class="cards-grid">
+        <div id="bagGrid" class="cards-grid planner-grid">
           <p style="color: var(--text-muted); font-style: italic;">Loading daily plan...</p>
         </div>
       </section>
@@ -180,14 +192,14 @@
       <!-- Section 2: Focus Suggestions & Raw Material Blockers -->
       <section id="section-focus">
         <div class="section-header">
-          <h2><span>🌾</span> Focus Suggestions (Raw Material Blockers)</h2>
+          <h2><img class="section-icon" src="/static/icons/ui/icon_wheat.png" alt="Focus"> Focus Suggestions (Raw Material Blockers)</h2>
           <span class="badge-counter" id="focusCountBadge">0 Items</span>
         </div>
 
         <!-- Source Priority Summary Panel -->
         <div id="sourceSummaryPanel" class="source-summary-panel" style="display: none;"></div>
 
-        <div id="focusGrid" class="focus-grid">
+        <div id="focusGrid" class="focus-grid item-card-grid">
           <p style="color: var(--text-muted); font-style: italic;">Loading focus suggestions...</p>
         </div>
       </section>
@@ -195,7 +207,7 @@
       <!-- Section 3: Infused Cooking Dishes Banner (If any) -->
       <section id="section-infused" style="display: none;">
         <div class="section-header">
-          <h2><span>🔮</span> Cooking Perk Infused Dishes</h2>
+          <h2><img class="section-icon" src="/static/icons/ui/icon_perk_essence.png" alt="Infused"> Cooking Perk Infused Dishes</h2>
         </div>
         <div id="infusedContainer" class="recipients-container" style="padding: 14px;"></div>
       </section>
@@ -207,25 +219,25 @@
 
       <div class="sidebar-card">
         <div class="sidebar-title">
-          <span>⚙️ Companion Settings</span>
+          <span><img class="inline-icon" src="/static/icons/ui/icon_gear.svg" alt="Settings"> Planner Settings</span>
           <button id="refreshBtn" class="refresh-btn" title="Force re-read save and recalculate">
-            <span>🔄</span> Refresh
+            <img class="inline-icon" src="/static/icons/ui/icon_refresh.svg" alt="Refresh"> Refresh
           </button>
         </div>
 
         <!-- Save Status Summary & Quick Selector -->
         <div class="save-status-box" id="saveStatusBox">
           <div class="save-status-header">
-            <span class="save-label">🎮 Active Save</span>
+            <span class="save-label"><img class="inline-icon" src="/static/icons/ui/icon_save.png" alt="Save"> Active Save</span>
             <div class="save-actions">
-              <button id="quickImportBtn" class="save-action-btn" title="Open file explorer to import a .sav file">📁 Import File</button>
-              <button id="quickResetBtn" class="save-action-btn btn-auto-detect" title="Switch back to auto-detecting the newest save" style="display: none;">↺ Auto</button>
+              <button id="quickImportBtn" class="save-action-btn" title="Open file explorer to import a .sav file"><img class="inline-icon" src="/static/icons/ui/icon_folder.svg" alt="Import"> Import File</button>
+              <button id="quickResetBtn" class="save-action-btn btn-auto-detect" title="Switch back to auto-detecting the newest save" style="display: none;"><img class="inline-icon" src="/static/icons/ui/icon_refresh.svg" alt="Auto"> Auto</button>
             </div>
           </div>
 
           <div class="save-select-wrapper">
             <select id="saveSelectDropdown" class="save-dropdown" title="Select active save file">
-              <option value="">🔍 Auto-detecting latest game save...</option>
+              <option value="">Auto-detecting latest game save...</option>
             </select>
           </div>
 
@@ -238,7 +250,7 @@
             </div>
             <div class="save-status-row">
               <span style="color: var(--text-muted);">Coverage:</span>
-              <span id="coverageSummary">0/0 NPCs</span>
+              <span id="coverageSummary">0/0 Villagers</span>
             </div>
             <div class="save-status-row">
               <span style="color: var(--text-muted);">Strategy:</span>
@@ -267,13 +279,13 @@
 
   <!-- FoM 28-Day Seasonal Calendar Modal Overlay -->
   <div id="calendarModal" class="calendar-modal-backdrop" style="display: none;">
-    <div class="calendar-modal" onclick="event.stopPropagation()">
+    <div class="calendar-modal cal-modal-window" onclick="event.stopPropagation()">
       <div class="calendar-modal-header">
         <div class="calendar-modal-title">
-          <span>📅</span>
+          <img class="section-icon" src="/static/icons/ui/icon_calendar.png" alt="Calendar">
           <span>Fields of Mistria Calendar</span>
         </div>
-        <button class="calendar-modal-close" id="calendarModalClose" title="Close (Esc)">✕</button>
+        <button class="calendar-modal-close" id="calendarModalClose" title="Close (Esc)"><img class="inline-icon" src="/static/icons/ui/icon_close.svg" alt="Close"></button>
       </div>
 
       <div class="calendar-modal-body">
@@ -287,10 +299,10 @@
           </div>
 
           <div class="cal-season-tabs">
-            <button class="cal-season-tab active" data-season="spring" id="calTabSpring">🌸 Spring</button>
-            <button class="cal-season-tab" data-season="summer" id="calTabSummer">☀️ Summer</button>
-            <button class="cal-season-tab" data-season="fall" id="calTabFall">🍂 Fall</button>
-            <button class="cal-season-tab" data-season="winter" id="calTabWinter">❄️ Winter</button>
+            <button class="cal-season-tab active" data-season="spring" id="calTabSpring"><img class="inline-icon" src="/static/icons/ui/season_spring.png" alt="Spring"> Spring</button>
+            <button class="cal-season-tab" data-season="summer" id="calTabSummer"><img class="inline-icon" src="/static/icons/ui/season_summer.png" alt="Summer"> Summer</button>
+            <button class="cal-season-tab" data-season="fall" id="calTabFall"><img class="inline-icon" src="/static/icons/ui/season_fall.png" alt="Fall"> Fall</button>
+            <button class="cal-season-tab" data-season="winter" id="calTabWinter"><img class="inline-icon" src="/static/icons/ui/season_winter.png" alt="Winter"> Winter</button>
           </div>
         </div>
 
@@ -312,7 +324,7 @@
             <div>WED</div>
             <div>THU</div>
             <div>FRI</div>
-            <div class="cal-hdr-sat">SAT ★</div>
+            <div class="cal-hdr-sat">SAT <img class="inline-icon" src="/static/icons/ui/icon_saturday.png" alt="Saturday Market"></div>
             <div>SUN</div>
           </div>
           <div class="cal-grid-days" id="calendarDaysGrid">
@@ -332,7 +344,7 @@
       <div class="calendar-modal-footer">
         <div class="cal-footer-shortcuts">
           <button class="cal-footer-btn cal-btn-reset" id="calResetSaveBtn" title="Clear override and follow game save calendar">
-            ↺ Follow Save Date
+            <img class="inline-icon" src="/static/icons/ui/icon_refresh.svg" alt="Reset"> Follow Save Date
           </button>
         </div>
         <div class="cal-footer-actions">
@@ -344,17 +356,17 @@
 
   <!-- Crafting Tree Modal Overlay -->
   <div id="treeModal" class="tree-modal-backdrop" style="display: none;">
-    <div class="tree-modal" onclick="event.stopPropagation()">
+    <div class="tree-modal tree-modal-window" onclick="event.stopPropagation()">
       <div class="tree-modal-header">
         <div class="tree-modal-title">
-          <span>🌳</span>
+          <img class="section-icon" src="/static/icons/ui/icon_tree.png" alt="Tree">
           <span id="treeModalTitle">Crafting Tree</span>
           <span class="deficit-badge" id="treeModalDeficit" style="display: none;"></span>
         </div>
         <div class="tree-modal-search-wrapper">
-          <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="🔍 Search recipe or NPC..." autocomplete="off" />
+          <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="Search recipe or villager..." autocomplete="off" />
         </div>
-        <button class="tree-modal-close" id="treeModalClose" title="Close (Esc)">✕</button>
+        <button class="tree-modal-close" id="treeModalClose" title="Close (Esc)"><img class="inline-icon" src="/static/icons/ui/icon_close.svg" alt="Close"></button>
       </div>
       <div class="tree-modal-body" id="treeModalBody"></div>
       <div class="tree-modal-controls">
@@ -367,6 +379,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div class="footer-disclaimer-wrap">
+        <div class="footer-section footer-disclaimer">
+          Mistria Gift Planner is an unofficial fan-made tool, not affiliated with or endorsed by NPC Studio.
+        </div>
+        <a href="https://buymeacoffee.com/chupachupbum" class="bmac-button" target="_blank" rel="noopener noreferrer" title="Support Mistria Gift Planner">
+          <span class="bmac-icon">☕</span> Buy Me a Coffee
+        </a>
+      </div>
+      <div class="footer-section footer-ip">
+        Fields of Mistria and all related assets, art, characters, and trademarks are © NPC Studio. Copyright holders who want content removed can contact me via GitHub.
+      </div>
+      <div class="footer-section footer-privacy">
+        Save files are parsed locally in your browser. No save data or personal information is sent to any server.
+      </div>
+      <div class="footer-section footer-meta">
+        Version 1.0.0 • <a href="https://github.com/chupachupbum/fom-gift-planner" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="/static/app.js"></script>

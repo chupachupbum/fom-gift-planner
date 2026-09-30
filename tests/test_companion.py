@@ -61,11 +61,39 @@ def test_config_serialization(tmp_path):
 def test_settings_schema_structure():
     schema = get_settings_schema()
     assert isinstance(schema, list)
-    assert len(schema) >= 3
+    assert len(schema) == 2
     group_ids = [g["id"] for g in schema]
     assert "planning" in group_ids
-    assert "scoring" in group_ids
-    assert "npc_filters" in group_ids
+    assert "focus_suggestions" in group_ids
+
+    planning_group = next(g for g in schema if g["id"] == "planning")
+    planning_fields = {f["key"]: f for f in planning_group["fields"]}
+    assert "strategy" in planning_fields
+    assert "mode" in planning_fields
+    assert "slots" in planning_fields
+    assert planning_fields["slots"]["max"] == 30
+    assert "date_override" in planning_fields
+    assert "exclude_npcs" in planning_fields
+    assert planning_fields["exclude_npcs"]["type"] == "exclude_npc_picker"
+    assert "force_all_npcs" in planning_fields
+    assert "no_exclude_max_relationship" in planning_fields
+    assert "loved_weight" in planning_fields
+    assert "liked_weight" in planning_fields
+    assert "vendor_boost" in planning_fields
+    assert "max_relationship_points" not in planning_fields
+
+    focus_group = next(g for g in schema if g["id"] == "focus_suggestions")
+    focus_fields = {f["key"]: f for f in focus_group["fields"]}
+    assert "focus_mode_enabled" in focus_fields
+    assert "focus_npcs" in focus_fields
+    assert "focus_sort" in focus_fields
+    assert "all_seasons" in focus_fields
+    assert "seasonal_boost" in focus_fields
+
+    # Verify every configurable parameter has help text for tooltips
+    for group in schema:
+        for f in group["fields"]:
+            assert "help" in f and len(f["help"]) > 0, f"Field {f['key']} must have help text"
 
 
 def test_planner_bridge_execution(repo_root):
@@ -341,6 +369,129 @@ def test_focus_suggestions_sample_save_has_items_exceeding_three_npcs(repo_root)
     feather = next(f for f in items_over_3 if f["item_id"] == "golden_duck_feather")
     assert len(feather["blocked_npcs"]) == 4
     assert feather["blocked_npcs"] == ["Landen", "Louis", "Merri", "Wheedle"]
+
+
+def test_parameter_help_and_beta_marker_and_exclude_npc_picker():
+    """Verify that companion app.js and style.css contain the beta badge, help icons, and exclude NPC picker."""
+    static_app_js = Path(__file__).resolve().parent.parent / "companion" / "static" / "app.js"
+    assert static_app_js.exists()
+    js_content = static_app_js.read_text(encoding="utf-8")
+
+    # Acquisition Source Priority is collapsed by default and has BETA badge
+    assert '<details class="source-tier-accordion tier-${tierKey}">' in js_content
+    assert '<details class="source-tier-accordion tier-${tierKey}" open>' not in js_content
+    assert '<span class="badge-beta">BETA</span>' in js_content
+
+    # Help icon rendering helper exists and is used
+    assert "function renderHelpIcon" in js_content
+    assert "param-help-btn" in js_content
+    assert "param-help-tooltip" in js_content
+
+    # Exclude NPC picker logic exists
+    assert 'field.type === "exclude_npc_picker"' in js_content
+    assert 'exclude-npc-cb' in js_content
+    assert 'excludeNpcSelectAll' in js_content
+    assert 'excludeNpcDeselectAll' in js_content
+    assert 'excludeNpcCounterBadge' in js_content
+
+    static_style_css = Path(__file__).resolve().parent.parent / "companion" / "static" / "style.css"
+    assert static_style_css.exists()
+    css_content = static_style_css.read_text(encoding="utf-8")
+
+    # CSS styles for beta badge, tooltips, and exclude picker
+    assert ".badge-beta" in css_content
+    assert ".param-help-wrap" in css_content
+    assert ".param-help-btn" in css_content
+    assert ".param-help-tooltip" in css_content
+    assert ".exclude-npc-picker-group" in css_content
+
+
+def test_mistria_gift_planner_brand_and_disclaimer(repo_root):
+    """Verify name is 'Mistria Gift Planner', disclaimer matches specification, and Buy Me a Coffee link is present."""
+    index_html = (repo_root / "companion" / "static" / "index.html").read_text(encoding="utf-8")
+
+    # Name check
+    assert "<title>Mistria Gift Planner</title>" in index_html
+    assert "Mistria Gift Planner</h1>" in index_html
+    assert "Mistria Gift Planner — Handcrafted by fans, for fans" not in index_html
+    assert app.title == "Mistria Gift Planner"
+
+    # Buy Me a Coffee link check next to disclaimer
+    assert "https://buymeacoffee.com/chupachupbum" in index_html
+    assert "Buy Me a Coffee" in index_html
+    assert "footer-disclaimer-wrap" in index_html
+
+    # Disclaimer 3-paragraph check
+    p1 = "Mistria Gift Planner is an unofficial fan-made tool, not affiliated with or endorsed by NPC Studio."
+    p2 = "Fields of Mistria and all related assets, art, characters, and trademarks are © NPC Studio. Copyright holders who want content removed can contact me via GitHub."
+    p3 = "Save files are parsed locally in your browser. No save data or personal information is sent to any server."
+
+    assert p1 in index_html
+    assert p2 in index_html
+    assert p3 in index_html
+
+    # Villager terminology check
+    assert "Completed Villagers" in index_html
+    assert "Incomplete Villagers" in index_html
+    assert 'placeholder="Search recipe or villager..."' in index_html
+    assert 'placeholder="Search villager..."' in index_html
+
+    # Verify settings schema labels changed to Villager
+    schema = get_settings_schema()
+    general_fields = schema[0]["fields"]
+    focus_fields = schema[1]["fields"]
+    assert any(f["label"] == "Exclude Villagers" for f in general_fields)
+    assert any(f["label"] == "Focus Villagers" for f in focus_fields)
+    assert any(f["label"] == "Include Already-Gifted Villagers" for f in general_fields)
+
+
+def test_tooltip_right_overflow_prevention(repo_root):
+    """Verify CSS and JS prevent parameter help tooltips from overflowing the right border."""
+    style_css = (repo_root / "companion" / "static" / "style.css").read_text(encoding="utf-8")
+    app_js = (repo_root / "companion" / "static" / "app.js").read_text(encoding="utf-8")
+
+    # CSS right-aligned classes
+    assert ".param-help-tooltip.align-right" in style_css
+    assert ".param-help-wrap.tooltip-align-right" in style_css
+    assert "right: -6px;" in style_css
+    assert "right: 12px;" in style_css
+
+    # JS alignment logic
+    assert "function adjustHelpTooltipPosition" in app_js
+    assert "function updateAllHelpTooltipPositions" in app_js
+    assert 'tooltip.classList.add("align-right")' in app_js
+    assert 'document.addEventListener("mouseenter"' in app_js
+
+
+def test_focus_suggestions_tree_button_and_alt_sources(repo_root):
+    """Verify focus suggestions omit tree button when no branch and display all alternate sources."""
+    app_js = (repo_root / "companion" / "static" / "app.js").read_text(encoding="utf-8")
+    style_css = (repo_root / "companion" / "static" / "style.css").read_text(encoding="utf-8")
+
+    # 1. Tree button conditional on having branches (children.length > 0)
+    assert "hasBranches = Boolean(tree && Array.isArray(tree.children) && tree.children.length > 0)" in app_js
+    assert "if (hasBranches)" in app_js
+
+    # 2. Shows all alternate sources on focus suggestions
+    assert "altSources = (f.alt_sources && Array.isArray(f.alt_sources) && f.alt_sources.length > 0)" in app_js
+    assert "focus-alt-badge" in app_js
+    assert "focus-alt-sources-row" in app_js
+
+    # 3. CSS styles for alt sources badges
+    assert ".focus-alt-sources-row" in style_css
+    assert ".focus-alt-badges" in style_css
+    assert ".focus-alt-badge" in style_css
+
+    # 4. plan_to_json exports alt_sources for focus suggestions
+    cfg = CompanionConfig()
+    save, plan_res, meta, save_path = execute_plan(cfg, repo_root)
+    json_data = plan_to_json(save, plan_res, meta, save_path, cfg)
+    assert "focus_suggestions" in json_data
+    for item in json_data["focus_suggestions"]:
+        assert "alt_sources" in item
+        assert isinstance(item["alt_sources"], list)
+
+
 
 
 

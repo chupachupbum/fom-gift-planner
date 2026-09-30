@@ -32,7 +32,7 @@ function setupEventSource() {
     try {
       const payload = JSON.parse(event.data);
       renderPlan(payload.data);
-      showToast("🎮 Game save updated — plan refreshed!");
+      showToast("Game save updated — plan refreshed!");
     } catch (e) {
       console.error("Error parsing plan_updated event:", e);
     }
@@ -129,14 +129,14 @@ function renderHeader(data) {
   if (dateText) {
     let dayStr = `Day ${dateInfo.day || 1} (${dateInfo.day_of_week || 'Weekday'})`;
     if (dateInfo.is_saturday) {
-      dayStr += " ★ SATURDAY MARKET";
+      dayStr += " • SATURDAY MARKET";
     }
     dateText.textContent = dayStr;
   }
 
   if (festivalPill) {
     if (dateInfo.festival_name) {
-      festivalPill.textContent = `🎉 ${dateInfo.festival_name}`;
+      festivalPill.innerHTML = `<img class="inline-icon" src="/static/icons/ui/icon_festival.png" alt="Festival"> ${dateInfo.festival_name}`;
       festivalPill.style.display = "inline-block";
     } else {
       festivalPill.style.display = "none";
@@ -163,7 +163,7 @@ function renderHeader(data) {
   if (playerFarmBadge && data.save_info) {
     const pName = data.save_info.player_name || "Player";
     const fName = data.save_info.farm_name || "Farm";
-    playerFarmBadge.textContent = `🌾 ${pName} @ ${fName}`;
+    playerFarmBadge.innerHTML = `<img class="inline-icon" src="/static/icons/ui/icon_wheat.png" alt="Farm"> ${pName} @ ${fName}`;
   }
 }
 
@@ -212,12 +212,12 @@ function renderStatsDashboard(data) {
   const totalNpcs = stats.total_npcs_count || (completedCount + incompleteCount);
 
   if (completedVal) completedVal.textContent = `${completedCount} / ${totalNpcs}`;
-  if (completedSub) completedSub.textContent = (completedCount === totalNpcs && totalNpcs > 0) ? "🎉 All NPCs 100% completed!" : "100% gift journal complete";
+  if (completedSub) completedSub.textContent = (completedCount === totalNpcs && totalNpcs > 0) ? "All villagers 100% completed!" : "100% gift journal complete";
   if (drawerCompletedCount) drawerCompletedCount.textContent = completedCount;
 
   // 3. Incomplete NPCs
   if (incompleteVal) incompleteVal.textContent = `${incompleteCount} / ${totalNpcs}`;
-  if (incompleteSub) incompleteSub.textContent = incompleteCount === 0 ? "All NPC gifts discovered!" : `${incompleteCount} NPCs pending loved/liked gifts`;
+  if (incompleteSub) incompleteSub.textContent = incompleteCount === 0 ? "All villager gifts discovered!" : `${incompleteCount} villagers pending loved/liked gifts`;
   if (drawerIncompleteCount) drawerIncompleteCount.textContent = incompleteCount;
 
   // 4. Recipes
@@ -300,7 +300,7 @@ function renderCompletedDrawerContent(list) {
   if (!container) return;
 
   if (!list || list.length === 0) {
-    container.innerHTML = `<div class="empty-state-notice">No NPCs have 100% completed gift journals yet. Keep gifting!</div>`;
+    container.innerHTML = `<div class="empty-state-notice">No villagers have 100% completed gift journals yet. Keep gifting!</div>`;
     return;
   }
 
@@ -309,7 +309,7 @@ function renderCompletedDrawerContent(list) {
       <img class="completed-npc-avatar" src="${npc.portrait_url}" alt="${npc.name}" onerror="this.src='/assets/sprites/npcs/fallback'" />
       <div class="completed-npc-info">
         <span class="completed-npc-name" title="${npc.name}">${npc.name}</span>
-        <span class="completed-npc-badge">✓ 100% Complete</span>
+        <span class="completed-npc-badge"><img class="inline-icon" src="/static/icons/ui/icon_check.png" alt="Complete"> 100% Complete</span>
       </div>
     </div>
   `).join("");
@@ -320,7 +320,7 @@ function renderIncompleteDrawerContent(list) {
   if (!container) return;
 
   if (!list || list.length === 0) {
-    container.innerHTML = `<div class="empty-state-notice">🎉 All NPCs have their gift journals 100% completed!</div>`;
+    container.innerHTML = `<div class="empty-state-notice"><img class="inline-icon" src="/static/icons/ui/icon_festival.png" alt="Complete"> All villagers have their gift journals 100% completed!</div>`;
     return;
   }
 
@@ -330,7 +330,7 @@ function renderIncompleteDrawerContent(list) {
     : list;
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state-notice">No incomplete NPCs found matching "${incompleteSearchFilter}".</div>`;
+    container.innerHTML = `<div class="empty-state-notice">No incomplete villagers found matching "${incompleteSearchFilter}".</div>`;
     return;
   }
 
@@ -371,13 +371,13 @@ function renderIncompleteDrawerContent(list) {
 
         <div class="incomplete-npc-gifts-section">
           <div class="gift-type-row">
-            <span class="gift-type-label loved">💖 Remaining Loved (${(npc.remaining_loved || []).length})</span>
+            <span class="gift-type-label loved"><img class="inline-icon" src="/static/icons/ui/heart_loved.png" alt="Loved"> Remaining Loved (${(npc.remaining_loved || []).length})</span>
             <div class="gift-chips-container">
               ${lovedChips || '<span style="font-size: 0.72rem; color: var(--text-light); font-style: italic;">All loved gifts discovered!</span>'}
             </div>
           </div>
           <div class="gift-type-row" style="margin-top: 4px;">
-            <span class="gift-type-label liked">💜 Remaining Liked (${(npc.remaining_liked || []).length})</span>
+            <span class="gift-type-label liked"><img class="inline-icon" src="/static/icons/ui/heart_liked.png" alt="Liked"> Remaining Liked (${(npc.remaining_liked || []).length})</span>
             <div class="gift-chips-container">
               ${likedChips || '<span style="font-size: 0.72rem; color: var(--text-light); font-style: italic;">All liked gifts discovered!</span>'}
             </div>
@@ -396,7 +396,7 @@ function renderRecipesDrawerContent(allRecipes) {
   if (!container) return;
 
   if (!allRecipes || allRecipes.length === 0) {
-    container.innerHTML = `<div class="empty-state-notice">🎉 All cooking recipes have been obtained!</div>`;
+    container.innerHTML = `<div class="empty-state-notice"><img class="inline-icon" src="/static/icons/ui/icon_festival.png" alt="Complete"> All cooking recipes have been obtained!</div>`;
     if (paginationRow) paginationRow.style.display = "none";
     if (searchInput) searchInput.style.display = "none";
     return;
@@ -440,10 +440,10 @@ function renderRecipesDrawerContent(allRecipes) {
       <div class="recipe-card-body">
         <div class="recipe-card-top">
           <span class="recipe-card-name" title="${r.display_name}">${r.display_name}</span>
-          ${r.impact > 0 ? `<span class="recipe-impact-badge" title="Unlocks gift preferences for ${r.impact} NPC(s)">🎁 Unlocks ${r.impact} NPC${r.impact === 1 ? '' : 's'}</span>` : ''}
+          ${r.impact > 0 ? `<span class="recipe-impact-badge" title="Unlocks gift preferences for ${r.impact} villager(s)"><img class="inline-icon" src="/static/icons/ui/icon_gift.png" alt="Gift"> Unlocks ${r.impact} villager${r.impact === 1 ? '' : 's'}</span>` : ''}
         </div>
         <div class="recipe-source-row">
-          <span>📍</span>
+          <img class="inline-icon" src="/static/icons/ui/icon_location_pin.png" alt="Location">
           <span class="recipe-source-badge" title="How to obtain: ${r.unlock_source}">${r.unlock_source || 'Unknown'}</span>
         </div>
       </div>
@@ -462,7 +462,7 @@ function renderBagPlan(bagPlan, stats) {
 
   if (!grid) return;
   if (bagPlan.length === 0) {
-    grid.innerHTML = `<p style="grid-column: 1/-1; color: var(--text-muted); font-style: italic; padding: 24px; text-align: center; background: white; border-radius: 8px;">No items required in your bag today! All eligible NPCs covered or already gifted.</p>`;
+    grid.innerHTML = `<p style="grid-column: 1/-1; color: var(--text-muted); font-style: italic; padding: 24px; text-align: center; background: white; border-radius: 8px;">No items required in your bag today! All eligible villagers covered or already gifted.</p>`;
     return;
   }
 
@@ -474,7 +474,7 @@ function renderBagPlan(bagPlan, stats) {
     const recipientsHtml = (item.recipients || []).map(r => {
       const isLove = r.preference.includes("LOVE");
       const prefClass = isLove ? "pref-love" : "pref-like";
-      const heartIcon = isLove ? "💖" : "🌟";
+      const heartIcon = isLove ? '<img class="inline-icon" src="/static/icons/ui/heart_loved.png" alt="Love">' : '<img class="inline-icon" src="/static/icons/ui/heart_liked.png" alt="Like">';
       const vendorTag = r.is_vendor ? `<span class="vendor-tag">MARKET</span>` : "";
       const npcAvatar = `/assets/sprites/npcs/${r.npc_id || 'default'}`;
 
@@ -489,14 +489,14 @@ function renderBagPlan(bagPlan, stats) {
     }).join("");
 
     const infusedHtml = item.is_infused
-      ? `<span class="infused-tag">🔮 ${item.infusion || 'Infused'}</span>`
+      ? `<span class="infused-tag"><img class="inline-icon" src="/static/icons/ui/icon_perk_essence.png" alt="Infused"> ${item.infusion || 'Infused'}</span>`
       : "";
 
     let craftingHtml = "";
     if (item.crafting_steps && item.crafting_steps.length > 0) {
       craftingHtml = `
         <div class="crafting-chain">
-          <div style="font-weight: 700; margin-bottom: 3px;">🔨 Crafting Steps:</div>
+          <div style="font-weight: 700; margin-bottom: 3px;"><img class="inline-icon" src="/static/icons/ui/icon_hammer.png" alt="Crafting"> Crafting Steps:</div>
           ${item.crafting_steps.map(s => {
             const ings = (s.ingredients || []).map(ing => `${ing.count}× ${ing.name}`).join(", ");
             const ingText = ings ? ` <span style="color:var(--text-light); font-size:0.75rem;">[← ${ings}]</span>` : "";
@@ -507,7 +507,7 @@ function renderBagPlan(bagPlan, stats) {
     } else if (item.crafting_summary && item.crafting_summary.trim().length > 0) {
       craftingHtml = `
         <div class="crafting-chain">
-          <div style="font-weight: 700; margin-bottom: 3px;">🔨 Crafting:</div>
+          <div style="font-weight: 700; margin-bottom: 3px;"><img class="inline-icon" src="/static/icons/ui/icon_hammer.png" alt="Crafting"> Crafting:</div>
           <div class="craft-step">• ${item.crafting_summary}</div>
         </div>
       `;
@@ -546,7 +546,7 @@ function renderBagPlan(bagPlan, stats) {
 
 function renderBlockedNpcs(blockedNpcs) {
   if (!blockedNpcs || !Array.isArray(blockedNpcs)) {
-    return 'Various NPCs';
+    return 'Various villagers';
   }
 
   const validNpcs = blockedNpcs
@@ -554,7 +554,7 @@ function renderBlockedNpcs(blockedNpcs) {
     .filter(name => name.length > 0);
 
   if (validNpcs.length === 0) {
-    return 'Various NPCs';
+    return 'Various villagers';
   }
 
   const formatTag = (name) => {
@@ -574,7 +574,7 @@ function renderBlockedNpcs(blockedNpcs) {
     <span class="blocked-npcs-wrapper">
       <span class="blocked-npcs-initial">${initialNpcs}</span>
       <span class="blocked-npcs-extra" style="display: none;"> ${extraNpcs}</span>
-      <button type="button" class="npc-toggle-btn npc-expand-btn" onclick="toggleBlockedNpcs(this, true)" title="Show ${extraCount} more NPCs">and +${extraCount} more</button>
+      <button type="button" class="npc-toggle-btn npc-expand-btn" onclick="toggleBlockedNpcs(this, true)" title="Show ${extraCount} more villagers">and +${extraCount} more</button>
       <button type="button" class="npc-toggle-btn npc-collapse-btn" onclick="toggleBlockedNpcs(this, false)" style="display: none;" title="Collapse list">Collapse</button>
     </span>
   `;
@@ -602,19 +602,19 @@ window.toggleBlockedNpcs = toggleBlockedNpcs;
 window.renderBlockedNpcs = renderBlockedNpcs;
 
 const ALT_SOURCE_EMOJI = {
-  shop: "🛒",
-  inn: "🍽️",
-  market_stall: "🛒",
-  chicken_statue: "🐔",
-  mimic: "⛏️",
-  mill: "⚙️",
-  fishing: "🎣",
-  wishing_well: "💫",
-  festival: "🎪",
-  date: "💕",
-  quest: "📋",
-  museum: "🏛️",
-  living_off_the_land: "🌱",
+  shop: "Shop",
+  inn: "Inn",
+  market_stall: "Market",
+  chicken_statue: "Chicken Statue",
+  mimic: "Mimic",
+  mill: "Mill",
+  fishing: "Fishing",
+  wishing_well: "Well",
+  festival: "Festival",
+  date: "Date",
+  quest: "Quest",
+  museum: "Museum",
+  living_off_the_land: "Forage",
 };
 
 function renderCraftingTree(tree, depth = 0) {
@@ -791,7 +791,7 @@ function openCraftingTreeModal(rawTreeData, deficit) {
       // Header row: sprite + title
       let headerHtml = `<div class="d3-node-header">`;
       if (isGroup) {
-        headerHtml += `<span style="font-size:1.1rem; line-height:1;">🍽️</span>`;
+        headerHtml += `<img class="d3-node-sprite" src="/static/icons/ui/icon_recipe.png" alt="Recipe" />`;
       } else {
         headerHtml += `<img class="d3-node-sprite" src="${data.sprite_url || '/assets/sprites/items/' + data.item_id}" alt="${data.item_name}" onerror="this.style.display='none'" />`;
       }
@@ -815,11 +815,9 @@ function openCraftingTreeModal(rawTreeData, deficit) {
             : '';
           const note = s.note ? ` (${s.note})` : '';
           const fullTitle = `${label}${cost}${note}`.replace(/"/g, '&quot;');
-          const emoji = ALT_SOURCE_EMOJI[s.type] || '📍';
 
           bodyHtml += `<span class="d3-node-alt-badge" title="${fullTitle}">
-            <img class="source-icon" src="${iconUrl}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';" alt="${s.type}" />
-            <span class="source-emoji-fallback" style="display:none;">${emoji} </span>
+            <img class="source-icon" src="${iconUrl}" onerror="this.src='/static/icons/ui/icon_location_pin.png';" alt="${s.type}" />
             <span class="badge-text">${label}${cost}</span>
           </span>`;
         });
@@ -1275,7 +1273,7 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
           <img class="source-item-sprite" src="${item.sprite_url || '/assets/sprites/items/' + item.item_id}" alt="${item.item_name}" onerror="this.style.display='none'" />
           <span class="source-item-name">${item.item_name}</span>
           <span class="source-item-deficit">Need: ${item.deficit}</span>
-          <span class="source-item-pairs" title="${item.blocked_pairs} blocked NPC-gift combinations">(${item.blocked_pairs} pairs)</span>
+          <span class="source-item-pairs" title="${item.blocked_pairs} blocked villager-gift combinations">(${item.blocked_pairs} pairs)</span>
         </div>
       `).join("");
 
@@ -1285,12 +1283,12 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
         <div class="source-card">
           <div class="source-card-header">
             <div class="source-card-title">
-              <span class="source-icon">📍</span>
+              <img class="inline-icon" src="/static/icons/ui/icon_location_pin.png" alt="Location">
               <strong>${s.source_name}</strong>
             </div>
             <div class="source-card-badges">
               <span class="tier-badge-pill tier-pill-${tierKey}">${tierKey.toUpperCase()}</span>
-              <span class="source-score-badge" title="Total blocked NPC gifts unlocked">Score: ${s.total_score || 0}</span>
+              <span class="source-score-badge" title="Total blocked villager gifts unlocked">Score: ${s.total_score || 0}</span>
             </div>
           </div>
 
@@ -1300,7 +1298,7 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
           </div>
 
           <div class="source-benefited-section">
-            <div class="source-label">Benefited NPCs:</div>
+            <div class="source-label">Benefited Villagers:</div>
             <div class="source-npcs-chips">${npcsHtml}</div>
           </div>
         </div>
@@ -1308,7 +1306,7 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
     }).join("");
 
     return `
-      <details class="source-tier-accordion tier-${tierKey}" open>
+      <details class="source-tier-accordion tier-${tierKey}">
         <summary class="source-tier-summary">
           <div class="tier-summary-title">
             <span class="tier-icon">${icon}</span>
@@ -1331,15 +1329,16 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
   panel.innerHTML = `
     <div class="source-summary-header">
       <div class="source-summary-title">
-        <span class="source-summary-icon">📍</span>
+        <img class="section-icon" src="/static/icons/ui/icon_location_pin.png" alt="Sources">
         <h3>Acquisition Source Priority</h3>
+        <span class="badge-beta">BETA</span>
       </div>
-      <span class="source-summary-subtitle">Ranked by blocked NPC gift impact</span>
+      <span class="source-summary-subtitle">Ranked by blocked villager gift impact</span>
     </div>
     <div class="source-tiers-wrapper">
-      ${renderTier("quick", "Quick Acquisition", "⚡", "— Instant / Purchasable (Shops, Mill, Forge, Cook)", quickSources)}
-      ${renderTier("grind", "Grind Acquisition", "⛏️", "— Repeatable / Exploration (Mines, Fishing, Foraging)", grindSources)}
-      ${renderTier("farm", "Farm & Ranch", "🌱", "— Seasonal / Planning (Crops, Animals, Feed)", farmSources)}
+      ${renderTier("quick", "Quick Acquisition", '<img class="inline-icon" src="/static/icons/ui/tier_quick.png" alt="Quick">', "— Instant / Purchasable (Shops, Mill, Forge, Cook)", quickSources)}
+      ${renderTier("grind", "Grind Acquisition", '<img class="inline-icon" src="/static/icons/ui/tier_grind.png" alt="Grind">', "— Repeatable / Exploration (Mines, Fishing, Foraging)", grindSources)}
+      ${renderTier("farm", "Farm & Ranch", '<img class="inline-icon" src="/static/icons/ui/tier_farm.png" alt="Farm">', "— Seasonal / Planning (Crops, Animals, Feed)", farmSources)}
     </div>
   `;
 }
@@ -1379,13 +1378,46 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
       else if (fId === 'basic_wood') tree = treeMap.get('wood');
     }
 
+    // Only show "View crafting tree" button if the item has at least one branch in its crafting tree
+    const hasBranches = Boolean(tree && Array.isArray(tree.children) && tree.children.length > 0);
     let treeHtml = "";
-    if (tree) {
+    if (hasBranches) {
       const treeKey = `tree_${fId}_${idx}`;
       window._craftingTreeData[treeKey] = tree;
       treeHtml = `
         <div class="tree-section">
-          <button type="button" class="tree-toggle" onclick="openCraftingTreeModal(window._craftingTreeData['${treeKey}'], ${f.deficit || 0})">🌳 View crafting tree</button>
+          <button type="button" class="tree-toggle" onclick="openCraftingTreeModal(window._craftingTreeData['${treeKey}'], ${f.deficit || 0})"><img class="inline-icon" src="/static/icons/ui/icon_tree.png" alt="Tree"> View crafting tree</button>
+        </div>
+      `;
+    }
+
+    // Resolve and render all alternate acquisition sources for this focus item
+    const altSources = (f.alt_sources && Array.isArray(f.alt_sources) && f.alt_sources.length > 0)
+      ? f.alt_sources
+      : (tree && Array.isArray(tree.alt_sources) ? tree.alt_sources : []);
+
+    let altSourcesHtml = "";
+    if (altSources && altSources.length > 0) {
+      const badgesHtml = altSources.map(s => {
+        const iconUrl = `/assets/sprites/locations/${s.icon || s.type}`;
+        const label = s.vendor || s.location || (s.type === 'chicken_statue' ? 'Chicken Statue' : (s.type === 'wishing_well' ? 'Wishing Well' : (s.type === 'living_off_the_land' ? 'Living Off The Land' : (s.type || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))));
+        const cost = (s.cost !== null && s.cost !== undefined)
+          ? ` (${s.cost}${s.currency === 'tesserae' ? 't' : (s.currency === 'shiny_beads' ? ' beads' : ' ' + (s.currency || ''))})`
+          : '';
+        const note = s.note ? ` [${s.note}]` : '';
+        const fullTitle = `${label}${cost}${note}`.replace(/"/g, '&quot;');
+        return `
+          <span class="focus-alt-badge" title="${fullTitle}">
+            <img class="source-icon" src="${iconUrl}" onerror="this.src='/static/icons/ui/icon_location_pin.png';" alt="${s.type || 'source'}" />
+            <span class="badge-text">${label}${cost}${note ? ' - ' + s.note : ''}</span>
+          </span>
+        `;
+      }).join("");
+
+      altSourcesHtml = `
+        <div class="focus-alt-sources-row">
+          <div><strong><img class="inline-icon" src="/static/icons/ui/icon_sparkle.png" alt="Alt Sources"> Alt Sources:</strong></div>
+          <div class="focus-alt-badges">${badgesHtml}</div>
         </div>
       `;
     }
@@ -1401,9 +1433,10 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
         </div>
 
         <div class="focus-details">
-          <div><strong>📍 Source:</strong> ${f.location || 'Gather / Farm'}</div>
-          <div><strong>📅 Season:</strong> ${seasonsStr}</div>
-          <div><strong>🔒 Unlocks Gifts For:</strong> ${blockedNpcsHtml}</div>
+          <div><strong><img class="inline-icon" src="/static/icons/ui/icon_location_pin.png" alt="Source"> Source:</strong> ${f.location || 'Gather / Farm'}</div>
+          <div><strong><img class="inline-icon" src="/static/icons/ui/icon_calendar.png" alt="Season"> Season:</strong> ${seasonsStr}</div>
+          <div><strong><img class="inline-icon" src="/static/icons/ui/icon_lock.png" alt="Unlocks"> Unlocks Gifts For:</strong> ${blockedNpcsHtml}</div>
+          ${altSourcesHtml}
         </div>
         ${treeHtml}
       </div>
@@ -1444,7 +1477,7 @@ function renderInfusedItems(infused) {
       itemsList = String(v);
     }
     if (itemsList) {
-      html += `<div style="margin-bottom: 6px;"><strong>✨ ${k.toUpperCase()}:</strong> ${itemsList}</div>`;
+      html += `<div style="margin-bottom: 6px;"><strong><img class="inline-icon" src="/static/icons/ui/icon_sparkle.png" alt="Perk"> ${k.toUpperCase()}:</strong> ${itemsList}</div>`;
     }
   }
 
@@ -1468,7 +1501,7 @@ function renderSidebarSummary(data) {
   }
 
   if (coverageSummary && data.stats) {
-    coverageSummary.textContent = `${data.stats.covered_npcs_count || 0} / ${data.stats.target_npcs_count || 0} NPCs`;
+    coverageSummary.textContent = `${data.stats.covered_npcs_count || 0} / ${data.stats.target_npcs_count || 0} Villagers`;
   }
 
   if (activeStrategy && data.config) {
@@ -1528,6 +1561,10 @@ function renderSettingsAccordion(schema, config) {
           }
           submitSettingUpdate("focus_mode_enabled", el.checked);
         });
+        return;
+      }
+
+      if (f.key === "focus_npcs" || f.type === "focus_npc_picker" || f.key === "exclude_npcs" || f.type === "exclude_npc_picker") {
         return;
       }
 
@@ -1594,7 +1631,7 @@ function renderSettingsAccordion(schema, config) {
     });
   }
 
-  // Select All & Deselect All Buttons
+  // Focus Select All & Deselect All Buttons
   const selectAllBtn = document.getElementById("focusNpcSelectAll");
   if (selectAllBtn && focusNpcGrid) {
     selectAllBtn.addEventListener("click", () => {
@@ -1630,6 +1667,83 @@ function renderSettingsAccordion(schema, config) {
     });
   }
 
+  // Exclude NPC Checkbox changes
+  const excludeNpcGrid = document.getElementById("excludeNpcGrid");
+  const excludeCounterBadge = document.getElementById("excludeNpcCounterBadge");
+  if (excludeNpcGrid) {
+    excludeNpcGrid.addEventListener("change", (e) => {
+      if (e.target && e.target.classList.contains("exclude-npc-cb")) {
+        const card = e.target.closest(".focus-npc-card");
+        if (card) {
+          card.classList.toggle("is-checked", e.target.checked);
+          card.classList.toggle("active", e.target.checked);
+        }
+
+        const checkedBoxes = Array.from(excludeNpcGrid.querySelectorAll(".exclude-npc-cb:checked"));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (excludeCounterBadge) {
+          const total = excludeNpcGrid.querySelectorAll(".exclude-npc-cb").length;
+          excludeCounterBadge.textContent = `${selectedIds.length} / ${total} Excluded`;
+        }
+        submitSettingUpdate("exclude_npcs", selectedIds.join(","));
+      }
+    });
+  }
+
+  // Exclude Select All & Deselect All Buttons
+  const excludeSelectAllBtn = document.getElementById("excludeNpcSelectAll");
+  if (excludeSelectAllBtn && excludeNpcGrid) {
+    excludeSelectAllBtn.addEventListener("click", () => {
+      const allBoxes = Array.from(excludeNpcGrid.querySelectorAll(".exclude-npc-cb"));
+      allBoxes.forEach(cb => {
+        cb.checked = true;
+        const card = cb.closest(".focus-npc-card");
+        if (card) {
+          card.classList.add("is-checked");
+          card.classList.add("active");
+        }
+      });
+      const allIds = allBoxes.map(cb => cb.value);
+      if (excludeCounterBadge) excludeCounterBadge.textContent = `${allIds.length} / ${allBoxes.length} Excluded`;
+      submitSettingUpdate("exclude_npcs", allIds.join(","));
+    });
+  }
+
+  const excludeDeselectAllBtn = document.getElementById("excludeNpcDeselectAll");
+  if (excludeDeselectAllBtn && excludeNpcGrid) {
+    excludeDeselectAllBtn.addEventListener("click", () => {
+      const allBoxes = Array.from(excludeNpcGrid.querySelectorAll(".exclude-npc-cb"));
+      allBoxes.forEach(cb => {
+        cb.checked = false;
+        const card = cb.closest(".focus-npc-card");
+        if (card) {
+          card.classList.remove("is-checked");
+          card.classList.remove("active");
+        }
+      });
+      if (excludeCounterBadge) excludeCounterBadge.textContent = `0 / ${allBoxes.length} Excluded`;
+      submitSettingUpdate("exclude_npcs", "");
+    });
+  }
+
+  // Tooltip tap toggle for mobile/touch
+  if (accordion && !accordion._hasHelpTooltipListener) {
+    accordion._hasHelpTooltipListener = true;
+    accordion.addEventListener("click", (e) => {
+      const btn = e.target.closest(".param-help-btn");
+      const wrap = e.target.closest(".param-help-wrap");
+      if (btn && wrap) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wasActive = wrap.classList.contains("is-active");
+        document.querySelectorAll(".param-help-wrap.is-active").forEach(w => w.classList.remove("is-active"));
+        if (!wasActive) {
+          wrap.classList.add("is-active");
+        }
+      }
+    });
+  }
+
   // Attach listeners for sidebar date override card actions
   const sidebarOpenCalBtn = document.getElementById("sidebarOpenCalBtn");
   if (sidebarOpenCalBtn) {
@@ -1646,6 +1760,9 @@ function renderSettingsAccordion(schema, config) {
       await resetDateOverride();
     });
   }
+
+  // Adjust all parameter help tooltips so they don't overflow the right border
+  updateAllHelpTooltipPositions();
 }
 
 // ---------------------------------------------------------------------------
@@ -1675,7 +1792,7 @@ function populateSaveDropdown(data) {
     resetBtn.style.display = isAuto ? "none" : "inline-flex";
   }
 
-  let optionsHtml = `<option value="__auto__" ${isAuto ? "selected" : ""}>★ Auto-Detect (Latest save)</option>`;
+  let optionsHtml = `<option value="__auto__" ${isAuto ? "selected" : ""}>Auto-Detect (Latest save)</option>`;
 
   if (data.saves && data.saves.length > 0) {
     optionsHtml += `<optgroup label="Discovered Game Saves (${data.saves.length})">`;
@@ -1687,18 +1804,18 @@ function populateSaveDropdown(data) {
     optionsHtml += `</optgroup>`;
   }
 
-  optionsHtml += `<option value="__browse__">📁 Browse & Import .sav File...</option>`;
+  optionsHtml += `<option value="__browse__">Browse & Import .sav File...</option>`;
   select.innerHTML = optionsHtml;
 }
 
 async function uploadSaveFile(file) {
   if (!file) return;
   if (!file.name.toLowerCase().endsWith(".sav")) {
-    showToast("⚠️ Invalid file! Please select a Fields of Mistria .sav file.");
+    showToast("Invalid file! Please select a Fields of Mistria .sav file.");
     return;
   }
 
-  showToast(`⏳ Importing "${file.name}"...`, 4000);
+  showToast(`Importing "${file.name}"...`, 4000);
 
   const formData = new FormData();
   formData.append("file", file);
@@ -1726,10 +1843,10 @@ async function uploadSaveFile(file) {
       renderPlan(resData.plan);
     }
     await loadAvailableSaves();
-    showToast(`🎮 Save "${resData.filename || file.name}" imported successfully!`);
+    showToast(`Save "${resData.filename || file.name}" imported successfully!`);
   } catch (err) {
     console.error("Save upload error:", err);
-    showToast(`❌ Import error: ${err.message}`);
+    showToast(`Import error: ${err.message}`);
   }
 }
 
@@ -1770,8 +1887,44 @@ const DEFAULT_34_NPCS = [
   { id: "zorel", name: "Zorel" },
 ];
 
+function adjustHelpTooltipPosition(wrap) {
+  if (!wrap) return;
+  const tooltip = wrap.querySelector(".param-help-tooltip");
+  if (!tooltip) return;
+
+  // Measure wrapping button position relative to window and parent card/sidebar
+  const wrapRect = wrap.getBoundingClientRect();
+  const card = wrap.closest(".sidebar-card, .sidebar") || document.body;
+  const cardRect = card.getBoundingClientRect();
+  const maxRight = Math.min(window.innerWidth - 12, cardRect.right - 8);
+
+  // If tooltip starting at wrapRect.left would exceed maxRight boundary, align to right
+  if (wrapRect.left + 210 > maxRight) {
+    tooltip.classList.add("align-right");
+    wrap.classList.add("tooltip-align-right");
+  } else {
+    tooltip.classList.remove("align-right");
+    wrap.classList.remove("tooltip-align-right");
+  }
+}
+
+function updateAllHelpTooltipPositions() {
+  document.querySelectorAll(".param-help-wrap").forEach(adjustHelpTooltipPosition);
+}
+
+function renderHelpIcon(helpText, label = "") {
+  if (!helpText) return "";
+  return `
+    <span class="param-help-wrap">
+      <button type="button" class="param-help-btn" aria-label="Explanation for ${label || 'parameter'}" tabindex="0"><img class="inline-icon" src="/static/icons/ui/icon_info.svg" alt="Info"></button>
+      <span class="param-help-tooltip" role="tooltip">${helpText}</span>
+    </span>
+  `;
+}
+
 function renderField(field, currentVal, config = {}) {
   const id = `setting_${field.key}`;
+  const helpHtml = renderHelpIcon(field.help, field.label);
 
   if (field.type === "focus_npc_picker" || field.key === "focus_npcs") {
     const isModeEnabled = Boolean((config && config.focus_mode_enabled !== undefined) ? config.focus_mode_enabled : currentSettings?.focus_mode_enabled);
@@ -1807,6 +1960,7 @@ function renderField(field, currentVal, config = {}) {
 
     return `
       <div class="field-group focus-npc-picker-group">
+        <label>${field.label}${helpHtml}</label>
         <div id="focusNpcContainer" class="focus-npc-container" style="${isModeEnabled ? '' : 'display: none;'}">
           <div class="focus-npc-toolbar">
             <div class="focus-npc-actions">
@@ -1823,12 +1977,63 @@ function renderField(field, currentVal, config = {}) {
     `;
   }
 
+  if (field.type === "exclude_npc_picker" || field.key === "exclude_npcs") {
+    const selectedNpcs = new Set(
+      (currentVal || "")
+        .split(",")
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    let npcList = field.options;
+    if (!npcList && currentPlan?.npc_progress) {
+      npcList = Object.values(currentPlan.npc_progress).map(n => ({
+        id: String(n.npc_id || '').toLowerCase(),
+        name: n.name || n.npc_id,
+      }));
+    }
+    if (!npcList || npcList.length === 0) {
+      npcList = DEFAULT_34_NPCS;
+    }
+
+    const cardsHtml = npcList.map(npc => {
+      const isChecked = selectedNpcs.has(npc.id.toLowerCase());
+      const activeClass = isChecked ? 'is-checked active' : '';
+      return `
+        <label class="focus-npc-card ${activeClass}" for="exclude_npc_${npc.id}">
+          <input type="checkbox" class="exclude-npc-cb" id="exclude_npc_${npc.id}" value="${npc.id}" ${isChecked ? 'checked' : ''} />
+          <img class="focus-npc-portrait" src="/assets/sprites/npcs/${npc.id}" alt="${npc.name}" loading="lazy" />
+          <span class="focus-npc-name" title="${npc.name}">${npc.name}</span>
+        </label>
+      `;
+    }).join("");
+
+    return `
+      <div class="field-group exclude-npc-picker-group">
+        <label>${field.label}${helpHtml}</label>
+        <div id="excludeNpcContainer" class="focus-npc-container">
+          <div class="focus-npc-toolbar">
+            <div class="focus-npc-actions">
+              <button type="button" class="focus-npc-btn" id="excludeNpcSelectAll">Exclude All</button>
+              <button type="button" class="focus-npc-btn" id="excludeNpcDeselectAll">Clear</button>
+            </div>
+            <span class="focus-npc-counter" id="excludeNpcCounterBadge">${selectedNpcs.size} / ${npcList.length} Excluded</span>
+          </div>
+          <div class="focus-npc-grid" id="excludeNpcGrid">
+            ${cardsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   if (field.type === "checkbox") {
     const checked = currentVal ? "checked" : "";
     return `
       <div class="checkbox-group">
         <input type="checkbox" id="${id}" ${checked} />
         <label for="${id}">${field.label}</label>
+        ${helpHtml}
       </div>
     `;
   }
@@ -1841,7 +2046,7 @@ function renderField(field, currentVal, config = {}) {
 
     return `
       <div class="field-group">
-        <label for="${id}">${field.label}</label>
+        <label for="${id}">${field.label}${helpHtml}</label>
         <select id="${id}">${optionsHtml}</select>
       </div>
     `;
@@ -1856,11 +2061,11 @@ function renderField(field, currentVal, config = {}) {
 
     return `
       <div class="field-group">
-        <label>${field.label}</label>
+        <label>${field.label}${helpHtml}</label>
         <div class="date-override-card">
           <div class="date-override-status-row">
             <div class="date-override-badge-active">
-              <span>📅</span>
+              <img class="inline-icon" src="/static/icons/ui/icon_calendar.png" alt="Calendar">
               <span>${targetDateStr}</span>
             </div>
             <span class="date-override-state-pill ${isOverridden ? 'pill-overridden' : 'pill-live'}">
@@ -1876,11 +2081,11 @@ function renderField(field, currentVal, config = {}) {
 
           <div class="date-override-actions">
             <button type="button" class="btn-cal-action btn-cal-primary" id="sidebarOpenCalBtn" title="Open interactive 28-day FoM calendar">
-              📅 Open Calendar
+              <img class="inline-icon" src="/static/icons/ui/icon_calendar.png" alt="Calendar"> Open Calendar
             </button>
             ${isOverridden ? `
               <button type="button" class="btn-cal-action btn-cal-reset" id="sidebarResetDateBtn" title="Reset date override and follow game save">
-                ↺ Reset
+                <img class="inline-icon" src="/static/icons/ui/icon_refresh.svg" alt="Reset"> Reset
               </button>
             ` : ''}
           </div>
@@ -1897,7 +2102,7 @@ function renderField(field, currentVal, config = {}) {
     const val = currentVal ?? field.min;
     return `
       <div class="field-group">
-        <label for="${id}">${field.label}</label>
+        <label for="${id}">${field.label}${helpHtml}</label>
         <div class="range-wrap">
           <input type="range" id="${id}" min="${field.min}" max="${field.max}" step="${field.step}" value="${val}" />
           <span class="range-val" id="val_${field.key}">${val}</span>
@@ -1913,7 +2118,7 @@ function renderField(field, currentVal, config = {}) {
 
   return `
     <div class="field-group">
-      <label for="${id}">${field.label}</label>
+      <label for="${id}">${field.label}${helpHtml}</label>
       <input type="${inputType}" id="${id}" ${valAttr} ${placeholderAttr} ${minMaxAttr} />
     </div>
   `;
@@ -2030,8 +2235,8 @@ function updateCalendarStatusBar() {
   const fest = FOM_FESTIVALS[selSeason]?.[selDay];
 
   let desc = `${capSeason} Day ${selDay}, Year ${selYear}`;
-  if (isSat) desc += " ★ (Saturday Market)";
-  if (fest) desc += ` 🎉 (${fest})`;
+  if (isSat) desc += " • (Saturday Market)";
+  if (fest) desc += ` • (${fest})`;
   textEl.textContent = desc;
 
   if (badgeEl) {
@@ -2096,12 +2301,12 @@ function renderCalendarDaysGrid() {
         <div class="cal-cell-top">
           <span class="cal-cell-number">${day}</span>
           <div class="cal-cell-badges">
-            ${isSat ? '<span class="cal-cell-sat-tag">★ Sat</span>' : ''}
-            ${isSaveDate ? '<span class="cal-cell-save-tag">🎮 Save</span>' : ''}
+            ${isSat ? '<span class="cal-cell-sat-tag"><img class="inline-icon" src="/static/icons/ui/icon_saturday.png" alt="Sat"> Sat</span>' : ''}
+            ${isSaveDate ? '<span class="cal-cell-save-tag"><img class="inline-icon" src="/static/icons/ui/icon_save.png" alt="Save"> Save</span>' : ''}
           </div>
         </div>
         <div class="cal-cell-content">
-          ${festName ? `<span class="cal-cell-fest-tag" title="${festName}">🎉 ${festName}</span>` : ''}
+          ${festName ? `<span class="cal-cell-fest-tag" title="${festName}"><img class="inline-icon" src="/static/icons/ui/icon_festival.png" alt="Festival"> ${festName}</span>` : ''}
         </div>
       </div>
     `;
@@ -2142,13 +2347,13 @@ async function applyCalendarModalDone() {
   closeCalendarModal();
 
   if (pendingReset) {
-    showToast("↺ Reverting to game save date...", 2000);
+    showToast("Reverting to game save date...", 2000);
     await submitSettingUpdate("date_override", "");
     await loadSettings();
   } else if (isDirty) {
     const capSeason = selSeason.charAt(0).toUpperCase() + selSeason.slice(1);
     const formatted = `${capSeason} ${selDay}, Year ${selYear}`;
-    showToast(`📅 Applying date override: ${formatted}...`, 2000);
+    showToast(`Applying date override: ${formatted}...`, 2000);
     await submitSettingUpdate("date_override", formatted);
     await loadSettings();
   }
@@ -2175,7 +2380,7 @@ function stageResetToSaveDate() {
 }
 
 async function resetDateOverride() {
-  showToast("↺ Reverting to game save date...", 2000);
+  showToast("Reverting to game save date...", 2000);
   await submitSettingUpdate("date_override", "");
   const inGame = currentPlan?.in_game_date || {};
   const saveDate = inGame.save_date;
@@ -2436,6 +2641,43 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       toggleBlockedNpcs(collapseBtn, false);
       return;
+    }
+
+    // Backdrop touch / outside click to collapse active stats drawer on mobile
+    if (activeStatsDrawer) {
+      const activeDrawerEl = document.getElementById(`drawer${activeStatsDrawer.charAt(0).toUpperCase() + activeStatsDrawer.slice(1)}`);
+      if (activeDrawerEl && activeDrawerEl.style.display !== "none") {
+        if (!activeDrawerEl.contains(e.target) && !e.target.closest(".stat-drawer-toggle-btn") && !e.target.closest(".stat-card")) {
+          setStatsDrawer(activeStatsDrawer);
+        }
+      }
+    }
+  });
+
+  // Dynamic tooltip alignment on mouseenter and focusin to prevent right border overflow
+  document.addEventListener("mouseenter", (e) => {
+    const wrap = e.target.closest && e.target.closest(".param-help-wrap");
+    if (wrap) adjustHelpTooltipPosition(wrap);
+  }, true);
+
+  document.addEventListener("focusin", (e) => {
+    const wrap = e.target.closest && e.target.closest(".param-help-wrap");
+    if (wrap) adjustHelpTooltipPosition(wrap);
+  }, true);
+
+  // Responsive window resize for D3 crafting tree container and tooltip positioning
+  window.addEventListener("resize", () => {
+    updateAllHelpTooltipPositions();
+    const treeModal = document.getElementById("treeModal");
+    if (treeModal && treeModal.style.display !== "none" && _treeModalSvg) {
+      const body = document.getElementById("treeModalBody");
+      if (body) {
+        const w = body.clientWidth;
+        const h = body.clientHeight;
+        if (w > 0 && h > 0) {
+          _treeModalSvg.attr("width", w).attr("height", h);
+        }
+      }
     }
   });
 });

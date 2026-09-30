@@ -262,7 +262,7 @@ def test_calendar_ui_saturday_button_removed_and_done_applied(repo_root):
 
     # 2. Calendar button still exists in sidebar
     assert "sidebarOpenCalBtn" in app_js
-    assert "📅 Open Calendar" in app_js
+    assert "Open Calendar" in app_js
 
     # 3. Calendar Done button applies the staged date override
     assert "applyCalendarModalDone" in app_js

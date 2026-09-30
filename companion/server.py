@@ -112,7 +112,7 @@ async def lifespan(app: FastAPI):
         state.watcher.stop()
 
 
-app = FastAPI(title="Fields of Mistria Live Companion", lifespan=lifespan)
+app = FastAPI(title="Mistria Gift Planner", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -761,7 +761,7 @@ def launch():
     port = config.server_port or 8000
 
     print("=" * 70)
-    print("🌾 FIELDS OF MISTRIA — LIVE COMPANION SERVER")
+    print("🌾 MISTRIA GIFT PLANNER SERVER")
     print(f"📡 Serving at: http://{host}:{port}")
     print("👀 Live Save Watcher active (auto-refreshes on every save)")
     print("=" * 70)

@@ -2,7 +2,7 @@
 companion/config.py
 
 Configuration model, serialization, and grouped metadata for the
-Fields of Mistria Live Companion App.
+Mistria Gift Planner App.
 Designed for seamless cross-platform usage (Windows & Linux).
 """
 
@@ -71,6 +71,8 @@ class CompanionConfig:
         filtered = {k: v for k, v in data.items() if k in valid_fields}
         if "focus_npcs" in filtered and isinstance(filtered["focus_npcs"], (list, set, tuple)):
             filtered["focus_npcs"] = ",".join(str(x).strip() for x in filtered["focus_npcs"] if str(x).strip())
+        if "exclude_npcs" in filtered and isinstance(filtered["exclude_npcs"], (list, set, tuple)):
+            filtered["exclude_npcs"] = ",".join(str(x).strip() for x in filtered["exclude_npcs"] if str(x).strip())
         if "focus_mode_enabled" in filtered and not isinstance(filtered["focus_mode_enabled"], bool):
             filtered["focus_mode_enabled"] = bool(filtered["focus_mode_enabled"])
         return cls(**filtered)
@@ -121,6 +123,7 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                         {"value": "journal", "label": "Journal Completion (Discover unrecorded gifts)"},
                         {"value": "max-relationship", "label": "Max Relationship (Daily points + Infused dishes)"},
                     ],
+                    "help": "Choose Journal Completion (discovering unrecorded preferences) or Max Relationship (maximizing friendship points).",
                 },
                 {
                     "key": "mode",
@@ -128,47 +131,48 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "type": "select",
                     "options": [
                         {"value": "auto", "label": "Auto (Follow save calendar day)"},
-                        {"value": "saturday", "label": "Saturday Market (All 34 NPCs + Vendor Boost)"},
+                        {"value": "saturday", "label": "Saturday Market (All 34 Villagers + Vendor Boost)"},
                         {"value": "weekday", "label": "Weekday (26 Townsfolk only)"},
-                        {"value": "market-only", "label": "Market Vendors Only (8 NPCs)"},
-                        {"value": "all", "label": "All NPCs (Ignore calendar)"},
+                        {"value": "market-only", "label": "Market Vendors Only (8 Villagers)"},
+                        {"value": "all", "label": "All Villagers (Ignore calendar)"},
                     ],
+                    "help": "Filter villagers by schedule (Auto from save date, Saturday Market, Weekday townsfolk, or Market Vendors).",
                 },
                 {
                     "key": "slots",
                     "label": "Bag Slots Budget",
                     "type": "number",
                     "min": 1,
-                    "max": 40,
+                    "max": 30,
                     "step": 1,
-                },
-                {
-                    "key": "focus_sort",
-                    "label": "Focus Suggestions Sort",
-                    "type": "select",
-                    "options": [
-                        {"value": "impact", "label": "Impact (Most blocked NPC gifts first)"},
-                        {"value": "deficit", "label": "Deficit (Largest shortage first)"},
-                        {"value": "quick-wins", "label": "Quick Wins (Closest to completion)"},
-                    ],
-                },
-                {
-                    "key": "all_seasons",
-                    "label": "Show All Seasons for Focus Items",
-                    "type": "checkbox",
+                    "help": "Maximum daily inventory bag slots allocated for gift items (1–30).",
                 },
                 {
                     "key": "date_override",
                     "label": "Date Override",
                     "type": "date_override",
                     "placeholder": "Leave empty for save date",
+                    "help": "Simulate an upcoming day, season, or festival instead of your current save file's date.",
                 },
-            ],
-        },
-        {
-            "group": "Scoring Weights",
-            "id": "scoring",
-            "fields": [
+                {
+                    "key": "exclude_npcs",
+                    "label": "Exclude Villagers",
+                    "type": "exclude_npc_picker",
+                    "placeholder": "Select villagers to exclude",
+                    "help": "Choose specific villagers to omit from all gift planning.",
+                },
+                {
+                    "key": "force_all_npcs",
+                    "label": "Include Already-Gifted Villagers",
+                    "type": "checkbox",
+                    "help": "Plan gifts even for villagers already gifted on the current in-game day.",
+                },
+                {
+                    "key": "no_exclude_max_relationship",
+                    "label": "Include Villagers at Max Hearts (10 Hearts)",
+                    "type": "checkbox",
+                    "help": "Continue planning gifts for villagers who have already reached 10 hearts.",
+                },
                 {
                     "key": "loved_weight",
                     "label": "Loved Gift Weight",
@@ -176,6 +180,7 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "min": 1,
                     "max": 10,
                     "step": 1,
+                    "help": "Scoring multiplier for loved gift recommendations (higher means prioritize more).",
                 },
                 {
                     "key": "liked_weight",
@@ -184,6 +189,7 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "min": 1,
                     "max": 10,
                     "step": 1,
+                    "help": "Scoring multiplier for liked gift recommendations (higher means prioritize more).",
                 },
                 {
                     "key": "vendor_boost",
@@ -192,6 +198,43 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "min": 1.0,
                     "max": 5.0,
                     "step": 0.1,
+                    "help": "Extra score priority for market vendors who only visit town on Saturdays (higher means prioritize more).",
+                },
+            ],
+        },
+        {
+            "group": "Focus Suggestions",
+            "id": "focus_suggestions",
+            "fields": [
+                {
+                    "key": "focus_mode_enabled",
+                    "label": "Focus Mode",
+                    "type": "checkbox",
+                    "help": "Restrict gift recommendations and focus suggestions solely to selected villagers.",
+                },
+                {
+                    "key": "focus_npcs",
+                    "label": "Focus Villagers",
+                    "type": "focus_npc_picker",
+                    "placeholder": "e.g. adeline, balor",
+                    "help": "Choose which specific villagers to prioritize when Focus Mode is active.",
+                },
+                {
+                    "key": "focus_sort",
+                    "label": "Focus Suggestions Sort",
+                    "type": "select",
+                    "options": [
+                        {"value": "impact", "label": "Impact (Most blocked villager gifts first)"},
+                        {"value": "deficit", "label": "Deficit (Largest shortage first)"},
+                        {"value": "quick-wins", "label": "Quick Wins (Closest to completion)"},
+                    ],
+                    "help": "Order blockers by Impact (unblocks most gifts), Deficit (largest quantity needed), or Quick Wins.",
+                },
+                {
+                    "key": "all_seasons",
+                    "label": "Show All Seasons for Focus Items",
+                    "type": "checkbox",
+                    "help": "Include out-of-season material blockers alongside current season items.",
                 },
                 {
                     "key": "seasonal_boost",
@@ -200,48 +243,7 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "min": 1.0,
                     "max": 5.0,
                     "step": 0.5,
-                },
-            ],
-        },
-        {
-            "group": "NPC Filters",
-            "id": "npc_filters",
-            "fields": [
-                {
-                    "key": "focus_mode_enabled",
-                    "label": "Focus Mode",
-                    "type": "checkbox",
-                },
-                {
-                    "key": "focus_npcs",
-                    "label": "Focus NPCs",
-                    "type": "focus_npc_picker",
-                    "placeholder": "e.g. adeline, balor",
-                },
-                {
-                    "key": "exclude_npcs",
-                    "label": "Exclude NPCs (comma-separated IDs)",
-                    "type": "text",
-                    "placeholder": "e.g. balor, eiland",
-                },
-                {
-                    "key": "force_all_npcs",
-                    "label": "Include Already-Gifted NPCs",
-                    "type": "checkbox",
-                },
-                {
-                    "key": "no_exclude_max_relationship",
-                    "label": "Include NPCs at Max Hearts (10 Hearts)",
-                    "type": "checkbox",
-                },
-                {
-                    "key": "max_relationship_points",
-                    "label": "Max Heart Points Threshold",
-                    "type": "number",
-                    "min": 100,
-                    "max": 5000,
-                    "step": 50,
-                    "placeholder": "Default: 1755.0",
+                    "help": "Priority multiplier for raw materials available in the current season (higher means prioritize more).",
                 },
             ],
         },

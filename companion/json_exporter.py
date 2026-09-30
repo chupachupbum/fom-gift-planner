@@ -162,11 +162,43 @@ def plan_to_json(
         except Exception:
             all_recipes = {}
 
+    alt_sources_data = plan_results.get("alt_sources")
+    if alt_sources_data is None:
+        try:
+            from fom_planner.data_loader import load_alt_sources
+            alt_sources_data = load_alt_sources()
+        except Exception:
+            alt_sources_data = {}
+
+    item_aliases = {
+        "milk": "cow_milk",
+        "cow_milk": "milk",
+        "golden_milk": "golden_cow_milk",
+        "golden_cow_milk": "golden_milk",
+        "wood": "basic_wood",
+        "basic_wood": "wood",
+        "stone": "ore_stone",
+        "ore_stone": "stone",
+        "rice_ball": "riceball",
+        "riceball": "rice_ball",
+        "tea": "cup_of_tea",
+        "cup_of_tea": "tea",
+    }
+
     focus_suggestions: List[Dict[str, Any]] = []
     for f in focus_raw:
         f_id = str(f.get("item_id", "")).strip().lower()
         impact_score = f.get("weighted_impact") if f.get("weighted_impact") is not None else f.get("impact_score", 0)
         location = f.get("location_hint") or f.get("location") or "Gather / Farm"
+
+        # Resolve alt sources for item
+        alt_sources_list = []
+        if isinstance(alt_sources_data, dict):
+            alt_sources_list = alt_sources_data.get(f_id, [])
+            if not alt_sources_list and f_id in item_aliases:
+                alt_sources_list = alt_sources_data.get(item_aliases[f_id], [])
+        if not alt_sources_list and f.get("alt_sources"):
+            alt_sources_list = f.get("alt_sources", [])
 
         blocked_raw = f.get("blocked_npcs")
         if blocked_raw:
@@ -205,6 +237,7 @@ def plan_to_json(
             "is_seasonal": bool(f.get("is_seasonal", False)),
             "blocked_npcs": blocked_list,
             "sprite_url": f"/assets/sprites/items/{f_id}",
+            "alt_sources": _to_serializable(alt_sources_list),
         })
 
     # NPC Overview & Completed / Incomplete Breakdown
