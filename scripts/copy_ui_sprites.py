@@ -48,7 +48,7 @@ SPRITE_MAP = {
     ),
     "icon_stats.png": (
         ANIM_DIR / "UI NEW/Inventory and Storage/Storage Chest Bark Icons/spr_ui_storage_chest_bark_icon_crown.png",
-        None,
+        (7, 8, 17, 15),
     ),
     "icon_star.png": (
         ANIM_DIR / "UI NEW/Barks/spr_ui_bark_icon_stars.png",
@@ -64,7 +64,7 @@ SPRITE_MAP = {
     ),
     "icon_bag.png": (
         ANIM_DIR / "Item Icons/Wearable/spr_ui_item_wearable_back_gear_pumpkin_backpack.png",
-        None,
+        (3, 3, 15, 14),
     ),
     "icon_wheat.png": (
         PROJECT_ROOT / "companion/static/icons/items/spr_ui_item_wheat.png",
@@ -72,7 +72,7 @@ SPRITE_MAP = {
     ),
     "icon_perk_essence.png": (
         ANIM_DIR / "UI NEW/Inventory and Storage/Storage Chest Bark Icons/spr_ui_storage_chest_bark_icon_magic.png",
-        None,
+        (6, 7, 17, 16),
     ),
     "icon_save.png": (
         ANIM_DIR / "UI NEW/Barks/spr_ui_bark_icon_saving.png",

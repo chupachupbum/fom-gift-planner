@@ -3846,8 +3846,9 @@ details.source-tier-accordion[open] .tier-chevron {
    ========================================================================== */
 
 .section-icon {
-  width: 22px;
+  width: auto;
   height: 22px;
+  max-width: 28px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   vertical-align: middle;
@@ -3856,8 +3857,9 @@ details.source-tier-accordion[open] .tier-chevron {
 }
 
 .inline-icon {
-  width: 14px;
+  width: auto;
   height: 14px;
+  max-width: 18px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   vertical-align: middle;
@@ -3918,13 +3920,50 @@ footer.app-footer {
 .footer-disclaimer-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-outline-soft);
+  margin-bottom: 4px;
 }
 
 .footer-disclaimer-wrap .footer-disclaimer {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.footer-coffee-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.footer-coffee-prompt {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  .footer-disclaimer-wrap {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding-bottom: 14px;
+  }
+
+  .footer-disclaimer-wrap .footer-disclaimer {
+    text-align: center;
+  }
+
+  .footer-coffee-cta {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 }
 
 .bmac-button {
