@@ -2,17 +2,13 @@
 """
 main.py
 
-Primary entry point for Fields of Mistria gift planner and optimization tools.
+Primary entry point for Fields of Mistria gift planner web companion.
 
 Usage:
-    python main.py                           # Run daily gift planner (auto-detects save)
-    python main.py --mode saturday --slots 15 # Plan Saturday Market day
-    python main.py --format terminal          # Display plan in terminal
-    python main.py rankings --sort-by total   # Export gift ranking matrices
-    python main.py --help                     # Show options
+    python main.py          # Launch companion web server
 """
 
-from fom_planner.cli import main
+from companion.server import launch
 
 if __name__ == "__main__":
-    main()
+    launch()

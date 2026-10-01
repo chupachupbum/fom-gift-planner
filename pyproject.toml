@@ -16,9 +16,6 @@ keywords = ["fields-of-mistria", "gift-planner", "game-tools"]
 dependencies = []
 
 [project.optional-dependencies]
-excel = [
-    "openpyxl>=3.1.0",
-]
 companion = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
@@ -27,14 +24,11 @@ companion = [
 ]
 
 [project.scripts]
-fom-planner = "fom_planner.cli:main"
-gift-planner = "fom_planner.cli:main"
 fom-companion = "companion.server:launch"
 
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
-    "openpyxl>=3.1.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "watchdog>=4.0.0",
@@ -47,3 +41,7 @@ packages = ["fom_planner", "companion"]
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

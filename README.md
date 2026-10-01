@@ -39,78 +39,35 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 - **Focus Crafting Trees & Downstream Dependency Breakdown**:
   - Automatically calculates downstream crafting dependencies for top blocker items (e.g. `milk` → `cheese`, `wood` → `wooden_chest`).
   - Displays recipient NPCs unlocked by each downstream craft and indicates required crafting stations (Kitchen, Mill, Crafting Bench, Smelter).
-  - Visualized as interactive tree nodes in the Companion Web UI, tree branches in Terminal output, and a dedicated "Focus Trees" sheet in Excel exports.
+  - Visualized as interactive tree nodes in the Web Companion UI.
 - **Alternate Acquisition Sources (`data/alt_sources.json`)**:
   - Maps items and ingredients to alternate acquisition paths: shops (Balor's Wagon, General Store, Hayden's Ranch, Tack Shop, Sleeping Dragon Inn), Saturday Market stalls, Chicken Statue offerings, Wishing Well wishes, Mining chests & Mimics, Mill processing, Fishing, Quests, Museum rewards, Festivals, and Living off the Land Farming perk bonus drops.
   - Badges indicate vendor/source, buy cost, currency (`tesserae` vs `shiny_beads`), and special availability notes.
-- **Zero Mandatory Dependencies**: Runs entirely on Python's standard library. Optional Excel export via `openpyxl`.
-- **Gift Rankings Exporter**: Includes `export_gift_rankings.py` to rank all 440+ giftable items by popularity across the 34 NPCs.
+- **Zero External Core Dependencies**: The core optimization engine runs entirely on standard Python 3.10+.
 
 ---
 
 ## Requirements
 
-- **Python 3.10 or newer** (built-in standard library is all that's required for core features).
-- Recommended: **[uv](https://docs.astral.sh/uv/)** for fast, reproducible dependency and environment management.
+- **Python 3.10 or newer**
+- Recommended: **[uv](https://docs.astral.sh/uv/)** for fast, reproducible dependency and environment management:
   ```bash
-  # Install dependencies and sync environment (includes dev tools and optional Excel support)
+  # Install dependencies and sync environment
   uv sync
-  ```
-- *(Alternative via pip)* `openpyxl` if you want to export `.xlsx` Excel spreadsheets:
-  ```bash
-  pip install -r requirements.txt
-  # or: pip install -e ".[excel]"
   ```
 
 ---
 
 ## Quick Start
 
-### 1. Test Immediately (Using Included Sample Save)
-
-You don't even need the game installed to try it out! A realistic sample save file is included in `samples/`:
-
-```bash
-# Run daily planner on sample save (using uv or python)
-uv run fom-planner --save-file samples/sample_save.sav --format terminal
-# or: python main.py --save-file samples/sample_save.sav --format terminal
-
-# Simulate Saturday Market planning
-uv run fom-planner --save-file samples/sample_save.sav --mode saturday
-# or: python main.py --save-file samples/sample_save.sav --mode saturday
-
-# Export gift rankings table to terminal or CSV
-uv run fom-planner rankings --format terminal --top 10
-uv run fom-planner rankings --format csv
-```
-
-### 2. Run with Your Own Game Save
-
-By default, running `uv run fom-planner` or `python main.py` automatically detects your most recent Fields of Mistria save file on Windows or Linux/Steam Deck!
-
-```bash
-uv run fom-planner
-# or: python main.py
-```
-
-Or specify your save file manually:
-
-```bash
-uv run fom-planner --save-file "path/to/your/save.sav"
-```
-
-### 3. Launch Live Companion Web App (Auto-Updates When You Save!)
+### 1. Launch Live Companion Web App (Auto-Updates When You Save!)
 
 Run the companion on your second monitor or in the background while playing Fields of Mistria on Windows or Linux:
 
 ```bash
-# Install companion dependencies (FastAPI, uvicorn, watchdog, python-multipart)
-uv sync --extra companion
-# or: pip install -e ".[companion]"
-
 # Start companion server
 uv run fom-companion
-# or: python -m companion.server
+# or: python main.py
 ```
 
 Then open **[http://localhost:8000](http://localhost:8000)** in any browser.
@@ -121,6 +78,10 @@ Then open **[http://localhost:8000](http://localhost:8000)** in any browser.
 - 🌾 **Focus Suggestions & Interactive Crafting Trees**: Pinpoints top blocker raw materials to gather or plant today, with expandable downstream crafting trees and vendor/alternate-source badges.
 - ⚙️ **All Parameters Configurable**: Change strategy (`journal` vs `max-relationship`), bag slot budget, date overrides, scoring multipliers, or NPC exclusions directly from the sidebar.
 - 🪟 **Cross-Platform & Windows Optimized**: Supports Windows filesystem semantics, atomic save rename handling, and Proton/Steam Deck/Linux save detection.
+
+### 2. Client-Side Static Web App
+
+A 100% client-side web version runs directly in the browser via Pyodide WebAssembly in `web/index.html` (deployable to GitHub Pages).
 
 ---
 
@@ -149,73 +110,20 @@ Fields of Mistria save files (`.sav`) are located at:
 
 ---
 
-## CLI Options & Usage
+## Companion Configuration & Features
 
-Run the daily planner directly:
+All planner features are dynamically controlled through the companion web interface:
 
-```bash
-python main.py [OPTIONS]
-```
-*(Note: `python gift_planner.py` remains supported as a backward-compatible alias).*
-
-| Option | Choices / Default | Description |
+| Setting | Choices / Default | Description |
 |---|---|---|
-| `--save-file` | *(auto-detect)* | Path to a specific `.sav` file. |
-| `--strategy` | `journal`, `max-relationship` (default: `journal`) | Optimization strategy: `journal` targets unrecorded preferences; `max-relationship` maximizes daily friendship points gained across all characters. |
-| `--mode` | `auto`, `saturday`, `market-only`, `townsfolk`, `all` (default: `auto`) | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets visiting vendors; `townsfolk` targets permanent residents; `all` plans all eligible NPCs. Respects player unlock progression when save is provided. |
-| `--slots` | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
-| `--max-relationship-points` | Float (default: `1755.0`) | Affection/heart points threshold to consider an NPC maxed out. |
-| `--no-exclude-max-relationship` | Flag | Include characters in the gift plan even if they have reached max relationship. |
-| `--item-locations` | Path (default: `data/item_locations.json`) | Path to item locations database. |
-| `--format` | `terminal`, `csv`, `excel`, `all`, `both` (default: `all`) | Output destination format. |
-| `--output-dir` | Path (default: `exports`) | Output directory for CSV and Excel files. |
-| `--loved-weight`| Integer (default: `3`) | Score weight multiplier for loved gifts. |
-| `--liked-weight`| Integer (default: `1`) | Score weight multiplier for liked gifts. |
-| `--vendor-boost`| Float (default: `1.5`) | Score multiplier for Saturday Market vendors on Saturdays. |
-| `--force-all-npcs`| Flag | Plan gifts for all NPCs even if already gifted today. |
-| `--exclude-npcs`| Comma-separated string | Exclude specific NPCs by ID (e.g. `--exclude-npcs adeline,march`). |
-| `--focus-sort` | `impact`, `deficit`, `quick-wins` (default: `impact`) | Ranking criteria for focus suggestions: `impact` (most blocked gifts first), `deficit` (largest missing count first), or `quick-wins` (closest to completion first). |
-
-### Examples
-
-```bash
-# Maximize daily friendship points across all available NPCs
-python main.py --strategy max-relationship --format terminal
-
-# Rank focus suggestions by largest shortage count (deficit)
-python main.py --focus-sort deficit
-
-# Rank focus suggestions by quick wins (smallest deficit first)
-python main.py --focus-sort quick-wins
-
-# Plan Saturday Market with 22 bag slots under max-relationship strategy
-python main.py --strategy max-relationship --mode saturday --slots 22
-
-# Plan Saturday Market with 15 bag slots and output to terminal
-python main.py --mode saturday --slots 15 --format terminal
-
-# Export daily plan to CSV only
-python main.py --format csv
-
-# Plan for all NPCs regardless of whether they were gifted today
-python main.py --force-all-npcs
-```
-
----
-
-## Item Gift Rankings Exporter
-
-To analyze which items are most universally loved or liked across all characters in Mistria:
-
-```bash
-python main.py rankings [OPTIONS]
-# or: python export_gift_rankings.py [OPTIONS]
-```
-
-Options:
-- `--sort-by [total|loved|liked]`: Primary ranking metric (default: `total`).
-- `--top N`: Limit output to top N items.
-- `--format [csv|excel|both|terminal]`: Export format (default: `both`).
+| **Save File** | Auto-detect or file upload | Select an existing save or drop in a new `.sav` file. |
+| **Strategy** | `journal` / `max-relationship` | Optimization strategy: `journal` targets unrecorded preferences; `max-relationship` maximizes daily friendship points gained across all characters. |
+| **Mode** | `auto`, `saturday`, `market-only`, `townsfolk`, `all` | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets visiting vendors; `townsfolk` targets permanent residents; `all` plans all eligible NPCs. |
+| **Bag Slots Budget** | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
+| **Max Relationship Cap** | 1,755 points / 10 hearts | Characters at max relationship are automatically excluded unless disabled in settings. |
+| **Date Override** | Day number, season name, or festival | Simulate future dates (e.g. `saturday`, `winter 10` for Animal Festival) without advancing your game save. |
+| **Focus Sort** | `impact`, `deficit`, `quick-wins` | Ranking criteria for focus suggestions: `impact` (most blocked gifts first), `deficit` (largest missing count first), or `quick-wins` (closest to completion first). |
+| **NPC Exclusions** | Selection list | Exclude specific NPCs from planning. |
 
 ---
 
@@ -224,74 +132,66 @@ Options:
 ```
 fom-gift-planner/
 ├── README.md                 # Project documentation
-├── pyproject.toml            # Project metadata, dependencies, and CLI entry points
+├── pyproject.toml            # Project metadata and dependencies
 ├── uv.lock                   # Deterministic lockfile for uv
-├── requirements.txt          # Optional dependencies (openpyxl)
-├── main.py                   # Primary unified CLI entry point
+├── main.py                   # Primary entry point (launches companion server)
 │
-├── fom_planner/              # Modular package
-│   ├── __init__.py           # Public API re-exports
+├── fom_planner/              # Core optimization and domain package
+│   ├── __init__.py           # Public API exports
 │   ├── constants.py          # Vendors, festivals, and availability tiers
 │   ├── models.py             # Domain models (InGameDate, SaveData, CraftingPlan)
 │   ├── parser.py             # Binary save decompressor & parser
 │   ├── crafting.py           # Recursive DAG recipe calculator & material deduction
 │   ├── data_loader.py        # Database loaders (locations, recipes, metadata, alt sources)
 │   ├── optimizer.py          # Greedy set-cover, max-relationship, focus suggestions & trees
-│   ├── rankings.py           # Gift popularity ranking builder
-│   ├── cli.py                # Unified CLI parser & execution dispatch
-│   └── exporters/
-│       ├── __init__.py       # Exporters package
-│       ├── terminal.py       # Terminal UI formatting (banners, badges, focus trees)
-│       ├── csv_export.py     # CSV exporters
-│       └── excel_export.py   # Multi-sheet openpyxl Excel exporter (6 sheets)
+│   └── rankings.py           # Gift popularity ranking builder
 │
-├── companion/                # Live companion web app
+├── companion/                # Live companion web server & backend
 │   ├── server.py             # FastAPI backend & SSE event stream
 │   ├── config.py             # Companion configuration model
-│   ├── json_exporter.py      # Companion payload formatter
+│   ├── json_exporter.py      # Companion JSON payload formatter
+│   ├── planner_bridge.py     # Execution bridge to fom_planner
+│   ├── watcher.py            # File watcher for auto-syncing saves
 │   └── static/               # Web client assets (HTML, CSS, JS, pixel-art sprites)
 │
-├── gift_planner.py           # Backward-compatible shim
-├── export_gift_rankings.py   # Backward-compatible shim
-├── save_parser.py            # Backward-compatible shim
-├── crafting_calculator.py    # Backward-compatible shim
+├── web/                      # Client-side static Pyodide web application
+│   ├── index.html            # Static single-page application
+│   ├── app.js                # Web application logic & UI
+│   ├── style.css             # Theme & UI styling
+│   ├── planner.worker.js     # Web Worker hosting Pyodide runtime
+│   └── py/web_bridge.py      # In-browser Python bridge
 │
 ├── data/
 │   ├── item_data.json        # Database of 34 NPCs, 556 items, affinities, and tags
 │   ├── item_locations.json   # Database of 452 item spawn and acquisition locations
 │   ├── alt_sources.json      # Database of alternate acquisition paths (shops, wells, etc.)
+│   ├── recipe_sources.json   # Cooking recipe unlock sources
+│   ├── item_seasons.json     # Seasonal availability metadata
 │   └── recipes.json          # Complete cooking, crafting, and milling recipes
 ├── samples/
-│   └── sample_save.sav       # Sample save file for quick testing
-├── exports/                  # Directory where CSV/Excel exports are saved
-└── tests/                    # Unit, regression & stress test suite (531 tests)
-    ├── test_alt_sources.py
-    ├── test_challenger_cli_and_exporters.py
-    ├── test_challenger_engine_stress.py
-    ├── test_challenger_stress_focus_recipes.py
-    ├── test_cli.py
-    ├── test_companion.py
-    ├── test_crafting_calculator.py
-    ├── test_exporters.py
-    ├── test_focus_recipes.py
-    ├── test_gift_planner.py
-    ├── test_infused_items.py
-    ├── test_max_relationship.py
-    ├── test_save_parser.py
-    └── test_zorel_features.py
+│   └── sample_save.sav       # Sample save file for testing
+└── tests/                    # Automated test suite
+    ├── fixtures.py           # Reusable synthetic save and item fixture generators
+    ├── conftest.py           # Pytest root configuration and shared fixtures
+    ├── core/                 # Core engine tests (planner, crafting, parser, focus)
+    ├── companion/            # Companion FastAPI backend & calendar tests
+    ├── web/                  # Pyodide web worker, bridge, sprites & UI contract tests
+    └── ci/                   # GitHub Actions CI/CD contracts & security audits
 ```
 
 ---
 
 ## Running the Test Suite
 
-Run the full automated test suite (531 tests):
+Run the full automated test suite (976 tests):
 
 ```bash
-# With uv (recommended)
+# Run all tests with uv (recommended)
 uv run pytest
-# or: uv run python -m unittest discover -s tests
 
-# With standard Python
-python -m unittest discover -s tests
+# Run tests by functional subsystem
+uv run pytest tests/core/         # Core engine & domain tests
+uv run pytest tests/companion/    # Companion API & server tests
+uv run pytest tests/web/          # Pyodide web application & worker tests
+uv run pytest tests/ci/           # CI/CD contract & security audit tests
 ```

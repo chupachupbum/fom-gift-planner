@@ -1,3 +1,0 @@
-# Optional dependency for Excel (.xlsx) workbook export.
-# Core planner (CLI terminal output and CSV export) requires only standard Python 3.10+!
-openpyxl>=3.1.0
