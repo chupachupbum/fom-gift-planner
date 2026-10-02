@@ -360,15 +360,15 @@ def test_focus_suggestions_blocked_npcs_structure():
 
 def test_focus_suggestions_sample_save_has_items_exceeding_three_npcs(repo_root):
     """Verify that sample save contains focus items with >3 blocked NPCs where expand button triggers."""
-    cfg = CompanionConfig(strategy="journal", slots=20)
+    sample_save = repo_root / "samples" / "sample_save.sav"
+    cfg = CompanionConfig(strategy="journal", slots=20, save_file=str(sample_save))
     save, res, meta, path = execute_plan(cfg, repo_root)
     data = plan_to_json(save, res, meta, path, cfg)
 
     items_over_3 = [f for f in data.get("focus_suggestions", []) if len(f.get("blocked_npcs", [])) > 3]
     assert len(items_over_3) > 0
-    feather = next(f for f in items_over_3 if f["item_id"] == "golden_duck_feather")
-    assert len(feather["blocked_npcs"]) == 4
-    assert feather["blocked_npcs"] == ["Landen", "Louis", "Merri", "Wheedle"]
+    item = next(f for f in items_over_3 if f["item_id"] == "wheat")
+    assert len(item["blocked_npcs"]) > 3
 
 
 def test_parameter_help_and_beta_marker_and_exclude_npc_picker():

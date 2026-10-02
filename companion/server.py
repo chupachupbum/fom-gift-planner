@@ -223,9 +223,13 @@ async def update_settings(payload: Dict[str, Any]):
 
     save_companion_config(state.config, state.repo_root)
 
-    # If save_file setting changed, update the watcher
-    if state.config.save_file != old_save_file and state.watcher:
-        state.watcher.update_watch_target(state.config.save_file)
+    # If save_file setting changed, update the watcher and reset mode to auto
+    if state.config.save_file != old_save_file:
+        if "mode" not in payload:
+            state.config.mode = "auto"
+            state.config.custom_preset_npcs = ""
+        if state.watcher:
+            state.watcher.update_watch_target(state.config.save_file)
 
     # Re-run plan with new config
     updated_plan = await state.recompute_plan()
@@ -279,6 +283,9 @@ async def upload_save_file(file: UploadFile = File(...)):
 
     old_save_file = state.config.save_file
     state.config.save_file = str(dest_path)
+    state.config.mode = "auto"
+    state.config.custom_preset_npcs = ""
+    state.config.focus_mode_enabled = False
     save_companion_config(state.config, state.repo_root)
 
     if state.watcher and state.config.save_file != old_save_file:

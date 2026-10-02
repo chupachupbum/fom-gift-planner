@@ -42,6 +42,12 @@ SATURDAY_MARKET_UPGRADE_2_VENDORS: Set[str] = {"stillwell", "zorel"}    # Quest:
 # Story-gated permanent townsfolk who unlock through mine story progression
 STORY_GATED_TOWNSFOLK: Set[str] = {"caldarus", "seridia"}
 
+# Canonical marriage / romance candidates in Fields of Mistria
+MARRIAGE_CANDIDATES: Set[str] = {
+    "adeline", "balor", "caldarus", "celine", "eiland", "hayden",
+    "juniper", "march", "reina", "ryis", "seridia", "valen"
+}
+
 # Visiting vendors who attend the Animal Festival on Winter 10
 ANIMAL_FESTIVAL_ATTENDING_VENDORS: Set[str] = {"louis", "merri"}
 

@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
+    MARRIAGE_CANDIDATES,
     SATURDAY_MARKET_VENDORS,
     AvailabilityTier,
 )
@@ -1035,6 +1036,7 @@ def plan_daily_gift_bag(
     alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     focus_mode_enabled: bool = False,
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
+    custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -1044,6 +1046,8 @@ def plan_daily_gift_bag(
       - 'saturday' / 'market': Simulate Saturday Market day (all 34 NPCs with vendor boost)
       - 'market-only': Plan only for the 8 visiting Saturday Market vendors
       - 'townsfolk' / 'weekday': Plan only for the 26 permanent townsfolk
+      - 'marriage' / 'candidates': Plan only for the 12 marriage candidates
+      - 'custom': Plan only for user-specified custom preset NPCs
       - 'all': Plan for all 34 NPCs regardless of day
 
     Returns a dict with:
@@ -1110,7 +1114,18 @@ def plan_daily_gift_bag(
         is_sat = getattr(save.in_game_date, "is_saturday", False)
         is_animal_fest = getattr(save.in_game_date, "is_animal_festival", False)
 
-    planning_for_saturday = (mode in ("saturday", "market")) or (mode == "auto" and is_sat)
+    custom_preset_set: Set[str] = set()
+    if custom_preset_npcs:
+        if isinstance(custom_preset_npcs, (str, bytes)):
+            custom_preset_set = {x.strip().lower() for x in str(custom_preset_npcs).split(",") if x.strip()}
+        elif hasattr(custom_preset_npcs, "__iter__"):
+            custom_preset_set = {str(x).strip().lower() for x in custom_preset_npcs if x is not None and str(x).strip()}
+
+    effective_mode = mode
+    if effective_mode == "custom" and not custom_preset_set:
+        effective_mode = "auto"
+
+    planning_for_saturday = (effective_mode in ("saturday", "market")) or (is_sat and effective_mode != "weekday")
 
     # 1. Determine which NPCs are eligible under current mode
     all_npcs = sorted(npc_gift_definitions.keys())
@@ -1165,20 +1180,26 @@ def plan_daily_gift_bag(
             can_gift = False
             locked_npcs.append(nid)
         else:
-            if mode in ("saturday", "market"):
+            if effective_mode in ("saturday", "market"):
                 is_present = True
-            elif mode == "market-only":
+            elif effective_mode == "market-only":
                 is_present = is_vendor
-            elif mode in ("townsfolk", "weekday"):
+            elif effective_mode in ("townsfolk", "weekday"):
                 is_present = not is_vendor
-            elif mode == "all":
+            elif effective_mode in ("marriage", "candidates", "romance"):
+                is_candidate = nid.lower() in MARRIAGE_CANDIDATES
+                is_present = is_candidate and (save.is_npc_present_in_town_today(nid) if (save and hasattr(save, "is_npc_present_in_town_today")) else True)
+            elif effective_mode == "custom":
+                in_preset = nid.lower() in custom_preset_set
+                is_present = in_preset and (save.is_npc_present_in_town_today(nid) if (save and hasattr(save, "is_npc_present_in_town_today")) else True)
+            elif effective_mode == "all":
                 is_present = True
             else:  # "auto" or "today"
                 is_present = save.is_npc_present_in_town_today(nid) if (save and hasattr(save, "is_npc_present_in_town_today")) else True
 
             if force_all_npcs:
                 can_gift = True
-            elif mode in ("saturday", "market") and not is_sat:
+            elif effective_mode in ("saturday", "market") and not is_sat:
                 can_gift = True
             elif save is not None and hasattr(save, "can_gift_npc_today"):
                 can_gift = save.can_gift_npc_today(nid)
@@ -1680,6 +1701,7 @@ def plan_max_relationship(
     alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     focus_mode_enabled: bool = False,
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
+    custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -1826,7 +1848,18 @@ def plan_max_relationship(
         is_sat = bool(getattr(save.in_game_date, "is_saturday", False))
         is_animal_fest = bool(getattr(save.in_game_date, "is_animal_festival", False))
 
-    planning_for_saturday = (mode in ("saturday", "market")) or (mode == "auto" and is_sat)
+    custom_preset_set: Set[str] = set()
+    if custom_preset_npcs:
+        if isinstance(custom_preset_npcs, (str, bytes)):
+            custom_preset_set = {x.strip().lower() for x in str(custom_preset_npcs).split(",") if x.strip()}
+        elif hasattr(custom_preset_npcs, "__iter__"):
+            custom_preset_set = {str(x).strip().lower() for x in custom_preset_npcs if x is not None and str(x).strip()}
+
+    effective_mode = mode
+    if effective_mode == "custom" and not custom_preset_set:
+        effective_mode = "auto"
+
+    planning_for_saturday = (effective_mode in ("saturday", "market")) or (is_sat and effective_mode != "weekday")
 
     # 5. Filter and Classify Target NPCs
     all_npcs = sorted(npc_gift_definitions.keys())
@@ -1907,13 +1940,25 @@ def plan_max_relationship(
             can_gift = False
             locked_npcs.append(nid)
         elif is_max_rel:
-            if mode in ("saturday", "market"):
+            if effective_mode in ("saturday", "market"):
                 is_present = True
-            elif mode == "market-only":
+            elif effective_mode == "market-only":
                 is_present = is_vendor
-            elif mode in ("townsfolk", "weekday"):
+            elif effective_mode in ("townsfolk", "weekday"):
                 is_present = not is_vendor
-            elif mode == "all":
+            elif effective_mode in ("marriage", "candidates", "romance"):
+                is_candidate = nid_clean in MARRIAGE_CANDIDATES
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = is_candidate and bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = is_candidate
+            elif effective_mode == "custom":
+                in_preset = nid_clean in custom_preset_set
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = in_preset and bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = in_preset
+            elif effective_mode == "all":
                 is_present = True
             else:  # "auto" or "today"
                 if save is not None and hasattr(save, "is_npc_present_in_town_today"):
@@ -1924,13 +1969,25 @@ def plan_max_relationship(
             can_gift = False
             max_relationship_npcs.append(nid)
         else:
-            if mode in ("saturday", "market"):
+            if effective_mode in ("saturday", "market"):
                 is_present = True
-            elif mode == "market-only":
+            elif effective_mode == "market-only":
                 is_present = is_vendor
-            elif mode in ("townsfolk", "weekday"):
+            elif effective_mode in ("townsfolk", "weekday"):
                 is_present = not is_vendor
-            elif mode == "all":
+            elif effective_mode in ("marriage", "candidates", "romance"):
+                is_candidate = nid_clean in MARRIAGE_CANDIDATES
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = is_candidate and bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = is_candidate
+            elif effective_mode == "custom":
+                in_preset = nid_clean in custom_preset_set
+                if save is not None and hasattr(save, "is_npc_present_in_town_today"):
+                    is_present = in_preset and bool(save.is_npc_present_in_town_today(nid_clean))
+                else:
+                    is_present = in_preset
+            elif effective_mode == "all":
                 is_present = True
             else:  # "auto" or "today"
                 if save is not None and hasattr(save, "is_npc_present_in_town_today"):
@@ -1940,7 +1997,7 @@ def plan_max_relationship(
 
             if force_all_npcs:
                 can_gift = True
-            elif mode in ("saturday", "market") and not is_sat:
+            elif effective_mode in ("saturday", "market") and not is_sat:
                 can_gift = True
             elif save is not None and hasattr(save, "can_gift_npc_today"):
                 try:

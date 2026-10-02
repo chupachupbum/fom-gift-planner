@@ -51,6 +51,8 @@ class TestApiSettingsExtremePayloads:
         yield
         # Restore original settings after test
         save_companion_config(original, repo_root)
+        from companion.server import state
+        state.config = load_companion_config(repo_root)
 
     @pytest.mark.parametrize(
         "label,payload,expected_focus_npcs,expected_error",

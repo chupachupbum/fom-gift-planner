@@ -383,16 +383,17 @@ const SETTINGS_SCHEMA = [
       },
       {
         key: "mode",
-        label: "Mode",
+        label: "Bag Preset & Mode",
         type: "select",
         options: [
           { value: "auto", label: "Auto (Follow save calendar day)" },
           { value: "saturday", label: "Saturday Market (All 34 Villagers + Vendor Boost)" },
           { value: "weekday", label: "Weekday (26 Townsfolk only)" },
+          { value: "marriage", label: "Marriage Candidates (12 Romance Options)" },
           { value: "market-only", label: "Market Vendors Only (8 Villagers)" },
           { value: "all", label: "All Villagers (Ignore calendar)" },
         ],
-        help: "Filter villagers by schedule (Auto from save date, Saturday Market, Weekday townsfolk, or Market Vendors).",
+        help: "Filter villagers by preset (Auto, Weekday townsfolk, Market Vendors, Marriage Candidates, or Custom Presets).",
       },
       {
         key: "slots",
@@ -826,6 +827,18 @@ function handleFileSelected(file) {
       saveFilenameEl.title = file.name;
     }
 
+    // When a new save file is loaded, default mode to auto and focus mode to false
+    currentSettings.mode = "auto";
+    currentSettings.active_preset_id = null;
+    currentSettings.custom_preset_npcs = "";
+    currentSettings.focus_mode_enabled = false;
+    localStorage.removeItem("fom_companion_active_preset_id");
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(currentSettings));
+    } catch (err) {}
+    renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+    renderBagPresetToolbar();
+
     // Persist to IndexedDB so page refreshes retain this save
     await persistActiveSave(file.name, currentSaveBytes);
 
@@ -871,6 +884,17 @@ function loadDemo() {
         saveFilenameEl.title = "sample_save.sav";
       }
 
+      currentSettings.mode = "auto";
+      currentSettings.active_preset_id = null;
+      currentSettings.custom_preset_npcs = "";
+      currentSettings.focus_mode_enabled = false;
+      localStorage.removeItem("fom_companion_active_preset_id");
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(currentSettings));
+      } catch (err) {}
+      renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+      renderBagPresetToolbar();
+
       // Persist demo save into IndexedDB
       await persistActiveSave("sample_save.sav (Demo)", buf);
 
@@ -908,13 +932,50 @@ function loadSettings() {
     currentSettings = { ...DEFAULT_SETTINGS };
   }
 
+  if (currentSettings.custom_preset_npcs === undefined) {
+    currentSettings.custom_preset_npcs = "";
+  }
+  if (currentSettings.active_preset_id === undefined) {
+    currentSettings.active_preset_id = null;
+  }
+
+  const savedActivePresetId = localStorage.getItem("fom_companion_active_preset_id");
+  if (savedActivePresetId && currentSettings.mode === "custom") {
+    const preset = getCustomPresetById(savedActivePresetId);
+    if (preset) {
+      currentSettings.active_preset_id = savedActivePresetId;
+    } else {
+      currentSettings.mode = "auto";
+      currentSettings.active_preset_id = null;
+      currentSettings.custom_preset_npcs = "";
+      localStorage.removeItem("fom_companion_active_preset_id");
+    }
+  } else if (currentSettings.mode === "custom" && !currentSettings.custom_preset_npcs) {
+    currentSettings.mode = "auto";
+    currentSettings.active_preset_id = null;
+  }
+
+  // Defensive validation: focus mode must not be enabled without valid focus npcs
+  if (currentSettings.focus_mode_enabled && !currentSettings.focus_npcs) {
+    currentSettings.focus_mode_enabled = false;
+  }
+
   renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
   updateSidebarSettingsSummary();
 }
 
-function saveSetting(key, value, shouldRecompute = true) {
+function saveSetting(keyOrUpdates, value, shouldRecompute = true) {
   if (!currentSettings) currentSettings = { ...DEFAULT_SETTINGS };
-  currentSettings[key] = value;
+  let flagRecompute = shouldRecompute;
+
+  if (typeof keyOrUpdates === "object" && keyOrUpdates !== null) {
+    Object.assign(currentSettings, keyOrUpdates);
+    if (typeof value === "boolean") {
+      flagRecompute = value;
+    }
+  } else {
+    currentSettings[keyOrUpdates] = value;
+  }
 
   try {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(currentSettings));
@@ -924,7 +985,7 @@ function saveSetting(key, value, shouldRecompute = true) {
 
   updateSidebarSettingsSummary();
 
-  if (shouldRecompute && currentSaveBytes && worker) {
+  if (flagRecompute && currentSaveBytes && worker) {
     const li = document.getElementById("liveIndicator");
     const lt = document.getElementById("liveText");
     if (li) {
@@ -940,9 +1001,12 @@ function saveSetting(key, value, shouldRecompute = true) {
   }
 }
 
-async function submitSettingUpdate(key, value) {
-  saveSetting(key, value, true);
-  showToast(`Setting "${key}" updated`, 1200);
+async function submitSettingUpdate(keyOrUpdates, value) {
+  saveSetting(keyOrUpdates, value, true);
+  const label = typeof keyOrUpdates === "object" && keyOrUpdates !== null
+    ? Object.keys(keyOrUpdates).join(", ")
+    : keyOrUpdates;
+  showToast(`Setting "${label}" updated`, 1200);
 }
 
 function updateSidebarSettingsSummary() {
@@ -958,9 +1022,15 @@ function updateSidebarSettingsSummary() {
       saturday: "Saturday Market",
       weekday: "Weekday",
       "market-only": "Market Only",
+      marriage: "Marriage Candidates",
       all: "All Villagers"
     };
-    modeEl.textContent = modeNames[currentSettings.mode] || currentSettings.mode || "Auto";
+    if (currentSettings.mode === "custom") {
+      const p = getCustomPresetById(currentSettings.active_preset_id);
+      modeEl.textContent = p ? `Custom: ${p.name}` : "Custom Preset";
+    } else {
+      modeEl.textContent = modeNames[currentSettings.mode] || currentSettings.mode || "Auto";
+    }
   }
 }
 
@@ -1355,6 +1425,7 @@ function renderRecipesDrawerContent(allRecipes) {
 }
 
 function renderBagPlan(bagPlan, stats) {
+  renderBagPresetToolbar();
   const grid = document.getElementById("bagGrid");
   const badge = document.getElementById("bagSlotsBadge");
 
@@ -2479,7 +2550,11 @@ function renderSettingsAccordion(schema, config) {
         });
       } else if (f.type === "select") {
         el.addEventListener("change", () => {
-          submitSettingUpdate(f.key, el.value);
+          if (f.key === "mode") {
+            handleModeSelectChange(el);
+          } else {
+            submitSettingUpdate(f.key, el.value);
+          }
         });
       } else {
         // Debounced text/number inputs
@@ -2493,6 +2568,27 @@ function renderSettingsAccordion(schema, config) {
       }
     });
   });
+
+  // Sidebar Presets Controls (Edit / Delete active custom preset if present)
+  const presetFieldGroup = (accordion && typeof accordion.querySelector === "function")
+    ? accordion.querySelector(".preset-field-group")
+    : (typeof document !== "undefined" && typeof document.querySelector === "function" ? document.querySelector(".preset-field-group") : null);
+
+  if (presetFieldGroup && typeof presetFieldGroup.querySelectorAll === "function") {
+    presetFieldGroup.querySelectorAll(".sidebar-btn-edit-preset").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openPresetModal(btn.dataset.id);
+      });
+    });
+
+    presetFieldGroup.querySelectorAll(".sidebar-btn-del-preset").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteCustomPresetById(btn.dataset.id);
+      });
+    });
+  }
 
   // Focus Mode Toggle (defensive listener if not attached in schema loop)
   const focusModeToggle = document.getElementById("setting_focus_mode_enabled");
@@ -2719,6 +2815,408 @@ const DEFAULT_34_NPCS = [
   { id: "zorel", name: "Zorel" },
 ];
 
+// ---------------------------------------------------------------------------
+// 4.1 Custom Bag Presets & Quick Presets Toolbar
+// ---------------------------------------------------------------------------
+
+const CUSTOM_PRESETS_STORAGE_KEY = "fom_custom_presets_v1";
+let editingPresetId = null;
+
+function loadCustomPresets() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRESETS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(p => p && typeof p === "object" && p.id && p.name && Array.isArray(p.villagers));
+    }
+  } catch (e) {
+    console.warn("Could not load custom presets from localStorage:", e);
+  }
+  return [];
+}
+
+function saveCustomPresets(presets) {
+  try {
+    localStorage.setItem(CUSTOM_PRESETS_STORAGE_KEY, JSON.stringify(presets));
+  } catch (e) {
+    console.warn("Could not save custom presets to localStorage:", e);
+  }
+}
+
+function getCustomPresetById(id) {
+  if (!id) return null;
+  const presets = loadCustomPresets();
+  return presets.find(p => p.id === id) || null;
+}
+
+function renderBagPresetToolbar() {
+  const container = document.getElementById("bagPresetPills");
+  if (!container) return;
+
+  const currentMode = currentSettings?.mode || "auto";
+  const activeCustomId = currentSettings?.active_preset_id;
+  const customPresets = loadCustomPresets();
+
+  const standardPills = [
+    { mode: "auto", label: "Auto", title: "Auto (Follow save calendar day)" },
+    { mode: "weekday", label: "Townsfolk", title: "Weekday (26 Townsfolk only)" },
+    { mode: "saturday", label: "Saturday", title: "Saturday Market (All 34 Villagers + Vendor Boost)" },
+    { mode: "market-only", label: "Vendors", title: "Market Vendors Only (8 Villagers)" },
+    { mode: "marriage", label: "Marriage", title: "Marriage Candidates (12 Romance Options)" },
+    { mode: "all", label: "All", title: "All Villagers (Ignore calendar)" },
+  ];
+
+  let pillsHtml = standardPills.map(p => {
+    const isActive = (currentMode === p.mode && !activeCustomId);
+    return `
+      <button type="button" class="bag-preset-pill ${isActive ? 'active' : ''}" data-mode="${p.mode}" title="${p.title}">
+        ${p.label}
+      </button>
+    `;
+  }).join("");
+
+  // Custom preset pills
+  pillsHtml += customPresets.map(p => {
+    const isActive = (currentMode === "custom" && activeCustomId === p.id);
+    return `
+      <button type="button" class="bag-preset-pill ${isActive ? 'active' : ''}" data-custom-id="${p.id}" title="${escapeHtml(p.name)} (${p.villagers.length} villagers)">
+        <span>${escapeHtml(p.name)}</span>
+        <span class="pill-edit-btn" data-edit-id="${p.id}" title="Edit preset">✎</span>
+      </button>
+    `;
+  }).join("");
+
+  // + New Preset button
+  pillsHtml += `
+    <button type="button" class="bag-preset-pill btn-new-preset" id="bagPresetNewBtn" title="Create a new custom bag preset">
+      + New Preset
+    </button>
+  `;
+
+  container.innerHTML = pillsHtml;
+}
+
+function initBagPresetToolbarEvents() {
+  const bar = document.getElementById("bagPresetBar");
+  if (!bar || bar._hasPresetEvents) return;
+  bar._hasPresetEvents = true;
+
+  bar.addEventListener("click", (e) => {
+    const editBtn = e.target.closest(".pill-edit-btn");
+    if (editBtn) {
+      e.stopPropagation();
+      const editId = editBtn.dataset.editId;
+      openPresetModal(editId);
+      return;
+    }
+
+    const newBtn = e.target.closest("#bagPresetNewBtn");
+    if (newBtn) {
+      openPresetModal();
+      return;
+    }
+
+    const pill = e.target.closest(".bag-preset-pill");
+    if (!pill) return;
+
+    if (pill.dataset.customId) {
+      const customId = pill.dataset.customId;
+      const preset = getCustomPresetById(customId);
+      if (!preset) return;
+
+      currentSettings.mode = "custom";
+      currentSettings.active_preset_id = customId;
+      currentSettings.custom_preset_npcs = preset.villagers.join(",");
+
+      saveSetting("mode", "custom", false);
+      saveSetting("active_preset_id", customId, false);
+      saveSetting("custom_preset_npcs", preset.villagers.join(","), true);
+
+      renderBagPresetToolbar();
+      renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+      updateSidebarSettingsSummary();
+      showToast(`Preset "${preset.name}" applied`, 1000);
+      return;
+    }
+
+    if (pill.dataset.mode) {
+      const mode = pill.dataset.mode;
+      currentSettings.mode = mode;
+      currentSettings.active_preset_id = null;
+      currentSettings.custom_preset_npcs = "";
+
+      saveSetting("mode", mode, false);
+      saveSetting("active_preset_id", null, false);
+      saveSetting("custom_preset_npcs", "", true);
+
+      renderBagPresetToolbar();
+      renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+      updateSidebarSettingsSummary();
+      showToast(`Mode "${mode}" applied`, 1000);
+      return;
+    }
+  });
+}
+
+function openPresetModal(presetId = null) {
+  editingPresetId = presetId;
+  const modal = document.getElementById("customPresetModal");
+  if (!modal) return;
+
+  const titleEl = document.getElementById("presetModalTitle");
+  const nameInput = document.getElementById("presetNameInput");
+  const deleteBtn = document.getElementById("presetDeleteBtn");
+  const grid = document.getElementById("presetVillagerGrid");
+
+  let initialVillagers = new Set();
+  let initialName = "";
+
+  if (presetId) {
+    const preset = getCustomPresetById(presetId);
+    if (preset) {
+      initialName = preset.name || "";
+      initialVillagers = new Set((preset.villagers || []).map(v => String(v).toLowerCase()));
+      if (titleEl) titleEl.textContent = `Edit Preset: ${preset.name}`;
+      if (deleteBtn) deleteBtn.style.display = "inline-block";
+    }
+  } else {
+    if (titleEl) titleEl.textContent = "Create Custom Bag Preset";
+    if (deleteBtn) deleteBtn.style.display = "none";
+  }
+
+  if (nameInput) nameInput.value = initialName;
+
+  if (grid) {
+    grid.innerHTML = DEFAULT_34_NPCS.map(npc => {
+      const isChecked = initialVillagers.has(npc.id.toLowerCase());
+      const checkedClass = isChecked ? "is-checked" : "";
+      return `
+        <label class="preset-villager-card ${checkedClass}" for="preset_npc_${npc.id}">
+          <input type="checkbox" class="preset-villager-cb" id="preset_npc_${npc.id}" value="${npc.id}" ${isChecked ? 'checked' : ''} />
+          <img class="preset-villager-portrait" src="${resolveNpcPortrait(npc.id)}" onerror="this.onerror=null; this.src=generatePlaceholderSvg('${npc.id}', 'npc');" alt="${npc.name}" loading="lazy" />
+          <span class="preset-villager-name" title="${npc.name}">${npc.name}</span>
+        </label>
+      `;
+    }).join("");
+  }
+
+  updatePresetModalCounter();
+  modal.style.display = "flex";
+  if (nameInput) setTimeout(() => nameInput.focus(), 60);
+}
+
+function closePresetModal() {
+  const modal = document.getElementById("customPresetModal");
+  if (modal) modal.style.display = "none";
+  editingPresetId = null;
+}
+
+function updatePresetModalCounter() {
+  const grid = document.getElementById("presetVillagerGrid");
+  const counter = document.getElementById("presetCounterBadge");
+  if (!grid || !counter) return;
+  const checked = grid.querySelectorAll(".preset-villager-cb:checked").length;
+  const total = grid.querySelectorAll(".preset-villager-cb").length;
+  counter.textContent = `${checked} / ${total} Villagers`;
+}
+
+function handleSavePreset() {
+  const nameInput = document.getElementById("presetNameInput");
+  const grid = document.getElementById("presetVillagerGrid");
+  const name = (nameInput ? nameInput.value : "").trim();
+  if (!name) {
+    alert("Please enter a name for the preset.");
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  const selected = [];
+  if (grid) {
+    grid.querySelectorAll(".preset-villager-cb:checked").forEach(cb => {
+      selected.push(cb.value);
+    });
+  }
+
+  if (selected.length === 0) {
+    alert("Please select at least one villager for this preset.");
+    return;
+  }
+
+  let presets = loadCustomPresets();
+  let presetId = editingPresetId;
+
+  if (presetId) {
+    const idx = presets.findIndex(p => p.id === presetId);
+    if (idx !== -1) {
+      presets[idx].name = name;
+      presets[idx].villagers = selected;
+    } else {
+      presetId = `preset_${Date.now()}`;
+      presets.push({ id: presetId, name, villagers: selected, createdAt: Date.now() });
+    }
+  } else {
+    presetId = `preset_${Date.now()}`;
+    presets.push({ id: presetId, name, villagers: selected, createdAt: Date.now() });
+  }
+
+  saveCustomPresets(presets);
+
+  currentSettings.mode = "custom";
+  currentSettings.active_preset_id = presetId;
+  currentSettings.custom_preset_npcs = selected.join(",");
+
+  saveSetting("mode", "custom", false);
+  saveSetting("active_preset_id", presetId, false);
+  saveSetting("custom_preset_npcs", selected.join(","), true);
+
+  closePresetModal();
+  renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+  renderBagPresetToolbar();
+  updateSidebarSettingsSummary();
+  showToast(`Preset "${name}" saved!`, 1500);
+}
+
+function deleteCustomPresetById(presetId) {
+  if (!presetId) return false;
+  const preset = getCustomPresetById(presetId);
+  const name = preset ? preset.name : "this preset";
+  if (!confirm(`Are you sure you want to delete preset "${name}"?`)) return false;
+
+  let presets = loadCustomPresets();
+  presets = presets.filter(p => p.id !== presetId);
+  saveCustomPresets(presets);
+
+  if (currentSettings.active_preset_id === presetId) {
+    currentSettings.mode = "auto";
+    currentSettings.active_preset_id = null;
+    currentSettings.custom_preset_npcs = "";
+    localStorage.removeItem("fom_companion_active_preset_id");
+    saveSetting({
+      mode: "auto",
+      active_preset_id: null,
+      custom_preset_npcs: "",
+    }, true);
+  }
+
+  renderSettingsAccordion(SETTINGS_SCHEMA, currentSettings);
+  renderBagPresetToolbar();
+  updateSidebarSettingsSummary();
+  showToast(`Preset "${name}" deleted`, 1500);
+  return true;
+}
+
+function handleDeletePreset() {
+  if (!editingPresetId) return;
+  const deleted = deleteCustomPresetById(editingPresetId);
+  if (deleted) {
+    closePresetModal();
+  }
+}
+
+function initPresetModalEvents() {
+  const modal = document.getElementById("customPresetModal");
+  if (!modal || modal._hasEvents) return;
+  modal._hasEvents = true;
+
+  const closeBtn = document.getElementById("presetModalClose");
+  const cancelBtn = document.getElementById("presetCancelBtn");
+  const saveBtn = document.getElementById("presetSaveBtn");
+  const deleteBtn = document.getElementById("presetDeleteBtn");
+  const selectAllBtn = document.getElementById("presetSelectAllBtn");
+  const clearBtn = document.getElementById("presetClearBtn");
+  const grid = document.getElementById("presetVillagerGrid");
+
+  closeBtn?.addEventListener("click", closePresetModal);
+  cancelBtn?.addEventListener("click", closePresetModal);
+  saveBtn?.addEventListener("click", handleSavePreset);
+  deleteBtn?.addEventListener("click", handleDeletePreset);
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closePresetModal();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.style.display !== "none") {
+      closePresetModal();
+    }
+  });
+
+  selectAllBtn?.addEventListener("click", () => {
+    if (!grid) return;
+    grid.querySelectorAll(".preset-villager-cb").forEach(cb => {
+      cb.checked = true;
+      cb.closest(".preset-villager-card")?.classList.add("is-checked");
+    });
+    updatePresetModalCounter();
+  });
+
+  clearBtn?.addEventListener("click", () => {
+    if (!grid) return;
+    grid.querySelectorAll(".preset-villager-cb").forEach(cb => {
+      cb.checked = false;
+      cb.closest(".preset-villager-card")?.classList.remove("is-checked");
+    });
+    updatePresetModalCounter();
+  });
+
+  grid?.addEventListener("change", (e) => {
+    if (e.target && e.target.classList.contains("preset-villager-cb")) {
+      const card = e.target.closest(".preset-villager-card");
+      if (card) {
+        if (e.target.checked) card.classList.add("is-checked");
+        else card.classList.remove("is-checked");
+      }
+      updatePresetModalCounter();
+    }
+  });
+}
+
+function handleModeSelectChange(el) {
+  const val = el.value;
+  if (val === "__create_custom__") {
+    // Revert dropdown display to previous active
+    const prevVal = (currentSettings.mode === "custom" && currentSettings.active_preset_id)
+      ? `custom:${currentSettings.active_preset_id}`
+      : currentSettings.mode;
+    el.value = prevVal;
+    openPresetModal();
+    return;
+  }
+
+  if (val.startsWith("custom:")) {
+    const presetId = val.slice("custom:".length);
+    const preset = getCustomPresetById(presetId);
+    if (!preset) return;
+
+    currentSettings.mode = "custom";
+    currentSettings.active_preset_id = preset.id;
+    currentSettings.custom_preset_npcs = preset.villagers.join(",");
+
+    saveSetting("mode", "custom", false);
+    saveSetting("active_preset_id", preset.id, false);
+    saveSetting("custom_preset_npcs", preset.villagers.join(","), true);
+
+    renderBagPresetToolbar();
+    updateSidebarSettingsSummary();
+    showToast(`Preset "${preset.name}" applied`, 1000);
+    return;
+  }
+
+  // Standard mode
+  currentSettings.mode = val;
+  currentSettings.active_preset_id = null;
+  currentSettings.custom_preset_npcs = "";
+
+  saveSetting("mode", val, false);
+  saveSetting("active_preset_id", null, false);
+  saveSetting("custom_preset_npcs", "", true);
+
+  renderBagPresetToolbar();
+  updateSidebarSettingsSummary();
+  showToast(`Mode updated`, 1000);
+}
+
 function adjustHelpTooltipPosition(wrap) {
   if (!wrap) return;
   const tooltip = wrap.querySelector(".param-help-tooltip");
@@ -2871,10 +3369,57 @@ function renderField(field, currentVal, config = {}) {
   }
 
   if (field.type === "select") {
-    const optionsHtml = (field.options || []).map(opt => {
-      const sel = opt.value === currentVal ? "selected" : "";
-      return `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
-    }).join("");
+    let optionsHtml = "";
+    if (field.key === "mode") {
+      const customPresets = loadCustomPresets();
+      const isCustomActive = (currentSettings?.mode === "custom" && currentSettings?.active_preset_id);
+      const activeCustomId = (currentSettings?.mode === "custom") ? currentSettings?.active_preset_id : null;
+      const activeCustomPreset = activeCustomId ? getCustomPresetById(activeCustomId) : null;
+
+      optionsHtml = (field.options || []).map(opt => {
+        const sel = (!isCustomActive && opt.value === currentVal) ? "selected" : "";
+        return `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
+      }).join("");
+
+      if (customPresets.length > 0) {
+        optionsHtml += `<optgroup label="Custom Presets">`;
+        optionsHtml += customPresets.map(p => {
+          const sel = (isCustomActive && currentSettings.active_preset_id === p.id) ? "selected" : "";
+          return `<option value="custom:${p.id}" ${sel}>Preset: ${escapeHtml(p.name)} (${p.villagers.length} villagers)</option>`;
+        }).join("");
+        optionsHtml += `</optgroup>`;
+      }
+
+      optionsHtml += `<option value="__create_custom__">➕ Create Custom Preset...</option>`;
+
+      let activePresetHtml = "";
+      if (isCustomActive && activeCustomPreset) {
+        activePresetHtml = `
+          <div class="sidebar-active-preset-bar">
+            <span class="sidebar-active-preset-info" title="${escapeHtml(activeCustomPreset.villagers.join(', '))}">
+              Active: <strong>${escapeHtml(activeCustomPreset.name)}</strong> (${activeCustomPreset.villagers.length})
+            </span>
+            <div class="sidebar-preset-row-actions">
+              <button type="button" class="sidebar-btn-edit-preset" data-id="${activeCustomPreset.id}" title="Edit preset">✏️ Edit</button>
+              <button type="button" class="sidebar-btn-del-preset" data-id="${activeCustomPreset.id}" title="Delete preset">🗑️</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="field-group preset-field-group">
+          <label for="${id}">${field.label}${helpHtml}</label>
+          <select id="${id}">${optionsHtml}</select>
+          ${activePresetHtml}
+        </div>
+      `;
+    } else {
+      optionsHtml = (field.options || []).map(opt => {
+        const sel = opt.value === currentVal ? "selected" : "";
+        return `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
+      }).join("");
+    }
 
     return `
       <div class="field-group">
@@ -3223,6 +3768,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initWorker();
   loadSettings();
   restorePersistedSave();
+  initBagPresetToolbarEvents();
+  initPresetModalEvents();
+  renderBagPresetToolbar();
 
   // Welcome Landing controls
   const welcomeBrowseBtn = document.getElementById("welcomeBrowseBtn");

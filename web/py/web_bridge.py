@@ -66,6 +66,12 @@ class WebPlannerConfig:
         else:
             self.exclude_npcs = str(raw_exclude or "")
 
+        raw_custom = d.get("custom_preset_npcs", "")
+        if isinstance(raw_custom, (list, set, tuple)):
+            self.custom_preset_npcs: str = ",".join(str(x).strip() for x in raw_custom if str(x).strip())
+        else:
+            self.custom_preset_npcs = str(raw_custom or "")
+
         self.force_all_npcs: bool = bool(d.get("force_all_npcs", False))
         self.max_relationship_points: Optional[float] = (
             float(d["max_relationship_points"]) if d.get("max_relationship_points") is not None else None
@@ -100,6 +106,7 @@ class WebPlannerConfig:
             "focus_mode_enabled": self.focus_mode_enabled,
             "focus_npcs": self.focus_npcs,
             "exclude_npcs": self.exclude_npcs,
+            "custom_preset_npcs": self.custom_preset_npcs,
             "force_all_npcs": self.force_all_npcs,
             "max_relationship_points": self.max_relationship_points,
             "no_exclude_max_relationship": self.no_exclude_max_relationship,
@@ -748,6 +755,8 @@ def generate_plan(
 
         # Handle date override
         effective_mode = config.mode
+        if effective_mode == "custom" and not str(config.custom_preset_npcs or "").strip():
+            effective_mode = "auto"
         current_ingame_date = save.in_game_date if (save and hasattr(save, "in_game_date")) else None
         override_date = parse_date_override(config.date_override, current_ingame_date)
 
@@ -834,6 +843,7 @@ def generate_plan(
                 seasonal_boost=seasonal_boost_val,
                 focus_mode_enabled=focus_mode_enabled,
                 focus_npcs=focus_npcs,
+                custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
             )
         else:
@@ -858,6 +868,7 @@ def generate_plan(
                 seasonal_boost=seasonal_boost_val,
                 focus_mode_enabled=focus_mode_enabled,
                 focus_npcs=focus_npcs,
+                custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
             )
 

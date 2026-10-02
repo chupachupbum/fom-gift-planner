@@ -291,6 +291,10 @@ def execute_plan(
         elif isinstance(raw_focus_npcs, str):
             focus_npcs = {x.strip().lower() for x in raw_focus_npcs.split(",") if x.strip()}
 
+    custom_preset_npcs = getattr(config, "custom_preset_npcs", "")
+    if effective_mode == "custom" and not str(custom_preset_npcs).strip():
+        effective_mode = "auto"
+
     # 7. Run optimization strategy
     focus_sort = config.focus_sort or "impact"
     all_seasons_flag = bool(config.all_seasons)
@@ -319,6 +323,7 @@ def execute_plan(
             seasonal_boost=seasonal_boost_val,
             focus_mode_enabled=focus_mode_enabled,
             focus_npcs=focus_npcs,
+            custom_preset_npcs=custom_preset_npcs,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -342,6 +347,7 @@ def execute_plan(
             seasonal_boost=seasonal_boost_val,
             focus_mode_enabled=focus_mode_enabled,
             focus_npcs=focus_npcs,
+            custom_preset_npcs=custom_preset_npcs,
         )
 
     return save, plan_results, metadata, save_path

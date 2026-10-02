@@ -28,7 +28,7 @@ def get_repo_root() -> Path:
 class CompanionConfig:
     # 1. Planning Core
     strategy: str = "journal"  # "journal" or "max-relationship"
-    mode: str = "auto"         # "auto", "today", "saturday", "market-only", "townsfolk", "weekday", "all"
+    mode: str = "auto"         # "auto", "today", "saturday", "marriage", "market-only", "townsfolk", "weekday", "all", "custom"
     date_override: Optional[str] = None  # e.g. "saturday", "winter 10", "6"
     slots: int = 20
     focus_sort: str = "impact"  # "impact", "deficit", "quick-wins"
@@ -44,6 +44,7 @@ class CompanionConfig:
     focus_mode_enabled: bool = False
     focus_npcs: str = ""        # Comma-separated list of NPC IDs
     exclude_npcs: str = ""      # Comma-separated list of NPC IDs
+    custom_preset_npcs: str = "" # Comma-separated list of NPC IDs for custom mode
     force_all_npcs: bool = False
     max_relationship_points: Optional[float] = None  # None uses default (1755.0)
     no_exclude_max_relationship: bool = False
@@ -73,6 +74,8 @@ class CompanionConfig:
             filtered["focus_npcs"] = ",".join(str(x).strip() for x in filtered["focus_npcs"] if str(x).strip())
         if "exclude_npcs" in filtered and isinstance(filtered["exclude_npcs"], (list, set, tuple)):
             filtered["exclude_npcs"] = ",".join(str(x).strip() for x in filtered["exclude_npcs"] if str(x).strip())
+        if "custom_preset_npcs" in filtered and isinstance(filtered["custom_preset_npcs"], (list, set, tuple)):
+            filtered["custom_preset_npcs"] = ",".join(str(x).strip() for x in filtered["custom_preset_npcs"] if str(x).strip())
         if "focus_mode_enabled" in filtered and not isinstance(filtered["focus_mode_enabled"], bool):
             filtered["focus_mode_enabled"] = bool(filtered["focus_mode_enabled"])
         return cls(**filtered)
@@ -127,16 +130,17 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                 },
                 {
                     "key": "mode",
-                    "label": "Mode",
+                    "label": "Bag Preset & Mode",
                     "type": "select",
                     "options": [
                         {"value": "auto", "label": "Auto (Follow save calendar day)"},
                         {"value": "saturday", "label": "Saturday Market (All 34 Villagers + Vendor Boost)"},
                         {"value": "weekday", "label": "Weekday (26 Townsfolk only)"},
+                        {"value": "marriage", "label": "Marriage Candidates (12 Romance Options)"},
                         {"value": "market-only", "label": "Market Vendors Only (8 Villagers)"},
                         {"value": "all", "label": "All Villagers (Ignore calendar)"},
                     ],
-                    "help": "Filter villagers by schedule (Auto from save date, Saturday Market, Weekday townsfolk, or Market Vendors).",
+                    "help": "Filter villagers by preset (Auto from save date, Saturday Market, Weekday townsfolk, Marriage Candidates, or Custom Presets).",
                 },
                 {
                     "key": "slots",

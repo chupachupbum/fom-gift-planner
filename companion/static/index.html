@@ -184,6 +184,14 @@
           <span class="badge-counter" id="bagSlotsBadge">0 / 20 Slots</span>
         </div>
 
+        <!-- Quick Preset Pills Bar -->
+        <div class="bag-preset-bar" id="bagPresetBar">
+          <div class="bag-preset-label">Presets:</div>
+          <div class="bag-preset-pills" id="bagPresetPills">
+            <!-- Populated dynamically: Auto, Townsfolk, Vendors, Marriage, Custom Presets, + New -->
+          </div>
+        </div>
+
         <div id="bagGrid" class="cards-grid planner-grid">
           <p style="color: var(--text-muted); font-style: italic;">Loading daily plan...</p>
         </div>
@@ -376,6 +384,51 @@
         <button class="tree-modal-ctrl-btn" id="treeZoomIn" title="Zoom In">＋</button>
         <button class="tree-modal-ctrl-btn" id="treeZoomOut" title="Zoom Out">−</button>
         <button class="tree-modal-ctrl-btn tree-modal-ctrl-fit" id="treeFitBtn" title="Fit to Screen">Fit to screen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Bag Preset Modal Overlay -->
+  <div id="customPresetModal" class="preset-modal-backdrop" style="display: none;">
+    <div class="preset-modal-window" onclick="event.stopPropagation()">
+      <div class="preset-modal-header">
+        <div class="preset-modal-title">
+          <img class="section-icon" src="/static/icons/ui/icon_bag.png" alt="Preset">
+          <span id="presetModalTitle">Create Custom Bag Preset</span>
+        </div>
+        <button class="preset-modal-close" id="presetModalClose" title="Close (Esc)"><img class="inline-icon" src="/static/icons/ui/icon_close.svg" alt="Close"></button>
+      </div>
+
+      <div class="preset-modal-body">
+        <div class="preset-field-group">
+          <label for="presetNameInput" class="preset-label">Preset Name</label>
+          <input type="text" id="presetNameInput" class="preset-name-input" placeholder="e.g. My Favorites, Bachelors..." maxlength="40" autocomplete="off" />
+        </div>
+
+        <div class="preset-villager-section">
+          <div class="preset-toolbar">
+            <span class="preset-label">Select Villagers</span>
+            <div class="preset-toolbar-actions">
+              <button type="button" class="preset-btn-sm" id="presetSelectAllBtn">Select All</button>
+              <button type="button" class="preset-btn-sm" id="presetClearBtn">Clear</button>
+            </div>
+            <span class="preset-counter-badge" id="presetCounterBadge">0 / 34 Villagers</span>
+          </div>
+
+          <div class="preset-villager-grid" id="presetVillagerGrid">
+            <!-- 34 villager cards populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="preset-modal-footer">
+        <div class="preset-footer-left">
+          <button type="button" class="preset-btn-delete" id="presetDeleteBtn" style="display: none;">Delete Preset</button>
+        </div>
+        <div class="preset-footer-right">
+          <button type="button" class="preset-btn-cancel" id="presetCancelBtn">Cancel</button>
+          <button type="button" class="preset-btn-save" id="presetSaveBtn">Save Preset</button>
+        </div>
       </div>
     </div>
   </div>
