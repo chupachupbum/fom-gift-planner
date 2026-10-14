@@ -690,7 +690,15 @@ function openCraftingTreeModal(rawTreeData, deficit) {
   function getCardHeight(d) {
     const data = d.data;
     const isRoot = d.depth === 0;
+    if (data.is_quest_group) return 56;
     if (data.is_group) return 56;
+
+    if (data.is_quest) {
+      let h = 44 + 24; // header (44px) + badges row (24px)
+      if (data.requester) h += 24;
+      if (data.via_item_name) h += 18;
+      return Math.max(68, Math.min(110, h));
+    }
 
     let h = 44; // base header
     if (isRoot && deficit) h += 24; // deficit badge
@@ -773,14 +781,18 @@ function openCraftingTreeModal(rawTreeData, deficit) {
       const nodeEl = d3.select(this);
       const data = d.data;
       const isRoot = d.depth === 0;
+      const isQuestGroup = !!data.is_quest_group;
       const isGroup = !!data.is_group;
-      const isGift = !isGroup && data.gift_npcs && data.gift_npcs.length > 0;
+      const isQuest = !!data.is_quest;
+      const isGift = !isGroup && !isQuest && data.gift_npcs && data.gift_npcs.length > 0;
       const hasChildren = (d.children && d.children.length > 0) || (d._children && d._children.length > 0);
-      const isIntermediate = !isRoot && !isGroup && hasChildren;
+      const isIntermediate = !isRoot && !isGroup && !isQuest && hasChildren;
 
       let cardClass = 'd3-tree-node';
       if (isRoot) cardClass += ' is-root';
+      else if (isQuestGroup) cardClass += ' is-group is-quest-group';
       else if (isGroup) cardClass += ' is-group';
+      else if (isQuest) cardClass += ' is-quest';
       else if (isIntermediate) cardClass += ' is-intermediate';
       else if (isGift) cardClass += ' is-gift';
 
@@ -801,58 +813,98 @@ function openCraftingTreeModal(rawTreeData, deficit) {
           toggleNode(d);
         });
 
-      // Header row: sprite + title
-      let headerHtml = `<div class="d3-node-header">`;
-      if (isGroup) {
-        headerHtml += `<img class="d3-node-sprite" src="/static/icons/ui/icon_recipe.png" alt="Recipe" />`;
+      let bodyHtml = "";
+
+      if (isQuest) {
+        // Quest node rendering
+        const cat = data.quest_category || data.quest_type || 'Request';
+        const catSlug = String(cat).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+        let requesterHtml = "";
+        if (data.requester) {
+          const reqSlug = String(data.requester).toLowerCase().trim();
+          requesterHtml = `
+            <div class="d3-quest-requester" title="Requester: ${escapeHtml(data.requester)}">
+              <img class="d3-requester-portrait" src="/assets/sprites/npcs/${reqSlug}" onerror="this.src='/static/icons/ui/icon_npc.png';" alt="${escapeHtml(data.requester)}" />
+              <span class="d3-requester-name">${escapeHtml(data.requester)}</span>
+            </div>
+          `;
+        }
+
+        let viaHtml = "";
+        if (data.via_item_name) {
+          viaHtml = `<div class="d3-quest-via" title="Needed via ${escapeHtml(data.via_item_name)}">via ${escapeHtml(data.via_item_name)}</div>`;
+        }
+
+        bodyHtml = `
+          <div class="d3-node-header">
+            <span class="d3-quest-icon" style="font-size: 1.1rem; line-height: 1; margin-right: 4px;">📜</span>
+            <span class="d3-node-name" title="${escapeHtml(data.item_name)}">${escapeHtml(data.item_name)}</span>
+          </div>
+          <div class="d3-quest-badges">
+            <span class="d3-quest-badge quest-cat-${catSlug}">${escapeHtml(cat)}</span>
+            <span class="d3-quest-amount">Required: ×${data.quest_amount || 1}</span>
+          </div>
+          ${requesterHtml}
+          ${viaHtml}
+        `;
       } else {
-        headerHtml += `<img class="d3-node-sprite" src="${data.sprite_url || '/assets/sprites/items/' + data.item_id}" alt="${data.item_name}" onerror="this.style.display='none'" />`;
-      }
-      headerHtml += `<span class="d3-node-name" title="${data.item_name}">${data.item_name}</span>`;
-      headerHtml += `</div>`;
-      let bodyHtml = headerHtml;
+        // Header row: sprite + title
+        let headerHtml = `<div class="d3-node-header">`;
+        if (isQuestGroup) {
+          headerHtml += `<span class="d3-quest-icon" style="font-size: 1.1rem; line-height: 1; margin-right: 4px;">📜</span>`;
+        } else if (isGroup) {
+          headerHtml += `<img class="d3-node-sprite" src="/static/icons/ui/icon_recipe.png" alt="Recipe" />`;
+        } else {
+          headerHtml += `<img class="d3-node-sprite" src="${data.sprite_url || '/assets/sprites/items/' + data.item_id}" alt="${escapeHtml(data.item_name)}" onerror="this.style.display='none'" />`;
+        }
+        headerHtml += `<span class="d3-node-name" title="${escapeHtml(data.item_name)}">${escapeHtml(data.item_name)}</span>`;
+        headerHtml += `</div>`;
+        bodyHtml = headerHtml;
 
-      // Deficit badge on root
-      if (isRoot && deficit) {
-        bodyHtml += `<span class="d3-node-deficit">Need: ${deficit}</span>`;
-      }
+        // Deficit badge on root
+        if (isRoot && deficit) {
+          bodyHtml += `<span class="d3-node-deficit">Need: ${deficit}</span>`;
+        }
 
-      // Alt source badges
-      if (data.alt_sources && data.alt_sources.length > 0) {
-        bodyHtml += `<div class="d3-node-alt-sources">`;
-        data.alt_sources.slice(0, 3).forEach(s => {
-          const iconUrl = `/assets/sprites/locations/${s.icon || s.type}`;
-          const label = s.vendor || s.location || (s.type === 'chicken_statue' ? 'Chicken Statue' : (s.type === 'wishing_well' ? 'Wishing Well' : (s.type === 'living_off_the_land' ? 'Living Off The Land' : (s.type || '').replace(/_/g, ' '))));
-          const cost = (s.cost !== null && s.cost !== undefined)
-            ? ` ${s.cost}${s.currency === 'tesserae' ? 't' : (s.currency === 'shiny_beads' ? ' beads' : ' ' + (s.currency || ''))}`
-            : '';
-          const note = s.note ? ` (${s.note})` : '';
-          const fullTitle = `${label}${cost}${note}`.replace(/"/g, '&quot;');
+        // Alt source badges
+        if (data.alt_sources && data.alt_sources.length > 0) {
+          bodyHtml += `<div class="d3-node-alt-sources">`;
+          data.alt_sources.slice(0, 3).forEach(s => {
+            const iconUrl = `/assets/sprites/locations/${s.icon || s.type}`;
+            const label = s.vendor || s.location || (s.type === 'chicken_statue' ? 'Chicken Statue' : (s.type === 'wishing_well' ? 'Wishing Well' : (s.type === 'living_off_the_land' ? 'Living Off The Land' : (s.type || '').replace(/_/g, ' '))));
+            const cost = (s.cost !== null && s.cost !== undefined)
+              ? ` ${s.cost}${s.currency === 'tesserae' ? 't' : (s.currency === 'shiny_beads' ? ' beads' : ' ' + (s.currency || ''))}`
+              : '';
+            const note = s.note ? ` (${s.note})` : '';
+            const fullTitle = `${label}${cost}${note}`.replace(/"/g, '&quot;');
 
-          bodyHtml += `<span class="d3-node-alt-badge" title="${fullTitle}">
-            <img class="source-icon" src="${iconUrl}" onerror="this.src='/static/icons/ui/icon_location_pin.png';" alt="${s.type}" />
-            <span class="badge-text">${label}${cost}</span>
-          </span>`;
-        });
-        bodyHtml += `</div>`;
-      }
+            bodyHtml += `<span class="d3-node-alt-badge" title="${fullTitle}">
+              <img class="source-icon" src="${iconUrl}" onerror="this.src='/static/icons/ui/icon_location_pin.png';" alt="${s.type}" />
+              <span class="badge-text">${label}${cost}</span>
+            </span>`;
+          });
+          bodyHtml += `</div>`;
+        }
 
-      // NPC recipient chips
-      if (data.gift_npcs && data.gift_npcs.length > 0) {
-        bodyHtml += `<div class="d3-node-npcs">`;
-        data.gift_npcs.forEach(npc => {
-          bodyHtml += `<span class="d3-node-npc-chip">→ ${npc}</span>`;
-        });
-        bodyHtml += `</div>`;
-      }
+        // NPC recipient chips
+        if (data.gift_npcs && data.gift_npcs.length > 0) {
+          bodyHtml += `<div class="d3-node-npcs">`;
+          data.gift_npcs.forEach(npc => {
+            bodyHtml += `<span class="d3-node-npc-chip">→ ${escapeHtml(npc)}</span>`;
+          });
+          bodyHtml += `</div>`;
+        }
 
-      // Collapse / Expand toggle button pill
-      if (hasChildren && !isRoot) {
-        const childCount = (d.children ? d.children.length : (d._children ? d._children.length : 0));
-        const isCollapsed = !!d._children;
-        const toggleIcon = isCollapsed ? '▶' : '▼';
-        const toggleText = isCollapsed ? `${toggleIcon} ${childCount} products` : `${toggleIcon} Collapse`;
-        bodyHtml += `<div class="d3-node-toggle ${isCollapsed ? 'is-collapsed' : ''}">${toggleText}</div>`;
+        // Collapse / Expand toggle button pill
+        if (hasChildren && !isRoot) {
+          const childCount = (d.children ? d.children.length : (d._children ? d._children.length : 0));
+          const isCollapsed = !!d._children;
+          const toggleIcon = isCollapsed ? '▶' : '▼';
+          const labelSuffix = isQuestGroup ? 'quests' : 'products';
+          const toggleText = isCollapsed ? `${toggleIcon} ${childCount} ${labelSuffix}` : `${toggleIcon} Collapse`;
+          bodyHtml += `<div class="d3-node-toggle ${isCollapsed ? 'is-collapsed' : ''}">${toggleText}</div>`;
+        }
       }
 
       cardDiv.html(bodyHtml);
@@ -876,7 +928,8 @@ function openCraftingTreeModal(rawTreeData, deficit) {
         const childCount = (d.children ? d.children.length : (d._children ? d._children.length : 0));
         const isCollapsed = !!d._children;
         const toggleIcon = isCollapsed ? '▶' : '▼';
-        const toggleText = isCollapsed ? `${toggleIcon} ${childCount} products` : `${toggleIcon} Collapse`;
+        const labelSuffix = d.data.is_quest_group ? 'quests' : 'products';
+        const toggleText = isCollapsed ? `${toggleIcon} ${childCount} ${labelSuffix}` : `${toggleIcon} Collapse`;
 
         if (!toggleEl.empty()) {
           toggleEl.text(toggleText).classed('is-collapsed', isCollapsed);
@@ -977,9 +1030,15 @@ function prepareTreeData(rawTree) {
 
     node.children.forEach(processNode);
 
+    // Separate quest children from recipe children
+    const questChildren = node.children.filter(c => c.is_quest === true);
+    const nonQuestChildren = node.children.filter(c => !c.is_quest);
+
+    let effectiveChildren = nonQuestChildren;
+
     // If node has intermediate items (with children) AND direct leaves (children: [])
-    const intermediates = node.children.filter(c => (c.children && c.children.length > 0) || (c._children && c._children.length > 0));
-    const leaves = node.children.filter(c => (!c.children || c.children.length === 0) && (!c._children || c._children.length === 0));
+    const intermediates = nonQuestChildren.filter(c => (c.children && c.children.length > 0) || (c._children && c._children.length > 0));
+    const leaves = nonQuestChildren.filter(c => (!c.children || c.children.length === 0) && (!c._children || c._children.length === 0));
 
     // Group leaves if there are intermediates AND leaves count > 5
     if (intermediates.length > 0 && leaves.length > 5) {
@@ -991,7 +1050,23 @@ function prepareTreeData(rawTree) {
         gift_npcs: [],
         alt_sources: []
       };
-      node.children = [...intermediates, groupNode];
+      effectiveChildren = [...intermediates, groupNode];
+    }
+
+    // When node has direct quest children with count > 4: group them into a single collapsible node
+    if (questChildren.length > 4) {
+      const questGroupNode = {
+        item_id: `_group_quests_${node.item_id}`,
+        item_name: `Quests (${questChildren.length})`,
+        is_group: true,
+        is_quest_group: true,
+        children: questChildren,
+        gift_npcs: [],
+        alt_sources: []
+      };
+      node.children = [...effectiveChildren, questGroupNode];
+    } else {
+      node.children = [...effectiveChildren, ...questChildren];
     }
   }
 
@@ -1140,12 +1215,22 @@ function _setupTreeModalControlsEnhanced(svg, g, root, svgW, svgH, zoom, update)
         return;
       }
 
+      function isNodeMatch(data) {
+        if (!data) return false;
+        const name = (data.item_name || '').toLowerCase();
+        const npcs = (data.gift_npcs || []).join(' ').toLowerCase();
+        const alts = (data.alt_sources || []).map(s => s.vendor || s.location || s.type).join(' ').toLowerCase();
+        const qType = (data.quest_type || '').toLowerCase();
+        const qCat = (data.quest_category || '').toLowerCase();
+        const qReq = (data.requester || '').toLowerCase();
+        const qVia = (data.via_item_name || '').toLowerCase();
+        return name.includes(term) || npcs.includes(term) || alts.includes(term) ||
+               qType.includes(term) || qCat.includes(term) || qReq.includes(term) || qVia.includes(term);
+      }
+
       // Auto-expand any collapsed ancestors of matching nodes
       function expandMatches(n) {
-        const name = (n.data.item_name || '').toLowerCase();
-        const npcs = (n.data.gift_npcs || []).join(' ').toLowerCase();
-        const alts = (n.data.alt_sources || []).map(s => s.vendor || s.location || s.type).join(' ').toLowerCase();
-        const isSelfMatch = name.includes(term) || npcs.includes(term) || alts.includes(term);
+        const isSelfMatch = isNodeMatch(n.data);
 
         const allChildren = (n.children || []).concat(n._children || []);
         let childMatched = false;
@@ -1166,10 +1251,7 @@ function _setupTreeModalControlsEnhanced(svg, g, root, svgW, svgH, zoom, update)
 
       let firstMatch = null;
       svg.selectAll('.d3-tree-node').each(function(d) {
-        const name = (d.data.item_name || '').toLowerCase();
-        const npcs = (d.data.gift_npcs || []).join(' ').toLowerCase();
-        const alts = (d.data.alt_sources || []).map(s => s.vendor || s.location || s.type).join(' ').toLowerCase();
-        const isMatch = name.includes(term) || npcs.includes(term) || alts.includes(term);
+        const isMatch = isNodeMatch(d.data);
 
         d3.select(this)
           .classed('is-match', isMatch)
@@ -1397,9 +1479,11 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
     if (hasBranches) {
       const treeKey = `tree_${fId}_${idx}`;
       window._craftingTreeData[treeKey] = tree;
+      const hasQuests = Boolean((f.quest_count && f.quest_count > 0) || (f.quest_demand && f.quest_demand > 0) || (tree && Array.isArray(tree.children) && tree.children.some(c => c.is_quest)));
+      const treeBtnText = hasQuests ? 'View crafting & quest tree' : 'View crafting tree';
       treeHtml = `
         <div class="tree-section">
-          <button type="button" class="tree-toggle" onclick="openCraftingTreeModal(window._craftingTreeData['${treeKey}'], ${f.deficit || 0})"><img class="inline-icon" src="/static/icons/ui/icon_tree.png" alt="Tree"> View crafting tree</button>
+          <button type="button" class="tree-toggle" onclick="openCraftingTreeModal(window._craftingTreeData['${treeKey}'], ${f.deficit || 0})"><img class="inline-icon" src="/static/icons/ui/icon_tree.png" alt="Tree"> ${treeBtnText}</button>
         </div>
       `;
     }
@@ -1435,13 +1519,49 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
       `;
     }
 
+    // Deficit badge
+    const giftDeficit = (f.gift_deficit !== undefined && f.gift_deficit !== null) ? f.gift_deficit : (f.deficit - (f.quest_demand || 0));
+    const deficitBadgeText = (f.quest_demand && f.quest_demand > 0)
+      ? `Need: ${f.deficit} (${giftDeficit} Gifts + ${f.quest_demand} Quests)`
+      : `Need: ${f.deficit}`;
+
+    // Quest reminder row inside focus-details
+    let questRowHtml = "";
+    if ((f.quest_count && f.quest_count > 0) || (f.quest_demand && f.quest_demand > 0)) {
+      const questCount = f.quest_count || 0;
+      const questDemand = f.quest_demand || 0;
+      const catEntries = Object.entries(f.quest_categories || {});
+      const catPills = catEntries.map(([category, count]) => {
+        const catSlug = String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        return `<span class="quest-cat-pill quest-cat-${catSlug}">${escapeHtml(category)}: ${count}</span>`;
+      }).join("");
+
+      const summaryLines = (f.quest_summary || []).map(q => {
+        const amt = q.amount ? ` ×${q.amount}` : '';
+        const viaTarget = q.via_item_name || q.target_item_name;
+        const via = (!q.is_direct && viaTarget) ? ` via ${viaTarget}` : '';
+        const req = q.requester ? ` (${q.requester})` : '';
+        return `• ${q.quest_name}${amt}${via}${req}`;
+      });
+      const summaryTooltip = summaryLines.join('\n');
+
+      questRowHtml = `
+        <div class="focus-quest-row" title="${escapeHtml(summaryTooltip)}">
+          <div class="focus-quest-header">
+            <strong>📜 Future Quests: ${questCount} ${questCount === 1 ? 'quest' : 'quests'} (+${questDemand} needed)</strong>
+          </div>
+          ${catPills ? `<div class="focus-quest-pills" title="${escapeHtml(summaryTooltip)}">${catPills}</div>` : ''}
+        </div>
+      `;
+    }
+
     return `
       <div class="focus-card">
         <div class="focus-header">
           <img class="item-sprite" src="${f.sprite_url}" alt="${f.item_name}" loading="lazy" />
           <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
             <strong style="color: var(--text-main);">${f.item_name}</strong>
-            <span class="deficit-badge">Need: ${f.deficit}</span>
+            <span class="deficit-badge">${deficitBadgeText}</span>
           </div>
         </div>
 
@@ -1449,6 +1569,7 @@ function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = nu
           <div><strong><img class="inline-icon" src="/static/icons/ui/icon_location_pin.png" alt="Source"> Source:</strong> ${f.location || 'Gather / Farm'}</div>
           <div><strong><img class="inline-icon" src="/static/icons/ui/icon_calendar.png" alt="Season"> Season:</strong> ${seasonsStr}</div>
           <div><strong><img class="inline-icon" src="/static/icons/ui/icon_lock.png" alt="Unlocks"> Unlocks Gifts For:</strong> ${blockedNpcsHtml}</div>
+          ${questRowHtml}
           ${altSourcesHtml}
         </div>
         ${treeHtml}

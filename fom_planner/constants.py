@@ -6,7 +6,11 @@ Shared constants, enumerations, and configurations for Fields of Mistria planner
 
 import os
 from enum import IntEnum
+from pathlib import Path
 from typing import Dict, List, Set, Tuple
+
+_PACKAGE_ROOT: Path = Path(__file__).resolve().parent.parent
+DEFAULT_QUEST_DATA_PATH: Path = _PACKAGE_ROOT / "data" / "quest_data.json"
 
 # Default save folder locations on Windows, Linux, Steam Deck, Snap, and Flatpak
 DEFAULT_SAVE_DIRS: List[str] = [

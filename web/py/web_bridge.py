@@ -22,6 +22,7 @@ from fom_planner.data_loader import (
     load_item_metadata,
     load_item_seasons,
     load_npc_preferences_from_json,
+    load_quest_data,
     load_recipe_sources,
 )
 from fom_planner.models import InGameDate, SaveData
@@ -473,6 +474,11 @@ def plan_to_json(
                 "blocked_npcs": blocked_list,
                 "sprite_url": f"/assets/sprites/items/{f_id}",
                 "alt_sources": _to_serializable(alt_sources_list),
+                "gift_deficit": f.get("gift_deficit", f.get("deficit", 0)),
+                "quest_demand": f.get("quest_demand", 0),
+                "quest_count": f.get("quest_count", 0),
+                "quest_categories": _to_serializable(f.get("quest_categories", {})),
+                "quest_summary": _to_serializable(f.get("quest_summary", [])),
             }
         )
 
@@ -686,6 +692,7 @@ def init_bridge(data_dir: str = "web/data") -> None:
     item_seasons_path = resolved / "item_seasons.json"
     alt_sources_path = resolved / "alt_sources.json"
     item_data_path = resolved / "item_data.json"
+    quest_data_path = resolved / "quest_data.json"
 
     _CACHED_DATA["data_dir"] = resolved
     _CACHED_DATA["all_recipes"] = load_recipes(str(recipes_path)) if recipes_path.exists() else {}
@@ -693,6 +700,7 @@ def init_bridge(data_dir: str = "web/data") -> None:
     _CACHED_DATA["recipe_sources"] = load_recipe_sources(str(recipe_sources_path)) if recipe_sources_path.exists() else {}
     _CACHED_DATA["item_seasons"] = load_item_seasons(str(item_seasons_path)) if item_seasons_path.exists() else {}
     _CACHED_DATA["alt_sources"] = load_alt_sources(str(alt_sources_path)) if alt_sources_path.exists() else {}
+    _CACHED_DATA["quest_data"] = load_quest_data(str(quest_data_path)) if quest_data_path.exists() else {}
 
     if item_data_path.exists():
         npc_defs, _ = load_npc_preferences_from_json(item_data_path)
@@ -814,6 +822,7 @@ def generate_plan(
         alt_sources = _CACHED_DATA.get("alt_sources", {})
         npcs_def = _CACHED_DATA.get("npc_definitions", {})
         metadata = _CACHED_DATA.get("metadata", {})
+        quest_data = _CACHED_DATA.get("quest_data", {})
 
         focus_sort = config.focus_sort or "impact"
         all_seasons_flag = bool(config.all_seasons)
@@ -845,6 +854,7 @@ def generate_plan(
                 focus_npcs=focus_npcs,
                 custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
+                quest_data=quest_data,
             )
         else:
             plan_results = plan_daily_gift_bag(
@@ -870,6 +880,7 @@ def generate_plan(
                 focus_npcs=focus_npcs,
                 custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
+                quest_data=quest_data,
             )
 
         # Ensure loaded assets are accessible to plan_to_json

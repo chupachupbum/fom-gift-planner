@@ -14,7 +14,8 @@ const DATA_FILES = [
   "alt_sources.json",
   "item_locations.json",
   "recipe_sources.json",
-  "item_seasons.json"
+  "item_seasons.json",
+  "quest_data.json"
 ];
 
 let pyodide = null;

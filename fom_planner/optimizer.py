@@ -9,6 +9,7 @@ Greedy weighted set-cover optimizer and focus suggestions calculator for Fields 
 
 import json
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from fom_planner.constants import (
@@ -25,11 +26,13 @@ from fom_planner.crafting import (
     load_recipes,
 )
 from fom_planner.data_loader import (
+    QUEST_ITEM_ALIASES,
     load_alt_sources,
     load_item_locations,
     load_item_seasons,
+    load_quest_data,
 )
-from fom_planner.models import SaveData
+from fom_planner.models import SaveData, is_quest_completed
 
 ITEM_LOCATIONS: Dict[str, str] = load_item_locations()
 ITEM_SEASONS: Dict[str, List[str]] = load_item_seasons()
@@ -173,6 +176,9 @@ def compute_focus_suggestions(
     seasonal_boost: float = 2.0,
     focus_mode_enabled: bool = False,
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
+    quest_data: Optional[Dict[str, Any]] = None,
+    completed_quests: Optional[Set[str]] = None,
+    save: Optional[SaveData] = None,
 ) -> List[Dict[str, Any]]:
     """
     Computes a ranked list of top insufficient items (raw materials and direct gifts)
@@ -212,6 +218,19 @@ def compute_focus_suggestions(
         recipes = load_recipes()
     if item_metadata is None:
         item_metadata = {}
+
+    if quest_data is None:
+        if save is not None or completed_quests is not None:
+            quest_data = load_quest_data()
+        else:
+            quest_data = {}
+
+    if completed_quests is None:
+        if save is not None and hasattr(save, "get_completed_quest_keys"):
+            completed_quests = save.get_completed_quest_keys()
+        else:
+            completed_quests = set()
+    completed_quests_set = set(completed_quests) if completed_quests is not None else set()
 
     clean_inv: Dict[str, int] = {}
     if inventory and isinstance(inventory, dict):
@@ -334,11 +353,164 @@ def compute_focus_suggestions(
     elif clean_season == "autumn":
         clean_season = "fall"
 
+    # Calculate quest demand and rollups to root raw materials
+    raw_quest_demand: Dict[str, int] = {}
+    raw_quest_summaries: Dict[str, List[Dict[str, Any]]] = {}
+    raw_quest_names: Dict[str, Set[str]] = {}
+    raw_quest_categories: Dict[str, Dict[str, Set[str]]] = {}
+
+    processed_target_keys: Set[str] = set()
+    processed_dict_ids: Set[int] = set()
+
+    for item_key, item_info in (quest_data.items() if isinstance(quest_data, dict) else []):
+        if not item_key or not isinstance(item_info, dict):
+            continue
+        if id(item_info) in processed_dict_ids:
+            continue
+        processed_dict_ids.add(id(item_info))
+
+        t = str(item_key).strip().lower()
+        if not t:
+            continue
+        canon_t = QUEST_ITEM_ALIASES.get(t, t)
+        if canon_t in processed_target_keys:
+            continue
+        processed_target_keys.add(canon_t)
+        processed_target_keys.add(t)
+
+        all_item_quests = item_info.get("quests", [])
+        if not isinstance(all_item_quests, list) or not all_item_quests:
+            continue
+
+        active_quests = []
+        for q in all_item_quests:
+            if not isinstance(q, dict):
+                continue
+            q_name = q.get("quest_name")
+            if not q_name:
+                continue
+            if is_quest_completed(q_name, completed_quests_set):
+                continue
+            active_quests.append(q)
+
+        if not active_quests:
+            continue
+
+        target_display_name = (
+            item_info.get("name")
+            or (item_metadata.get(t, {}).get("display_name") if isinstance(item_metadata, dict) else None)
+            or (recipes.get(t, {}).get("display_name") if isinstance(recipes, dict) else None)
+            or t.replace("_", " ").title()
+        )
+
+        owned_t = clean_inv.get(t, 0)
+        if owned_t == 0 and t in _TREE_ITEM_ALIASES:
+            owned_t = clean_inv.get(_TREE_ITEM_ALIASES[t], 0)
+        if owned_t == 0 and t in QUEST_ITEM_ALIASES:
+            owned_t = clean_inv.get(QUEST_ITEM_ALIASES[t], 0)
+
+        direct_gift_need = direct_gift_demand.get(t, 0)
+        if direct_gift_need == 0 and t in _TREE_ITEM_ALIASES:
+            direct_gift_need = direct_gift_demand.get(_TREE_ITEM_ALIASES[t], 0)
+        if direct_gift_need == 0 and t in QUEST_ITEM_ALIASES:
+            direct_gift_need = direct_gift_demand.get(QUEST_ITEM_ALIASES[t], 0)
+
+        surplus = max(0, owned_t - direct_gift_need)
+
+        recipe_key = t
+        if (not recipes or recipe_key not in recipes) and t in QUEST_ITEM_ALIASES:
+            recipe_key = QUEST_ITEM_ALIASES[t]
+        if (not recipes or recipe_key not in recipes) and t in _TREE_ITEM_ALIASES:
+            recipe_key = _TREE_ITEM_ALIASES[t]
+
+        is_crafted = bool(recipes and isinstance(recipes, dict) and recipe_key in recipes)
+        if is_crafted:
+            root_mats = resolve_root_raw_materials(recipe_key, recipes)
+        else:
+            root_mats = {recipe_key: 1}
+
+        for q in active_quests:
+            q_name = q.get("quest_name", "")
+            q_type = q.get("quest_type", "Request")
+            q_cat = q.get("category", "Request")
+            try:
+                q_amount = max(1, int(round(float(q.get("amount", 1)))))
+            except (ValueError, TypeError):
+                q_amount = 1
+            q_requester = q.get("requester")
+
+            used_surplus = min(surplus, q_amount)
+            rem_q_amount = q_amount - used_surplus
+            surplus -= used_surplus
+
+            if rem_q_amount <= 0:
+                continue
+
+            for raw_id, raw_count in root_mats.items():
+                if not raw_id:
+                    continue
+                raw_clean = str(raw_id).strip().lower()
+                raw_needed = raw_count * rem_q_amount
+
+                raw_quest_demand[raw_clean] = raw_quest_demand.get(raw_clean, 0) + raw_needed
+
+                is_direct = bool(
+                    raw_clean == t
+                    or raw_clean == recipe_key
+                    or QUEST_ITEM_ALIASES.get(t) == raw_clean
+                    or _TREE_ITEM_ALIASES.get(t) == raw_clean
+                    or QUEST_ITEM_ALIASES.get(raw_clean) == t
+                )
+
+                summary_entry = {
+                    "quest_name": q_name,
+                    "quest_type": q_type,
+                    "category": q_cat,
+                    "amount": q_amount,
+                    "raw_amount_needed": raw_needed,
+                    "target_item_id": t,
+                    "target_item_name": target_display_name,
+                    "via_item_name": target_display_name,
+                    "is_direct": is_direct,
+                    "requester": q_requester,
+                }
+                raw_quest_summaries.setdefault(raw_clean, []).append(summary_entry)
+                raw_quest_names.setdefault(raw_clean, set()).add(q_name)
+                raw_quest_categories.setdefault(raw_clean, {}).setdefault(q_cat, set()).add(q_name)
+
+    def _get_raw_quest_data(rid: str) -> Tuple[int, List[Dict[str, Any]], Set[str], Dict[str, Set[str]]]:
+        dem = raw_quest_demand.get(rid, 0)
+        summ = list(raw_quest_summaries.get(rid, []))
+        names = set(raw_quest_names.get(rid, set()))
+        cats: Dict[str, Set[str]] = {c: set(ns) for c, ns in raw_quest_categories.get(rid, {}).items()}
+
+        aliases_to_check = set()
+        if rid in _TREE_ITEM_ALIASES:
+            aliases_to_check.add(_TREE_ITEM_ALIASES[rid])
+        if rid in QUEST_ITEM_ALIASES:
+            aliases_to_check.add(QUEST_ITEM_ALIASES[rid])
+        for k, v in QUEST_ITEM_ALIASES.items():
+            if v == rid:
+                aliases_to_check.add(k)
+        for k, v in _TREE_ITEM_ALIASES.items():
+            if v == rid:
+                aliases_to_check.add(k)
+
+        for arid in aliases_to_check:
+            if arid != rid and arid in raw_quest_demand:
+                dem += raw_quest_demand[arid]
+                summ.extend(raw_quest_summaries.get(arid, []))
+                names.update(raw_quest_names.get(arid, set()))
+                for c, ns in raw_quest_categories.get(arid, {}).items():
+                    cats.setdefault(c, set()).update(ns)
+
+        return dem, summ, names, cats
+
     suggestions: List[Dict[str, Any]] = []
     for raw_id, total_dem in raw_demand.items():
         inv_count = effective_inv.get(raw_id, 0)
-        deficit = total_dem - inv_count
-        if deficit > 0:
+        gift_deficit = total_dem - inv_count
+        if gift_deficit > 0:
             if clean_season and season_map and raw_id in season_map:
                 avail_seasons = [
                     "fall" if str(s).strip().lower() == "autumn" else str(s).strip().lower()
@@ -346,6 +518,11 @@ def compute_focus_suggestions(
                 ]
                 if clean_season not in avail_seasons:
                     continue
+
+            item_q_dem, item_q_summ, item_q_names, item_q_cats = _get_raw_quest_data(raw_id)
+            deficit = gift_deficit + item_q_dem
+            quest_count = len(item_q_names)
+            quest_categories = {c: len(ns) for c, ns in sorted(item_q_cats.items())}
 
             pair_map = raw_pair_costs.get(raw_id, {})
             # Sort deterministically by (item_id, npc_id)
@@ -394,7 +571,12 @@ def compute_focus_suggestions(
                 "total_pairs": total_pairs,
                 "demand": total_dem,
                 "inventory": inv_count,
+                "gift_deficit": gift_deficit,
+                "quest_demand": item_q_dem,
                 "deficit": deficit,
+                "quest_count": quest_count,
+                "quest_categories": quest_categories,
+                "quest_summary": item_q_summ,
                 "location_hint": location,
                 "seasonal_boost": boost,
                 "weighted_impact": weighted_impact,
@@ -581,6 +763,9 @@ def build_focus_crafting_trees(
     alt_sources: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     item_metadata: Optional[Dict[str, dict]] = None,
     npc_names: Optional[Dict[str, str]] = None,
+    quest_data: Optional[Dict[str, Any]] = None,
+    completed_quests: Optional[Set[str]] = None,
+    save: Optional[SaveData] = None,
 ) -> List[Dict[str, Any]]:
     """
     Builds a downstream crafting dependency tree for each focus suggestion blocker item.
@@ -596,7 +781,7 @@ def build_focus_crafting_trees(
     Each node includes:
       - item_id, item_name
       - alt_sources: list of alternate acquisition methods from alt_sources.json
-      - children: list of downstream product nodes
+      - children: list of downstream product nodes and terminal quest nodes
       - gift_npcs: sorted list of NPC names who want this item as a gift (leaf/product nodes)
       - sprite_url: URL path to the item's sprite image
     """
@@ -610,6 +795,55 @@ def build_focus_crafting_trees(
         alt_sources = {}
     if item_metadata is None:
         item_metadata = {}
+
+    if quest_data is None:
+        if save is not None or completed_quests is not None:
+            quest_data = load_quest_data()
+        else:
+            quest_data = {}
+
+    if completed_quests is None:
+        if save is not None and hasattr(save, "get_completed_quest_keys"):
+            completed_quests = save.get_completed_quest_keys()
+        else:
+            completed_quests = set()
+    completed_quests_set = set(completed_quests) if completed_quests is not None else set()
+
+    direct_quests_by_item: Dict[str, List[Dict[str, Any]]] = {}
+    if isinstance(quest_data, dict):
+        for q_item_id, q_item_info in quest_data.items():
+            if not q_item_id or not isinstance(q_item_info, dict):
+                continue
+            q_clean_id = str(q_item_id).strip().lower()
+            for q in q_item_info.get("quests", []):
+                if not isinstance(q, dict):
+                    continue
+                q_name = q.get("quest_name")
+                if not q_name or is_quest_completed(q_name, completed_quests_set):
+                    continue
+                direct_quests_by_item.setdefault(q_clean_id, []).append(q)
+
+    def _get_direct_quests(item_id: str) -> List[Dict[str, Any]]:
+        seen_q = set()
+        res = []
+        ids_to_check = [item_id]
+        if item_id in _TREE_ITEM_ALIASES:
+            ids_to_check.append(_TREE_ITEM_ALIASES[item_id])
+        if item_id in QUEST_ITEM_ALIASES:
+            ids_to_check.append(QUEST_ITEM_ALIASES[item_id])
+        for k, v in QUEST_ITEM_ALIASES.items():
+            if v == item_id:
+                ids_to_check.append(k)
+        for k, v in _TREE_ITEM_ALIASES.items():
+            if v == item_id:
+                ids_to_check.append(k)
+        for i_id in ids_to_check:
+            for q in direct_quests_by_item.get(i_id, []):
+                q_name = q.get("quest_name")
+                if q_name and q_name not in seen_q:
+                    seen_q.add(q_name)
+                    res.append(q)
+        return res
 
     # Normalize remaining_items_map keys to lowercase
     norm_remaining_map: Dict[str, Any] = {}
@@ -654,6 +888,9 @@ def build_focus_crafting_trees(
             return True
         return False
 
+    def _is_needed(item_id: str) -> bool:
+        return _is_pending_gift(item_id) or bool(_get_direct_quests(item_id))
+
     def _get_gift_npcs(item_id: str) -> List[str]:
         targets = norm_remaining_map.get(item_id)
         if targets is None and item_id in _TREE_ITEM_ALIASES:
@@ -690,7 +927,7 @@ def build_focus_crafting_trees(
         return sources or []
 
     def _has_pending_downstream(item_id: str, seen: Set[str]) -> bool:
-        """Checks if any downstream product is a pending gift."""
+        """Checks if any downstream product is a pending gift or required by an incomplete quest."""
         if item_id in seen:
             return False
         seen.add(item_id)
@@ -704,7 +941,7 @@ def build_focus_crafting_trees(
             product = str(rdata.get("item_id", rid)).strip().lower()
             if not product:
                 continue
-            if _is_pending_gift(product):
+            if _is_needed(product):
                 return True
             if _has_pending_downstream(product, seen):
                 return True
@@ -739,10 +976,31 @@ def build_focus_crafting_trees(
                 continue
             products_seen.add(product_id)
 
-            if _is_pending_gift(product_id) or _has_pending_downstream(product_id, set()):
+            if _is_needed(product_id) or _has_pending_downstream(product_id, set()):
                 child = _build_subtree(product_id, visited.copy())
                 if child:
                     node["children"].append(child)
+
+        for q in _get_direct_quests(item_id):
+            q_name = q.get("quest_name", "")
+            if not q_name:
+                continue
+            slug = re.sub(r"[^a-z0-9]+", "_", q_name.lower()).strip("_")
+            requester = q.get("requester")
+            node["children"].append({
+                "item_id": f"_quest_{slug}",
+                "item_name": q_name,
+                "is_quest": True,
+                "quest_type": q.get("quest_type", "Request"),
+                "quest_category": q.get("category", "Request"),
+                "quest_amount": int(q.get("amount", 1)),
+                "requester": requester,
+                "via_item_name": node["item_name"],
+                "alt_sources": [],
+                "gift_npcs": [],
+                "children": [],
+                "sprite_url": f"/assets/sprites/npcs/{requester.lower()}" if requester else None,
+            })
 
         return node
 
@@ -757,6 +1015,9 @@ def build_focus_crafting_trees(
         if tree:
             if suggestion.get("item_name") and tree.get("item_name") != suggestion["item_name"]:
                 tree["item_name"] = suggestion["item_name"]
+                for c in tree.get("children", []):
+                    if c.get("is_quest"):
+                        c["via_item_name"] = tree["item_name"]
             trees.append(tree)
 
     return trees
@@ -1037,6 +1298,7 @@ def plan_daily_gift_bag(
     focus_mode_enabled: bool = False,
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
     custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
+    quest_data: Optional[Dict[str, Any]] = None,
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -1525,6 +1787,12 @@ def plan_daily_gift_bag(
         else all_remaining_items_map
     )
 
+    save_completed_quests = (
+        save.get_completed_quest_keys()
+        if (save is not None and hasattr(save, "get_completed_quest_keys"))
+        else None
+    )
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
@@ -1538,6 +1806,9 @@ def plan_daily_gift_bag(
         seasonal_boost=seasonal_boost,
         focus_mode_enabled=focus_mode_enabled,
         focus_npcs=focus_npcs,
+        quest_data=quest_data,
+        completed_quests=save_completed_quests,
+        save=save,
     )
 
     all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -1564,6 +1835,9 @@ def plan_daily_gift_bag(
         alt_sources=alt_sources_data,
         item_metadata=item_metadata,
         npc_names=npc_names_map,
+        quest_data=quest_data,
+        completed_quests=save_completed_quests,
+        save=save,
     )
 
     source_priority = compute_source_priorities(
@@ -1702,6 +1976,7 @@ def plan_max_relationship(
     focus_mode_enabled: bool = False,
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
     custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
+    quest_data: Optional[Dict[str, Any]] = None,
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -2546,6 +2821,12 @@ def plan_max_relationship(
         else all_remaining_items_map
     )
 
+    save_completed_quests = (
+        save.get_completed_quest_keys()
+        if (save is not None and hasattr(save, "get_completed_quest_keys"))
+        else None
+    )
+
     focus_suggestions = compute_focus_suggestions(
         remaining_items_map=all_remaining_items_map,
         inventory=initial_inventory,
@@ -2559,6 +2840,9 @@ def plan_max_relationship(
         seasonal_boost=seasonal_boost,
         focus_mode_enabled=focus_mode_enabled,
         focus_npcs=focus_npcs,
+        quest_data=quest_data,
+        completed_quests=save_completed_quests,
+        save=save,
     )
 
     all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -2585,6 +2869,9 @@ def plan_max_relationship(
         alt_sources=alt_sources_data,
         item_metadata=item_metadata,
         npc_names=npc_names_map,
+        quest_data=quest_data,
+        completed_quests=save_completed_quests,
+        save=save,
     )
 
     source_priority = compute_source_priorities(

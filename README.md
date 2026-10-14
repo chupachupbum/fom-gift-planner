@@ -31,15 +31,18 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
   - Status badges: `📦 HAVE` (in bag/chests) > `✅ CRAFT` (craftable) > `❌ NEED` (need to gather/buy).
   - Dynamically deducts shared ingredients (e.g. flour, milk, sugar) so recipes never double-count materials.
 - **Configurable Focus Suggestions (`--focus-sort`)**:
-  - Pinpoints top blocker raw materials (crops, animal products, forageables) to guide your daily farming and gathering tasks.
+  - Pinpoints top blocker raw materials (crops, animal products, forageables) to guide your daily farming and gathering tasks across both NPC gifts and active quests.
   - Supports 3 ranking criteria:
-    - `impact` (default): Prioritizes items gating the highest number of NPC gifts across town.
-    - `deficit`: Prioritizes items with the largest overall deficit/shortage in your storage.
-    - `quick-wins`: Prioritizes items closest to completion (smallest deficit first) for immediate gift unlocks.
+    - `impact` (default): Prioritizes items gating the highest number of NPC gifts and uncompleted quests across town.
+    - `deficit`: Prioritizes items with the largest combined gift and quest deficit in your storage.
+    - `quick-wins`: Prioritizes items closest to completion (smallest deficit first) for immediate gift and quest unlocks.
+- **Quest Demand & Completion Tracking (`data/quest_data.json`)**:
+  - Tracks item requirements across 214 quests (Request Board, Story Quests, Crown Requests, and Date Invites) covering 277 distinct items.
+  - Reads completed quests directly from your `.sav` file and normalizes internal quest IDs against wiki quest titles so finished quests are automatically excluded.
+  - Rolls up crafted quest requirements to root raw materials and surfaces quest demand badges on Focus Suggestion cards.
 - **Focus Crafting Trees & Downstream Dependency Breakdown**:
   - Automatically calculates downstream crafting dependencies for top blocker items (e.g. `milk` → `cheese`, `wood` → `wooden_chest`).
-  - Displays recipient NPCs unlocked by each downstream craft and indicates required crafting stations (Kitchen, Mill, Crafting Bench, Smelter).
-  - Visualized as interactive tree nodes in the Web Companion UI.
+  - Displays recipient NPCs unlocked by each downstream craft, required crafting stations (Kitchen, Mill, Crafting Bench, Smelter), and expandable `📜 Quests` nodes showing quest category, required quantity, and requester portrait in the Web Companion UI.
 - **Alternate Acquisition Sources (`data/alt_sources.json`)**:
   - Maps items and ingredients to alternate acquisition paths: shops (Balor's Wagon, General Store, Hayden's Ranch, Tack Shop, Sleeping Dragon Inn), Saturday Market stalls, Chicken Statue offerings, Wishing Well wishes, Mining chests & Mimics, Mill processing, Fishing, Quests, Museum rewards, Festivals, and Living off the Land Farming perk bonus drops.
   - Badges indicate vendor/source, buy cost, currency (`tesserae` vs `shiny_beads`), and special availability notes.
@@ -165,6 +168,7 @@ fom-gift-planner/
 │   ├── item_data.json        # Database of 34 NPCs, 556 items, affinities, and tags
 │   ├── item_locations.json   # Database of 452 item spawn and acquisition locations
 │   ├── alt_sources.json      # Database of alternate acquisition paths (shops, wells, etc.)
+│   ├── quest_data.json       # Database of 277 quest-required items across 214 quests
 │   ├── recipe_sources.json   # Cooking recipe unlock sources
 │   ├── item_seasons.json     # Seasonal availability metadata
 │   └── recipes.json          # Complete cooking, crafting, and milling recipes
@@ -173,7 +177,7 @@ fom-gift-planner/
 └── tests/                    # Automated test suite
     ├── fixtures.py           # Reusable synthetic save and item fixture generators
     ├── conftest.py           # Pytest root configuration and shared fixtures
-    ├── core/                 # Core engine tests (planner, crafting, parser, focus)
+    ├── core/                 # Core engine tests (planner, crafting, parser, focus, quests)
     ├── companion/            # Companion FastAPI backend & calendar tests
     ├── web/                  # Pyodide web worker, bridge, sprites & UI contract tests
     └── ci/                   # GitHub Actions CI/CD contracts & security audits
@@ -183,7 +187,7 @@ fom-gift-planner/
 
 ## Running the Test Suite
 
-Run the full automated test suite (976 tests):
+Run the full automated test suite (1,257 tests):
 
 ```bash
 # Run all tests with uv (recommended)

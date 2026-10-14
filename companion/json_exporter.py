@@ -238,6 +238,11 @@ def plan_to_json(
             "blocked_npcs": blocked_list,
             "sprite_url": f"/assets/sprites/items/{f_id}",
             "alt_sources": _to_serializable(alt_sources_list),
+            "gift_deficit": f.get("gift_deficit", f.get("deficit", 0)),
+            "quest_demand": f.get("quest_demand", 0),
+            "quest_count": f.get("quest_count", 0),
+            "quest_categories": _to_serializable(f.get("quest_categories", {})),
+            "quest_summary": _to_serializable(f.get("quest_summary", [])),
         })
 
     # NPC Overview & Completed / Incomplete Breakdown

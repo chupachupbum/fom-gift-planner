@@ -1,0 +1,5905 @@
+{
+  "version": "1.0.0",
+  "extracted_at": "2026-08-17T16:04:09.165821",
+  "item_quest_names": {
+    "copper_ore": [
+      "Cop Some Ore",
+      "Request for Copper"
+    ],
+    "stone_loach": [
+      "The Water Tablet"
+    ],
+    "upper_mines_mushroom": [
+      "The Water Tablet"
+    ],
+    "ruby": [
+      "The Water Tablet",
+      "Procuring the Sealing Scroll",
+      "Request for a Ruby"
+    ],
+    "lantern_moth": [
+      "The Water Tablet"
+    ],
+    "coral_mantis": [
+      "The Earth Tablet"
+    ],
+    "sapphire": [
+      "The Earth Tablet",
+      "Procuring the Sealing Scroll",
+      "Request for Sapphire"
+    ],
+    "archerfish": [
+      "The Earth Tablet"
+    ],
+    "jade_dulse": [
+      "The Earth Tablet"
+    ],
+    "sealing_scroll": [
+      "Procuring the Sealing Scroll",
+      "Breaking The Fire Seal"
+    ],
+    "emerald": [
+      "Procuring the Sealing Scroll",
+      "Breaking The Fire Seal",
+      "Request for an Emerald",
+      "Request for Emeralds"
+    ],
+    "silver_ingot": [
+      "Procuring the Sealing Scroll",
+      "Upgrade the Inn",
+      "Request for a Silver Ingot",
+      "Crown Request: Ingots"
+    ],
+    "faceted_rock_gem": [
+      "Breaking The Fire Seal"
+    ],
+    "rockroot": [
+      "Breaking The Fire Seal"
+    ],
+    "void_stone": [
+      "Creating The Void Mass",
+      "Request for Void Stone"
+    ],
+    "void_powder": [
+      "Creating The Void Mass"
+    ],
+    "void_herb": [
+      "Creating The Void Mass"
+    ],
+    "void_pearl": [
+      "Creating The Void Mass"
+    ],
+    "breath_of_flame": [
+      "Breaking The Ruins Seal",
+      "Potions and Errands",
+      "Request for Breath of Flame"
+    ],
+    "smoke_moth": [
+      "Breaking The Ruins Seal"
+    ],
+    "firesail_fish": [
+      "Breaking The Ruins Seal"
+    ],
+    "obsidian": [
+      "Breaking The Ruins Seal",
+      "Upgrade the Saturday Market",
+      "Upgrade the Carpenter's Shop",
+      "Request for Obsidian"
+    ],
+    "temple_flower": [
+      "Find The Magic Key",
+      "Request for Temple Flower"
+    ],
+    "marigold": [
+      "Find The Magic Key"
+    ],
+    "dragon_forged_fang": [
+      "Breaking The Final Seal",
+      "Repair the Bell Tower"
+    ],
+    "dragon_forged_horn": [
+      "Breaking The Final Seal"
+    ],
+    "dragon_forged_core": [
+      "Breaking The Final Seal",
+      "Repair the Bell Tower",
+      "Request for a Dragon-Forged Core"
+    ],
+    "dragon_forged_powder": [
+      "Breaking The Final Seal"
+    ],
+    "wood": [
+      "Repair the Bridge",
+      "The Mill Restoration Project",
+      "Repair the General Store",
+      "Repair the Beach Bridge",
+      "Upgrade Hayden's Barn",
+      "Upgrade the Inn",
+      "Stone Refinery",
+      "Crafting Tutorial",
+      "Bird Song",
+      "Request for Wood",
+      "Request for Materials"
+    ],
+    "stone": [
+      "Repair the Bridge",
+      "The Mill Restoration Project",
+      "Repair the General Store",
+      "Repair the Beach Bridge",
+      "Upgrade Hayden's Barn",
+      "Upgrade the Inn",
+      "Stone Refinery",
+      "Request for a Rock",
+      "Request for Materials",
+      "Crown Request: Stone"
+    ],
+    "crop": [
+      "Restocking Mistria's Food Reserves",
+      "Crown Request: Crops"
+    ],
+    "copper_ingot": [
+      "The Mill Restoration Project",
+      "Repair the General Store",
+      "Request for a Copper Ingot"
+    ],
+    "iron_ingot": [
+      "Repair the General Store",
+      "Upgrade Hayden's Barn",
+      "Request for an Iron Ingot",
+      "Crown Request: Ingots"
+    ],
+    "fiber": [
+      "Repair the Beach Bridge"
+    ],
+    "chicken_egg": [
+      "Restocking Mistria's Food Reserves 2"
+    ],
+    "cheese": [
+      "Restocking Mistria's Food Reserves 2",
+      "Request for Cheese"
+    ],
+    "haydens_weathervane": [
+      "Find the Weathervane"
+    ],
+    "glass": [
+      "Upgrade the Inn",
+      "Upgrade the Carpenter's Shop",
+      "Request for Glass"
+    ],
+    "peat": [
+      "Upgrade the Inn",
+      "Batch 312",
+      "Request for Gardening Materials"
+    ],
+    "sap": [
+      "Stone Refinery",
+      "Request for Sap"
+    ],
+    "crystal": [
+      "Upgrade the Saturday Market",
+      "Upgrade the Carpenter's Shop",
+      "Request for Crystals"
+    ],
+    "gold_ingot": [
+      "Upgrade the Saturday Market",
+      "Request for Gold Ingots",
+      "Crown Request: Gold Ingots"
+    ],
+    "hardwood": [
+      "Upgrade the Saturday Market",
+      "Repair the Bell Tower",
+      "Request for Hardwood"
+    ],
+    "refined_stone": [
+      "Upgrade the Saturday Market",
+      "Upgrade the Carpenter's Shop",
+      "Expanding the Saturday Market",
+      "Repair the Bell Tower",
+      "Crown Request: Refined Stone"
+    ],
+    "voidite": [
+      "Expanding the Saturday Market",
+      "Request for Voidite"
+    ],
+    "mistril_ingot": [
+      "Expanding the Saturday Market",
+      "Request for a Mistril Ingot"
+    ],
+    "monster_core": [
+      "Expanding the Saturday Market",
+      "Request for a Monster Core"
+    ],
+    "monster_block": [
+      "Expanding the Saturday Market"
+    ],
+    "breath_of_spring": [
+      "The Spring Festival"
+    ],
+    "queen_berry": [
+      "The Harvest Festival"
+    ],
+    "lilac": [
+      "Stinky Stamina Potion"
+    ],
+    "lemon_pie": [
+      "A Craving"
+    ],
+    "spring_salad": [
+      "A Craving"
+    ],
+    "pizza": [
+      "A Craving"
+    ],
+    "ice_cream_sundae": [
+      "A Craving",
+      "A Craving"
+    ],
+    "grilled_cheese": [
+      "A Craving"
+    ],
+    "heather": [
+      "Request for Heather"
+    ],
+    "lemon": [
+      "Request for a Lemon"
+    ],
+    "pineshroom": [
+      "Request for Pineshrooms"
+    ],
+    "silver_sword": [
+      "Request for a Silver Sword"
+    ],
+    "turnip": [
+      "Request for a Turnip"
+    ],
+    "iron_watering_can": [
+      "Request for an Iron Watering Can"
+    ],
+    "apple": [
+      "Request for an Apple"
+    ],
+    "gold_ore": [
+      "Request for Gold Ore"
+    ],
+    "ultimate_large_animal_feed": [
+      "Request for Ultimate Feed"
+    ],
+    "pink_diamond": [
+      "Request for a Pink Diamond"
+    ],
+    "uncommon_bug_pheromones": [
+      "Uncommon Pheromone Request"
+    ],
+    "copper_shovel": [
+      "Request for a Copper Shovel"
+    ],
+    "coral": [
+      "Request for Coral"
+    ],
+    "fennel": [
+      "Request for Fennel"
+    ],
+    "sod": [
+      "Request for Gardening Materials"
+    ],
+    "shadow_flower": [
+      "Request for a Shadow Flower"
+    ],
+    "spirit_mushroom_tea": [
+      "Request for Spirit Mushroom Tea"
+    ],
+    "walnut": [
+      "Request for Walnuts"
+    ],
+    "coconut": [
+      "Request for Coconuts",
+      "Request for Coconuts"
+    ],
+    "peach": [
+      "Request for Peaches"
+    ],
+    "pomegranate": [
+      "Request for a Pomegranate"
+    ],
+    "legendary_honey": [
+      "Request for Legendary Honey"
+    ],
+    "spell_fruit": [
+      "Request for a Spell Fruit"
+    ],
+    "acorn": [
+      "Request for Acorns"
+    ],
+    "chestnut": [
+      "Request for Chestnuts",
+      "Request for Chestnuts"
+    ],
+    "frog": [
+      "Request for a Frog"
+    ],
+    "iron_ore": [
+      "Request for Iron"
+    ],
+    "snail": [
+      "Request for a Snail"
+    ],
+    "crocus": [
+      "Request for a Crocus"
+    ],
+    "tidestone": [
+      "Request for a Tidestone"
+    ],
+    "wild_berries": [
+      "Request for Berries",
+      "Request for Wild Berries",
+      "Request for Berries",
+      "Request for Berries"
+    ],
+    "egg": [
+      "Request for Eggs"
+    ],
+    "moon_fruit": [
+      "Request for a Moon Fruit",
+      "Important Request for a Moon Fruit"
+    ],
+    "archeology_shard": [
+      "Request for Shards",
+      "Crown Request: Archeology Shards"
+    ],
+    "strawberry": [
+      "Request for a Strawberry",
+      "Request for a Strawberry"
+    ],
+    "striped_bass": [
+      "Request for a Striped Bass"
+    ],
+    "pudding": [
+      "Request for Pudding"
+    ],
+    "pumpkin": [
+      "Request for a Pumpkin"
+    ],
+    "blackberry": [
+      "Request for Blackberries",
+      "Request for Blackberries"
+    ],
+    "orange": [
+      "Request for an Orange"
+    ],
+    "snowdrop_anemone": [
+      "Request for a Snowdrop Anemone"
+    ],
+    "rose": [
+      "Request for Roses"
+    ],
+    "clam": [
+      "Request for a Clam"
+    ],
+    "iron_armor": [
+      "Request for Iron Armor"
+    ],
+    "perch": [
+      "Request for a Perch"
+    ],
+    "tilapia": [
+      "Request for a Tilapia"
+    ],
+    "scarecrow": [
+      "Request for a Scarecrow"
+    ],
+    "pear": [
+      "Request for Pears"
+    ],
+    "corrupted_mistril_sword": [
+      "Corrupted Mistril Sword Request"
+    ],
+    "uncommon_fish_bait": [
+      "Request for Uncommon Bait"
+    ],
+    "baked_potato": [
+      "Request for Baked Potato"
+    ],
+    "thorn_vine": [
+      "Request for Thorn Vine"
+    ],
+    "hay": [
+      "Request for Hay"
+    ],
+    "wooden_fence": [
+      "Request for Wood Fencing"
+    ],
+    "ultimate_small_animal_feed": [
+      "Request for Ultimate Feed"
+    ],
+    "peas": [
+      "Request for Peas"
+    ],
+    "caterpillar": [
+      "Request for a Caterpillar"
+    ],
+    "catfish": [
+      "Request for a Catfish"
+    ],
+    "rice": [
+      "Request for Rice"
+    ],
+    "sheep_wool": [
+      "Request for Sheep Wool"
+    ],
+    "potted_plant": [
+      "Request for a Potted Plant"
+    ],
+    "wild_grapes": [
+      "Request for Wild Grapes"
+    ],
+    "copper_net": [
+      "Request for a Copper Net"
+    ],
+    "beet": [
+      "Request for a Beet"
+    ],
+    "bell_berry_bakewell_tart": [
+      "Request for Bell Berry Bakewell Tart",
+      "Bell Berry Bakewell Tart Challenge"
+    ],
+    "tomato": [
+      "Request for Tomatoes"
+    ],
+    "goby": [
+      "Request for a Goby"
+    ],
+    "lake_trout": [
+      "Request for Lake Trout"
+    ],
+    "monster_horn": [
+      "Request for a Monster Horn"
+    ],
+    "cabbage": [
+      "Request for a Cabbage"
+    ],
+    "cauliflower": [
+      "Request for a Cauliflower"
+    ],
+    "sugar_cane": [
+      "Request for Sugar Cane"
+    ],
+    "ice_block": [
+      "Request for Ice"
+    ],
+    "rooster_feather": [
+      "Request for Rooster Feathers"
+    ],
+    "salmon": [
+      "Request for Salmon",
+      "Request for Ingredients"
+    ],
+    "trail_mix": [
+      "Request for Trail Mix"
+    ],
+    "crystal_berries": [
+      "Request for Crystal Berries"
+    ],
+    "noodles": [
+      "Request for Noodles"
+    ],
+    "dill": [
+      "Request for Dill"
+    ],
+    "chili_pepper": [
+      "Request for Chili Peppers"
+    ],
+    "bristle": [
+      "Request for Capybara Bristles"
+    ],
+    "duck_egg": [
+      "Request for a Duck Egg"
+    ],
+    "fog_orchid": [
+      "Request for a Fog Orchid"
+    ],
+    "monster_powder": [
+      "Request for Monster Powder"
+    ],
+    "red_toadstool": [
+      "Request for a Red Toadstool"
+    ],
+    "water_chestnut": [
+      "Request for Water Chestnuts"
+    ],
+    "carrot": [
+      "Request for a Carrot"
+    ],
+    "night_queen": [
+      "Request for a Night Queen"
+    ],
+    "rare_bug_pheromones": [
+      "Request for Rare Pheromone"
+    ],
+    "tomato_soup": [
+      "Request for Tomato Soup"
+    ],
+    "rare_fish_bait": [
+      "Request for Rare Bait"
+    ],
+    "silver_axe": [
+      "Request for a Silver Axe"
+    ],
+    "rabbit_wool": [
+      "Request for Rabbit Wool"
+    ],
+    "monster_fang": [
+      "Request for a Monster Fang"
+    ],
+    "middlemist": [
+      "Request for a Middlemist"
+    ],
+    "holly": [
+      "Request for Holly"
+    ],
+    "copper_nugget_beetle": [
+      "Request for Copper Beetle"
+    ],
+    "dragon_horn_beetle": [
+      "Request for Dragon Horn Beetle"
+    ],
+    "pond_skater": [
+      "Request for a Pond Skater"
+    ],
+    "singing_katydid": [
+      "Request for Singing Katydid"
+    ],
+    "mullet": [
+      "Request for a Mullet"
+    ],
+    "pink_scallop_shell": [
+      "Request for a Seashell"
+    ],
+    "freshwater_oyster": [
+      "Request for a Freshwater Oyster"
+    ],
+    "sunflower": [
+      "Request for a Sunflower"
+    ],
+    "common_bug_pheromones": [
+      "Request for Common Pheromone"
+    ],
+    "armored_bass": [
+      "Request for Armored Bass"
+    ],
+    "freshwater_eel": [
+      "Request for Freshwater Eel"
+    ],
+    "monster_shell": [
+      "Request for a Monster Shell"
+    ],
+    "silver_ore": [
+      "Request for Silver Ore"
+    ],
+    "shipping_bin": [
+      "Request for a Shipping Bin"
+    ],
+    "dragon_forged_bracelet": [
+      "Dragon-Forged Bracelet Request"
+    ],
+    "mistril_ore": [
+      "Request for Mistril Ore"
+    ],
+    "horse_hair": [
+      "Request for Horse Hair"
+    ],
+    "hay_bale": [
+      "Request for a Hay Bale"
+    ],
+    "watermelon": [
+      "Request for a Watermelon"
+    ],
+    "fiddlehead": [
+      "Request for a Fiddlehead"
+    ],
+    "clay": [
+      "Request for Art Supplies"
+    ],
+    "burdock_root": [
+      "Request for Burdock Root"
+    ],
+    "onion": [
+      "Request for an Onion"
+    ],
+    "golden_butter": [
+      "Request for Golden Butter"
+    ],
+    "sweet_potato": [
+      "Request for a Sweet Potato"
+    ],
+    "grilled_corn": [
+      "Request for Grilled Corn"
+    ],
+    "corn": [
+      "Request for Corn"
+    ],
+    "diamond": [
+      "Request for Diamond"
+    ],
+    "miners_pickaxe": [
+      "Request for a Miner's Pickaxe"
+    ],
+    "really_round_rock": [
+      "Request for a Really Round Rock"
+    ],
+    "pike": [
+      "Request for a Pike"
+    ],
+    "oyster_mushroom": [
+      "Request for Oyster Mushrooms"
+    ],
+    "blueberry": [
+      "Request for Blueberries"
+    ],
+    "broccoli": [
+      "Request for Broccoli"
+    ],
+    "cod": [
+      "Request for Cod"
+    ],
+    "deep_earthworm": [
+      "Request for a Deep Earthworm"
+    ],
+    "milk": [
+      "Request for Milk"
+    ],
+    "rosemary": [
+      "Request for Rosemary"
+    ],
+    "wild_leek": [
+      "Request for Wild Leek"
+    ],
+    "garlic": [
+      "Request for Garlic"
+    ],
+    "butter": [
+      "Request for Butter"
+    ],
+    "deluxe_honey": [
+      "Request for Deluxe Honey"
+    ],
+    "bull_horn": [
+      "Request for Bull Horns"
+    ],
+    "cranberry": [
+      "Request for Cranberries"
+    ],
+    "glowberry": [
+      "Request for Glowberries"
+    ],
+    "smallmouth_bass": [
+      "Request for Smallmouth Bass"
+    ],
+    "red_wine": [
+      "Request for Red Wine"
+    ],
+    "spring_galette": [
+      "Request for Spring Galette"
+    ],
+    "beet_soup": [
+      "Request for Beet Soup",
+      "Beet Soup Challenge"
+    ],
+    "worm": [
+      "Request for Bait"
+    ],
+    "earthshroom": [
+      "Request for an Earthshroom"
+    ],
+    "horseradish": [
+      "Request for Ingredients"
+    ],
+    "trout": [
+      "Request for Trout"
+    ],
+    "underseaweed": [
+      "Request for Underseaweed"
+    ],
+    "tuna_sashimi": [
+      "Request for Tuna Sashimi"
+    ],
+    "coelacanth": [
+      "Request for a Coelacanth"
+    ],
+    "common_fish_bait": [
+      "Request for Common Bait"
+    ],
+    "basil": [
+      "Request for Herbs"
+    ],
+    "thyme": [
+      "Request for Herbs"
+    ],
+    "morel_mushroom": [
+      "Request for a Morel Mushroom"
+    ],
+    "rose_hip": [
+      "Request for Rose Hips"
+    ],
+    "seaweed": [
+      "Request for Seaweed"
+    ],
+    "tea": [
+      "Request for Tea"
+    ],
+    "birdhouse": [
+      "Request for a Bird House"
+    ],
+    "cucumber": [
+      "Request for Cucumbers"
+    ],
+    "premium_honey": [
+      "Request for Premium Honey"
+    ],
+    "daikon_radish": [
+      "Request for a Daikon Radish"
+    ],
+    "sesame": [
+      "Request for Sesame"
+    ],
+    "pomegranate_juice": [
+      "Request for Pomegranate Juice"
+    ],
+    "rice_ball": [
+      "Request for a Riceball",
+      "Rice Ball Challenge"
+    ],
+    "salted_watermelon": [
+      "Request for Salted Watermelon"
+    ],
+    "golden_cookies": [
+      "Request for Golden Cookies",
+      "Golden Cookies Challenge"
+    ],
+    "written_root": [
+      "Request for a Written Root"
+    ],
+    "dog_treat": [
+      "Request for a Dog Treat"
+    ],
+    "fried_rice": [
+      "Request for Fried Rice"
+    ],
+    "lobster": [
+      "Request for a Lobster"
+    ],
+    "monster_mash": [
+      "Request for Monster Mash"
+    ],
+    "pumpkin_pie": [
+      "Request for a Pumpkin Pie"
+    ],
+    "sushi_platter": [
+      "Request for a Sushi Platter"
+    ],
+    "clod_bomb": [
+      "Request for a Bomb"
+    ],
+    "fire_wasp": [
+      "Request for a Fire Wasp"
+    ],
+    "iron_shovel": [
+      "Request for an Iron Shovel"
+    ],
+    "latte": [
+      "Request for a Latte"
+    ],
+    "mont_blanc": [
+      "Request for Mont Blanc"
+    ],
+    "dining_tables": [
+      "Crown Request: Tables and Chairs"
+    ],
+    "dining_chairs": [
+      "Crown Request: Tables and Chairs"
+    ],
+    "mine_forageable": [
+      "Crown Request: Mine Forageables"
+    ],
+    "fish": [
+      "Crown Request: Fish"
+    ],
+    "berry": [
+      "Crown Request: Berries"
+    ],
+    "feather": [
+      "Crown Request: Animal Materials"
+    ],
+    "wool": [
+      "Crown Request: Animal Materials"
+    ],
+    "soup": [
+      "Crown Request: Soup"
+    ],
+    "shard_mass": [
+      "Crown Request: Archeology Shards"
+    ],
+    "copper_tool": [
+      "Crown Request: Copper Tools"
+    ],
+    "golden_cheese": [
+      "Crown Request: Golden Ingredients"
+    ],
+    "golden_mayonnaise": [
+      "Crown Request: Golden Ingredients"
+    ],
+    "baked_dishes": [
+      "Crown Request: Baked Dishes"
+    ],
+    "stone_path": [
+      "Crown Request: Stone Paths"
+    ],
+    "flower": [
+      "Crown Request: Flowers"
+    ],
+    "monster_part": [
+      "Crown Request: Monster Materials"
+    ],
+    "grass_starter": [
+      "Crown Request: Grass Starters"
+    ],
+    "bell_berry": [
+      "Crown Request: Bell Berries"
+    ],
+    "crystal_berry_pie": [
+      "Crystal Berry Pie Challenge"
+    ],
+    "crispy_fried_earthshroom": [
+      "Fried Earthshroom Challenge"
+    ],
+    "chocolate_cake": [
+      "Chocolate Cake Challenge"
+    ],
+    "tide_salad": [
+      "Tide Salad Challenge"
+    ],
+    "omelet": [
+      "Omelet Challenge"
+    ],
+    "herb_salad": [
+      "Herb Salad Challenge"
+    ],
+    "incredibly_hot_pot": [
+      "Incredibly Hot Pot Challenge"
+    ],
+    "veggie_sub_sandwich": [
+      "Veggie Sub Sandwich Challenge"
+    ],
+    "green_saplings": [
+      "Green Sapling Surprise"
+    ],
+    "any_rockclod": [
+      "Rock Clod Catastrophe"
+    ],
+    "green_mushroom": [
+      "Mushroom Madness"
+    ],
+    "blue_enchanterns": [
+      "Enchantern Explosion"
+    ],
+    "green_stalagmites": [
+      "Staggering Stalagmites"
+    ],
+    "blue_essence_bats": [
+      "Essence Gone Batty"
+    ],
+    "mimics": [
+      "Malicious Mimics"
+    ],
+    "flame_spirits": [
+      "Flame Spirit Shocker"
+    ],
+    "lava_cats": [
+      "Lava Cat Conundrum"
+    ],
+    "flying_tomes": [
+      "Flying Tome Trouble"
+    ],
+    "rock_stacks": [
+      "Rock Stack Smackdown"
+    ],
+    "living_gryphon_statues": [
+      "Gryphon Grapple"
+    ]
+  },
+  "item_quest_details": {
+    "copper_ore": {
+      "name": "Copper Ore",
+      "total_required": 8,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Cop Some Ore",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 3,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Copper",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "March"
+        }
+      ]
+    },
+    "stone_loach": {
+      "name": "Stone Loach",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Water Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "upper_mines_mushroom": {
+      "name": "Upper Mines Mushroom",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Water Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "ruby": {
+      "name": "Ruby",
+      "total_required": 12,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Water Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Procuring the Sealing Scroll",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Ruby",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "lantern_moth": {
+      "name": "Lantern Moth",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Water Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "coral_mantis": {
+      "name": "Coral Mantis",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Earth Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "sapphire": {
+      "name": "Sapphire",
+      "total_required": 12,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Earth Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Procuring the Sealing Scroll",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Sapphire",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "archerfish": {
+      "name": "Archerfish",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Earth Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "jade_dulse": {
+      "name": "Jade Dulse",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Earth Tablet",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "sealing_scroll": {
+      "name": "Sealing Scroll",
+      "total_required": 2,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Procuring the Sealing Scroll",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Breaking The Fire Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "emerald": {
+      "name": "Emerald",
+      "total_required": 19,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Procuring the Sealing Scroll",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Breaking The Fire Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for an Emerald",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        },
+        {
+          "quest_name": "Request for Emeralds",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 7,
+          "requester": "Wheedle"
+        }
+      ]
+    },
+    "silver_ingot": {
+      "name": "Silver Ingot",
+      "total_required": 26,
+      "quest_types": [
+        "Crown Request",
+        "Request",
+        "Story Quest (Mines Progression)",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Procuring the Sealing Scroll",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Inn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Silver Ingot",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Elsie"
+        },
+        {
+          "quest_name": "Crown Request: Ingots",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 5,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "faceted_rock_gem": {
+      "name": "Faceted Rock Gem",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Fire Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "rockroot": {
+      "name": "Rockroot",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Fire Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "void_stone": {
+      "name": "Void Stone",
+      "total_required": 8,
+      "quest_types": [
+        "Special Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Creating The Void Mass",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Void Stone",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 3,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "void_powder": {
+      "name": "Void Powder",
+      "total_required": 5,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Creating The Void Mass",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        }
+      ]
+    },
+    "void_herb": {
+      "name": "Void Herb",
+      "total_required": 5,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Creating The Void Mass",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        }
+      ]
+    },
+    "void_pearl": {
+      "name": "Void Pearl",
+      "total_required": 5,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Creating The Void Mass",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        }
+      ]
+    },
+    "breath_of_flame": {
+      "name": "Breath of Flame",
+      "total_required": 3,
+      "quest_types": [
+        "Heart Quest",
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Ruins Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Potions and Errands",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Juniper"
+        },
+        {
+          "quest_name": "Request for Breath of Flame",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "smoke_moth": {
+      "name": "Smoke Moth",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Ruins Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "firesail_fish": {
+      "name": "Firesail Fish",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Ruins Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "obsidian": {
+      "name": "Obsidian",
+      "total_required": 54,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Ruins Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 20,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Carpenter's Shop",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 30,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Obsidian",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "temple_flower": {
+      "name": "Temple Flower",
+      "total_required": 2,
+      "quest_types": [
+        "Request",
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Find The Magic Key",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Temple Flower",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "marigold": {
+      "name": "Marigold",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Find The Magic Key",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "dragon_forged_fang": {
+      "name": "Dragon-Forged Fang",
+      "total_required": 2,
+      "quest_types": [
+        "Story Quest (Mines Progression)",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Final Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Bell Tower",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "dragon_forged_horn": {
+      "name": "Dragon-Forged Horn",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Final Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "dragon_forged_core": {
+      "name": "Dragon-Forged Core",
+      "total_required": 3,
+      "quest_types": [
+        "Special Request",
+        "Story Quest (Mines Progression)",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Final Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Bell Tower",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Dragon-Forged Core",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "dragon_forged_powder": {
+      "name": "Dragon-Forged Powder",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Mines Progression)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Breaking The Final Seal",
+          "quest_type": "Story Quest (Mines Progression)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "wood": {
+      "name": "Wood",
+      "total_required": 2055,
+      "quest_types": [
+        "Heart Quest",
+        "Important Quest",
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Repair the Bridge",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 60,
+          "requester": null
+        },
+        {
+          "quest_name": "The Mill Restoration Project",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 150,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the General Store",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 300,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Beach Bridge",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 300,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade Hayden's Barn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 400,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Inn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 600,
+          "requester": null
+        },
+        {
+          "quest_name": "Stone Refinery",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 200,
+          "requester": null
+        },
+        {
+          "quest_name": "Crafting Tutorial",
+          "quest_type": "Important Quest",
+          "category": "Important Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Bird Song",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 15,
+          "requester": "Ryis"
+        },
+        {
+          "quest_name": "Request for Wood",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 10,
+          "requester": "Landen"
+        },
+        {
+          "quest_name": "Request for Materials",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 10,
+          "requester": "Ryis"
+        }
+      ]
+    },
+    "stone": {
+      "name": "Stone",
+      "total_required": 2571,
+      "quest_types": [
+        "Crown Request",
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Repair the Bridge",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 60,
+          "requester": null
+        },
+        {
+          "quest_name": "The Mill Restoration Project",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 200,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the General Store",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 500,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Beach Bridge",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 150,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade Hayden's Barn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 500,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Inn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 500,
+          "requester": null
+        },
+        {
+          "quest_name": "Stone Refinery",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 400,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Rock",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Olric"
+        },
+        {
+          "quest_name": "Request for Materials",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 10,
+          "requester": "Ryis"
+        },
+        {
+          "quest_name": "Crown Request: Stone",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 250,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "crop": {
+      "name": "Crop",
+      "total_required": 40,
+      "quest_types": [
+        "Crown Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Restocking Mistria's Food Reserves",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Crown Request: Crops",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 30,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "copper_ingot": {
+      "name": "Copper Ingot",
+      "total_required": 8,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Mill Restoration Project",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 2,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the General Store",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Copper Ingot",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "iron_ingot": {
+      "name": "Iron Ingot",
+      "total_required": 24,
+      "quest_types": [
+        "Crown Request",
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Repair the General Store",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade Hayden's Barn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 8,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for an Iron Ingot",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "March"
+        },
+        {
+          "quest_name": "Crown Request: Ingots",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 10,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "fiber": {
+      "name": "Fiber",
+      "total_required": 50,
+      "quest_types": [
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Repair the Beach Bridge",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 50,
+          "requester": null
+        }
+      ]
+    },
+    "chicken_egg": {
+      "name": "Chicken Egg",
+      "total_required": 12,
+      "quest_types": [
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Restocking Mistria's Food Reserves 2",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 12,
+          "requester": null
+        }
+      ]
+    },
+    "cheese": {
+      "name": "Cheese",
+      "total_required": 11,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Restocking Mistria's Food Reserves 2",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Cheese",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Luc"
+        }
+      ]
+    },
+    "haydens_weathervane": {
+      "name": "Hayden's Weathervane",
+      "total_required": 1,
+      "quest_types": [
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Find the Weathervane",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "glass": {
+      "name": "Glass",
+      "total_required": 128,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Inn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 25,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Carpenter's Shop",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 100,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Glass",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "peat": {
+      "name": "Peat",
+      "total_required": 12,
+      "quest_types": [
+        "Heart Quest",
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Inn",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Batch 312",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Valen"
+        },
+        {
+          "quest_name": "Request for Gardening Materials",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "sap": {
+      "name": "Sap",
+      "total_required": 25,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Stone Refinery",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 20,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Sap",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "crystal": {
+      "name": "Crystal",
+      "total_required": 55,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 20,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Carpenter's Shop",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 30,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Crystals",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "gold_ingot": {
+      "name": "Gold Ingot",
+      "total_required": 21,
+      "quest_types": [
+        "Crown Request",
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 8,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Gold Ingots",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Wheedle"
+        },
+        {
+          "quest_name": "Crown Request: Gold Ingots",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 10,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "hardwood": {
+      "name": "Hardwood",
+      "total_required": 135,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 100,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Bell Tower",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 30,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Hardwood",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Merri"
+        }
+      ]
+    },
+    "refined_stone": {
+      "name": "Refined Stone",
+      "total_required": 210,
+      "quest_types": [
+        "Crown Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Upgrade the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 50,
+          "requester": null
+        },
+        {
+          "quest_name": "Upgrade the Carpenter's Shop",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 100,
+          "requester": null
+        },
+        {
+          "quest_name": "Expanding the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 20,
+          "requester": null
+        },
+        {
+          "quest_name": "Repair the Bell Tower",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 20,
+          "requester": null
+        },
+        {
+          "quest_name": "Crown Request: Refined Stone",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 20,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "voidite": {
+      "name": "Voidite",
+      "total_required": 51,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Expanding the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 50,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for Voidite",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "mistril_ingot": {
+      "name": "Mistril Ingot",
+      "total_required": 6,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Expanding the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Mistril Ingot",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "monster_core": {
+      "name": "Monster Core",
+      "total_required": 11,
+      "quest_types": [
+        "Request",
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Expanding the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 10,
+          "requester": null
+        },
+        {
+          "quest_name": "Request for a Monster Core",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "monster_block": {
+      "name": "Monster Block",
+      "total_required": 5,
+      "quest_types": [
+        "Story Quest (Town Improvement)"
+      ],
+      "quests": [
+        {
+          "quest_name": "Expanding the Saturday Market",
+          "quest_type": "Story Quest (Town Improvement)",
+          "category": "Story Quest",
+          "amount": 5,
+          "requester": null
+        }
+      ]
+    },
+    "breath_of_spring": {
+      "name": "Breath of Spring",
+      "total_required": 1,
+      "quest_types": [
+        "Festival Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Spring Festival",
+          "quest_type": "Festival Quest",
+          "category": "Festival Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "queen_berry": {
+      "name": "Queen Berry",
+      "total_required": 1,
+      "quest_types": [
+        "Festival Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "The Harvest Festival",
+          "quest_type": "Festival Quest",
+          "category": "Festival Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "lilac": {
+      "name": "Lilac",
+      "total_required": 1,
+      "quest_types": [
+        "Important Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Stinky Stamina Potion",
+          "quest_type": "Important Quest",
+          "category": "Important Quest",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "lemon_pie": {
+      "name": "Lemon Pie",
+      "total_required": 1,
+      "quest_types": [
+        "Heart Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "spring_salad": {
+      "name": "Spring Salad",
+      "total_required": 1,
+      "quest_types": [
+        "Heart Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "pizza": {
+      "name": "Pizza",
+      "total_required": 1,
+      "quest_types": [
+        "Heart Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "ice_cream_sundae": {
+      "name": "Ice Cream Sundae",
+      "total_required": 2,
+      "quest_types": [
+        "Heart Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Reina"
+        },
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "grilled_cheese": {
+      "name": "Grilled Cheese",
+      "total_required": 1,
+      "quest_types": [
+        "Heart Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "A Craving",
+          "quest_type": "Heart Quest",
+          "category": "Heart Quest",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "heather": {
+      "name": "Heather",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Heather",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "lemon": {
+      "name": "Lemon",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Lemon",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "pineshroom": {
+      "name": "Pineshroom",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Pineshrooms",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "silver_sword": {
+      "name": "Silver Sword",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Silver Sword",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "turnip": {
+      "name": "Turnip",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Turnip",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "iron_watering_can": {
+      "name": "Iron Watering Can",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Iron Watering Can",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "apple": {
+      "name": "Apple",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Apple",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "gold_ore": {
+      "name": "Gold Ore",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Gold Ore",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "ultimate_large_animal_feed": {
+      "name": "Ultimate Large Animal Feed",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Ultimate Feed",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "pink_diamond": {
+      "name": "Pink Diamond",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pink Diamond",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "uncommon_bug_pheromones": {
+      "name": "Uncommon Bug Pheromones",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Uncommon Pheromone Request",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Balor"
+        }
+      ]
+    },
+    "copper_shovel": {
+      "name": "Copper Shovel",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Copper Shovel",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "coral": {
+      "name": "Coral",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Coral",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "fennel": {
+      "name": "Fennel",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Fennel",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "sod": {
+      "name": "Sod",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Gardening Materials",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "shadow_flower": {
+      "name": "Shadow Flower",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Shadow Flower",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Celine"
+        }
+      ]
+    },
+    "spirit_mushroom_tea": {
+      "name": "Spirit Mushroom Tea",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Spirit Mushroom Tea",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "walnut": {
+      "name": "Walnut",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Walnuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "coconut": {
+      "name": "Coconut",
+      "total_required": 6,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Coconuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Darcy"
+        },
+        {
+          "quest_name": "Request for Coconuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "peach": {
+      "name": "Peach",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Peaches",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "pomegranate": {
+      "name": "Pomegranate",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pomegranate",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "legendary_honey": {
+      "name": "Legendary Honey",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Legendary Honey",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "spell_fruit": {
+      "name": "Spell Fruit",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Spell Fruit",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Darcy"
+        }
+      ]
+    },
+    "acorn": {
+      "name": "Acorn",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Acorns",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "chestnut": {
+      "name": "Chestnut",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Chestnuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Dell"
+        },
+        {
+          "quest_name": "Request for Chestnuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "frog": {
+      "name": "Frog",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Frog",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "iron_ore": {
+      "name": "Iron Ore",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Iron",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "snail": {
+      "name": "Snail",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Snail",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "crocus": {
+      "name": "Crocus",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Crocus",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Dell"
+        }
+      ]
+    },
+    "tidestone": {
+      "name": "Tidestone",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Tidestone",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Dozy"
+        }
+      ]
+    },
+    "wild_berries": {
+      "name": "Wild Berries",
+      "total_required": 21,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Berries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Eiland"
+        },
+        {
+          "quest_name": "Request for Wild Berries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 6,
+          "requester": "Elsie"
+        },
+        {
+          "quest_name": "Request for Berries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Errol"
+        },
+        {
+          "quest_name": "Request for Berries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "egg": {
+      "name": "Egg",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Eggs",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Eiland"
+        }
+      ]
+    },
+    "moon_fruit": {
+      "name": "Moon Fruit",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Moon Fruit",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        },
+        {
+          "quest_name": "Important Request for a Moon Fruit",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "archeology_shard": {
+      "name": "Archeology Shard",
+      "total_required": 17,
+      "quest_types": [
+        "Crown Request",
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Shards",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Eiland"
+        },
+        {
+          "quest_name": "Crown Request: Archeology Shards",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 15,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "strawberry": {
+      "name": "Strawberry",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Strawberry",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        },
+        {
+          "quest_name": "Request for a Strawberry",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        }
+      ]
+    },
+    "striped_bass": {
+      "name": "Striped Bass",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Striped Bass",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        }
+      ]
+    },
+    "pudding": {
+      "name": "Pudding",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Pudding",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        }
+      ]
+    },
+    "pumpkin": {
+      "name": "Pumpkin",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pumpkin",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Eiland"
+        }
+      ]
+    },
+    "blackberry": {
+      "name": "Blackberry",
+      "total_required": 11,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Blackberries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 6,
+          "requester": "Elsie"
+        },
+        {
+          "quest_name": "Request for Blackberries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "orange": {
+      "name": "Orange",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Orange",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Elsie"
+        }
+      ]
+    },
+    "snowdrop_anemone": {
+      "name": "Snowdrop Anemone",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Snowdrop Anemone",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Elsie"
+        }
+      ]
+    },
+    "rose": {
+      "name": "Rose",
+      "total_required": 12,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Roses",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 12,
+          "requester": "Elsie"
+        }
+      ]
+    },
+    "clam": {
+      "name": "Clam",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Clam",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "iron_armor": {
+      "name": "Iron Armor",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Iron Armor",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "perch": {
+      "name": "Perch",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Perch",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "tilapia": {
+      "name": "Tilapia",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Tilapia",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "scarecrow": {
+      "name": "Scarecrow",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Scarecrow",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "pear": {
+      "name": "Pear",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Pears",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "corrupted_mistril_sword": {
+      "name": "Corrupted Mistril Sword",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Corrupted Mistril Sword Request",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "uncommon_fish_bait": {
+      "name": "Uncommon Fish Bait",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Uncommon Bait",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Errol"
+        }
+      ]
+    },
+    "baked_potato": {
+      "name": "Baked Potato",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Baked Potato",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "thorn_vine": {
+      "name": "Thorn Vine",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Thorn Vine",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "hay": {
+      "name": "Hay",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Hay",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "wooden_fence": {
+      "name": "Wooden Fence",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Wood Fencing",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "ultimate_small_animal_feed": {
+      "name": "Ultimate Small Animal Feed",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Ultimate Feed",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "peas": {
+      "name": "Peas",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Peas",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Hayden"
+        }
+      ]
+    },
+    "caterpillar": {
+      "name": "Caterpillar",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Caterpillar",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "catfish": {
+      "name": "Catfish",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Catfish",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "rice": {
+      "name": "Rice",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rice",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "sheep_wool": {
+      "name": "Sheep Wool",
+      "total_required": 6,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Sheep Wool",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 6,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "potted_plant": {
+      "name": "Potted Plant",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Potted Plant",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "wild_grapes": {
+      "name": "Wild Grapes",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Wild Grapes",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "copper_net": {
+      "name": "Copper Net",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Copper Net",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Hemlock"
+        }
+      ]
+    },
+    "beet": {
+      "name": "Beet",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Beet",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "bell_berry_bakewell_tart": {
+      "name": "Bell Berry Bakewell Tart",
+      "total_required": 2,
+      "quest_types": [
+        "Cooking Challenge",
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Bell Berry Bakewell Tart",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        },
+        {
+          "quest_name": "Bell Berry Bakewell Tart Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "tomato": {
+      "name": "Tomato",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Tomatoes",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "goby": {
+      "name": "Goby",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Goby",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "lake_trout": {
+      "name": "Lake Trout",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Lake Trout",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "monster_horn": {
+      "name": "Monster Horn",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Monster Horn",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "cabbage": {
+      "name": "Cabbage",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Cabbage",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "cauliflower": {
+      "name": "Cauliflower",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Cauliflower",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "sugar_cane": {
+      "name": "Sugar Cane",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Sugar Cane",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Holt"
+        }
+      ]
+    },
+    "ice_block": {
+      "name": "Ice Block",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Ice",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "rooster_feather": {
+      "name": "Rooster Feather",
+      "total_required": 4,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rooster Feathers",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 4,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "salmon": {
+      "name": "Salmon",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Salmon",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Josephine"
+        },
+        {
+          "quest_name": "Request for Ingredients",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "trail_mix": {
+      "name": "Trail Mix",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Trail Mix",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "crystal_berries": {
+      "name": "Crystal Berries",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Crystal Berries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "noodles": {
+      "name": "Noodles",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Noodles",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "dill": {
+      "name": "Dill",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Dill",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "chili_pepper": {
+      "name": "Chili Pepper",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Chili Peppers",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Josephine"
+        }
+      ]
+    },
+    "bristle": {
+      "name": "Bristle",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Capybara Bristles",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "duck_egg": {
+      "name": "Duck Egg",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Duck Egg",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "fog_orchid": {
+      "name": "Fog Orchid",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Fog Orchid",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "monster_powder": {
+      "name": "Monster Powder",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Monster Powder",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "red_toadstool": {
+      "name": "Red Toadstool",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Red Toadstool",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "water_chestnut": {
+      "name": "Water Chestnut",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Water Chestnuts",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "carrot": {
+      "name": "Carrot",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Carrot",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "night_queen": {
+      "name": "Night Queen",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Night Queen",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "rare_bug_pheromones": {
+      "name": "Rare Bug Pheromones",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rare Pheromone",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Juniper"
+        }
+      ]
+    },
+    "tomato_soup": {
+      "name": "Tomato Soup",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Tomato Soup",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "rare_fish_bait": {
+      "name": "Rare Fish Bait",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rare Bait",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "silver_axe": {
+      "name": "Silver Axe",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Silver Axe",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Landen"
+        }
+      ]
+    },
+    "rabbit_wool": {
+      "name": "Rabbit Wool",
+      "total_required": 4,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rabbit Wool",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 4,
+          "requester": "Louis"
+        }
+      ]
+    },
+    "monster_fang": {
+      "name": "Monster Fang",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Monster Fang",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Louis"
+        }
+      ]
+    },
+    "middlemist": {
+      "name": "Middlemist",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Middlemist",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Louis"
+        }
+      ]
+    },
+    "holly": {
+      "name": "Holly",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Holly",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Louis"
+        }
+      ]
+    },
+    "copper_nugget_beetle": {
+      "name": "Copper Nugget Beetle",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Copper Beetle",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Luc"
+        }
+      ]
+    },
+    "dragon_horn_beetle": {
+      "name": "Dragon Horn Beetle",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Dragon Horn Beetle",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Luc"
+        }
+      ]
+    },
+    "pond_skater": {
+      "name": "Pond Skater",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pond Skater",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Luc"
+        }
+      ]
+    },
+    "singing_katydid": {
+      "name": "Singing Katydid",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Singing Katydid",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Luc"
+        }
+      ]
+    },
+    "mullet": {
+      "name": "Mullet",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Mullet",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "pink_scallop_shell": {
+      "name": "Pink Scallop Shell",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Seashell",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "freshwater_oyster": {
+      "name": "Freshwater Oyster",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Freshwater Oyster",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "sunflower": {
+      "name": "Sunflower",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Sunflower",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "common_bug_pheromones": {
+      "name": "Common Bug Pheromones",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Common Pheromone",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Maple"
+        }
+      ]
+    },
+    "armored_bass": {
+      "name": "Armored Bass",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Armored Bass",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "March"
+        }
+      ]
+    },
+    "freshwater_eel": {
+      "name": "Freshwater Eel",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Freshwater Eel",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "March"
+        }
+      ]
+    },
+    "monster_shell": {
+      "name": "Monster Shell",
+      "total_required": 5,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Monster Shell",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 5,
+          "requester": "March"
+        }
+      ]
+    },
+    "silver_ore": {
+      "name": "Silver Ore",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Silver Ore",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "March"
+        }
+      ]
+    },
+    "shipping_bin": {
+      "name": "Shipping Bin",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Shipping Bin",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "March"
+        }
+      ]
+    },
+    "dragon_forged_bracelet": {
+      "name": "Dragon-Forged Bracelet",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Dragon-Forged Bracelet Request",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "March"
+        }
+      ]
+    },
+    "mistril_ore": {
+      "name": "Mistril Ore",
+      "total_required": 4,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Mistril Ore",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 4,
+          "requester": "March"
+        }
+      ]
+    },
+    "horse_hair": {
+      "name": "Horse Hair",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Horse Hair",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Merri"
+        }
+      ]
+    },
+    "hay_bale": {
+      "name": "Hay Bale",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Hay Bale",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Merri"
+        }
+      ]
+    },
+    "watermelon": {
+      "name": "Watermelon",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Watermelon",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Merri"
+        }
+      ]
+    },
+    "fiddlehead": {
+      "name": "Fiddlehead",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Fiddlehead",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Merri"
+        }
+      ]
+    },
+    "clay": {
+      "name": "Clay",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Art Supplies",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "burdock_root": {
+      "name": "Burdock Root",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Burdock Root",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "onion": {
+      "name": "Onion",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Onion",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "golden_butter": {
+      "name": "Golden Butter",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Golden Butter",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "sweet_potato": {
+      "name": "Sweet Potato",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Sweet Potato",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "grilled_corn": {
+      "name": "Grilled Corn",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Grilled Corn",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "corn": {
+      "name": "Corn",
+      "total_required": 4,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Corn",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 4,
+          "requester": "Nora"
+        }
+      ]
+    },
+    "diamond": {
+      "name": "Diamond",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Diamond",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Olric"
+        }
+      ]
+    },
+    "miners_pickaxe": {
+      "name": "Miner's Pickaxe",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Miner's Pickaxe",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Olric"
+        }
+      ]
+    },
+    "really_round_rock": {
+      "name": "Really Round Rock",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Really Round Rock",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Olric"
+        }
+      ]
+    },
+    "pike": {
+      "name": "Pike",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pike",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Olric"
+        }
+      ]
+    },
+    "oyster_mushroom": {
+      "name": "Oyster Mushroom",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Oyster Mushrooms",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Olric"
+        }
+      ]
+    },
+    "blueberry": {
+      "name": "Blueberry",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Blueberries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "broccoli": {
+      "name": "Broccoli",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Broccoli",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "cod": {
+      "name": "Cod",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Cod",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "deep_earthworm": {
+      "name": "Deep Earthworm",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Deep Earthworm",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "milk": {
+      "name": "Milk",
+      "total_required": 4,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Milk",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 4,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "rosemary": {
+      "name": "Rosemary",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rosemary",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "wild_leek": {
+      "name": "Wild Leek",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Wild Leek",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "garlic": {
+      "name": "Garlic",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Garlic",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "butter": {
+      "name": "Butter",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Butter",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "deluxe_honey": {
+      "name": "Deluxe Honey",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Deluxe Honey",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Reina"
+        }
+      ]
+    },
+    "bull_horn": {
+      "name": "Bull Horn",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Bull Horns",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Ryis"
+        }
+      ]
+    },
+    "cranberry": {
+      "name": "Cranberry",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Cranberries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Ryis"
+        }
+      ]
+    },
+    "glowberry": {
+      "name": "Glowberry",
+      "total_required": 12,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Glowberries",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 12,
+          "requester": "Ryis"
+        }
+      ]
+    },
+    "smallmouth_bass": {
+      "name": "Smallmouth Bass",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Smallmouth Bass",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Ryis"
+        }
+      ]
+    },
+    "red_wine": {
+      "name": "Red Wine",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Red Wine",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Taliferro"
+        }
+      ]
+    },
+    "spring_galette": {
+      "name": "Spring Galette",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Spring Galette",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Taliferro"
+        }
+      ]
+    },
+    "beet_soup": {
+      "name": "Beet Soup",
+      "total_required": 2,
+      "quest_types": [
+        "Cooking Challenge",
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Beet Soup",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Taliferro"
+        },
+        {
+          "quest_name": "Beet Soup Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "worm": {
+      "name": "Worm",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Bait",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "earthshroom": {
+      "name": "Earthshroom",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Earthshroom",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "horseradish": {
+      "name": "Horseradish",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Ingredients",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "trout": {
+      "name": "Trout",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Trout",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "underseaweed": {
+      "name": "Underseaweed",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Underseaweed",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "tuna_sashimi": {
+      "name": "Tuna Sashimi",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Tuna Sashimi",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "coelacanth": {
+      "name": "Coelacanth",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Coelacanth",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "common_fish_bait": {
+      "name": "Common Fish Bait",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Common Bait",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Terithia"
+        }
+      ]
+    },
+    "basil": {
+      "name": "Basil",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Herbs",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "thyme": {
+      "name": "Thyme",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Herbs",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "morel_mushroom": {
+      "name": "Morel Mushroom",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Morel Mushroom",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "rose_hip": {
+      "name": "Rose Hip",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Rose Hips",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "seaweed": {
+      "name": "Seaweed",
+      "total_required": 2,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Seaweed",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 2,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "tea": {
+      "name": "Tea",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Tea",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "birdhouse": {
+      "name": "Birdhouse",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Bird House",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "cucumber": {
+      "name": "Cucumber",
+      "total_required": 3,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Cucumbers",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 3,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "premium_honey": {
+      "name": "Premium Honey",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Premium Honey",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Valen"
+        }
+      ]
+    },
+    "daikon_radish": {
+      "name": "Daikon Radish",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Daikon Radish",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Vera"
+        }
+      ]
+    },
+    "sesame": {
+      "name": "Sesame",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Sesame",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Vera"
+        }
+      ]
+    },
+    "pomegranate_juice": {
+      "name": "Pomegranate Juice",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Pomegranate Juice",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Vera"
+        }
+      ]
+    },
+    "rice_ball": {
+      "name": "Rice Ball",
+      "total_required": 2,
+      "quest_types": [
+        "Cooking Challenge",
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Riceball",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Vera"
+        },
+        {
+          "quest_name": "Rice Ball Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "salted_watermelon": {
+      "name": "Salted Watermelon",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Salted Watermelon",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Vera"
+        }
+      ]
+    },
+    "golden_cookies": {
+      "name": "Golden Cookies",
+      "total_required": 2,
+      "quest_types": [
+        "Cooking Challenge",
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Golden Cookies",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Wheedle"
+        },
+        {
+          "quest_name": "Golden Cookies Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "written_root": {
+      "name": "Written Root",
+      "total_required": 1,
+      "quest_types": [
+        "Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Written Root",
+          "quest_type": "Request",
+          "category": "Request",
+          "amount": 1,
+          "requester": "Wheedle"
+        }
+      ]
+    },
+    "dog_treat": {
+      "name": "Dog Treat",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Dog Treat",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "fried_rice": {
+      "name": "Fried Rice",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Fried Rice",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "lobster": {
+      "name": "Lobster",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Lobster",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "monster_mash": {
+      "name": "Monster Mash",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Monster Mash",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "pumpkin_pie": {
+      "name": "Pumpkin Pie",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Pumpkin Pie",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "sushi_platter": {
+      "name": "Sushi Platter",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Sushi Platter",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Caldarus"
+        }
+      ]
+    },
+    "clod_bomb": {
+      "name": "Clod Bomb",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Bomb",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "fire_wasp": {
+      "name": "Fire Wasp",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Fire Wasp",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "iron_shovel": {
+      "name": "Iron Shovel",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for an Iron Shovel",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "latte": {
+      "name": "Latte",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for a Latte",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "mont_blanc": {
+      "name": "Mont Blanc",
+      "total_required": 1,
+      "quest_types": [
+        "Special Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Request for Mont Blanc",
+          "quest_type": "Special Request",
+          "category": "Special Request",
+          "amount": 1,
+          "requester": "Seridia"
+        }
+      ]
+    },
+    "dining_tables": {
+      "name": "Dining Tables",
+      "total_required": 6,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Tables and Chairs",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 6,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "dining_chairs": {
+      "name": "Dining Chairs",
+      "total_required": 12,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Tables and Chairs",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 12,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "mine_forageable": {
+      "name": "Mine Forageable",
+      "total_required": 30,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Mine Forageables",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 30,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "fish": {
+      "name": "Fish",
+      "total_required": 40,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Fish",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 40,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "berry": {
+      "name": "Berry",
+      "total_required": 30,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Berries",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 30,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "feather": {
+      "name": "Feather",
+      "total_required": 10,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Animal Materials",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 10,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "wool": {
+      "name": "Wool",
+      "total_required": 10,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Animal Materials",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 10,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "soup": {
+      "name": "Soup",
+      "total_required": 15,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Soup",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 15,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "shard_mass": {
+      "name": "Shard Mass",
+      "total_required": 15,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Archeology Shards",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 15,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "copper_tool": {
+      "name": "Copper Tool",
+      "total_required": 5,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Copper Tools",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 5,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "golden_cheese": {
+      "name": "Golden Cheese",
+      "total_required": 5,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Golden Ingredients",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 5,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "golden_mayonnaise": {
+      "name": "Golden Mayonnaise",
+      "total_required": 5,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Golden Ingredients",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 5,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "baked_dishes": {
+      "name": "Baked Dishes",
+      "total_required": 5,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Baked Dishes",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 5,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "stone_path": {
+      "name": "Stone Path",
+      "total_required": 100,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Stone Paths",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 100,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "flower": {
+      "name": "Flower",
+      "total_required": 30,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Flowers",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 30,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "monster_part": {
+      "name": "Monster Part",
+      "total_required": 30,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Monster Materials",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 30,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "grass_starter": {
+      "name": "Grass Starter",
+      "total_required": 10,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Grass Starters",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 10,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "bell_berry": {
+      "name": "Bell Berry",
+      "total_required": 20,
+      "quest_types": [
+        "Crown Request"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crown Request: Bell Berries",
+          "quest_type": "Crown Request",
+          "category": "Crown Request",
+          "amount": 20,
+          "requester": "Adeline"
+        }
+      ]
+    },
+    "crystal_berry_pie": {
+      "name": "Crystal Berry Pie",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Crystal Berry Pie Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "crispy_fried_earthshroom": {
+      "name": "Crispy Fried Earthshroom",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Fried Earthshroom Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "chocolate_cake": {
+      "name": "Chocolate Cake",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Chocolate Cake Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "tide_salad": {
+      "name": "Tide Salad",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Tide Salad Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "omelet": {
+      "name": "Omelet",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Omelet Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "herb_salad": {
+      "name": "Herb Salad",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Herb Salad Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "incredibly_hot_pot": {
+      "name": "Incredibly Hot Pot",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Incredibly Hot Pot Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "veggie_sub_sandwich": {
+      "name": "Veggie Sub Sandwich",
+      "total_required": 1,
+      "quest_types": [
+        "Cooking Challenge"
+      ],
+      "quests": [
+        {
+          "quest_name": "Veggie Sub Sandwich Challenge",
+          "quest_type": "Cooking Challenge",
+          "category": "Cooking Challenge",
+          "amount": 1,
+          "requester": null
+        }
+      ]
+    },
+    "green_saplings": {
+      "name": "Green Saplings",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Green Sapling Surprise",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "any_rockclod": {
+      "name": "Any Rockclod",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Rock Clod Catastrophe",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "green_mushroom": {
+      "name": "Green Mushroom",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Mushroom Madness",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "blue_enchanterns": {
+      "name": "Blue Enchanterns",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Enchantern Explosion",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "green_stalagmites": {
+      "name": "Green Stalagmites",
+      "total_required": 10,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Staggering Stalagmites",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 10,
+          "requester": null
+        }
+      ]
+    },
+    "blue_essence_bats": {
+      "name": "Blue Essence Bats",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Essence Gone Batty",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "mimics": {
+      "name": "Mimics",
+      "total_required": 5,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Malicious Mimics",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 5,
+          "requester": null
+        }
+      ]
+    },
+    "flame_spirits": {
+      "name": "Flame Spirits",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Flame Spirit Shocker",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "lava_cats": {
+      "name": "Lava Cats",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Lava Cat Conundrum",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "flying_tomes": {
+      "name": "Flying Tomes",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Flying Tome Trouble",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "rock_stacks": {
+      "name": "Rock Stacks",
+      "total_required": 20,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Rock Stack Smackdown",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 20,
+          "requester": null
+        }
+      ]
+    },
+    "living_gryphon_statues": {
+      "name": "Living Gryphon Statues",
+      "total_required": 10,
+      "quest_types": [
+        "Mission Quest"
+      ],
+      "quests": [
+        {
+          "quest_name": "Gryphon Grapple",
+          "quest_type": "Mission Quest",
+          "category": "Mission Quest",
+          "amount": 10,
+          "requester": null
+        }
+      ]
+    }
+  }
+}

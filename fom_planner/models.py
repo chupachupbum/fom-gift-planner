@@ -6,9 +6,11 @@ Data structures and domain models for Fields of Mistria planner:
 - SaveData
 - CraftingStep
 - CraftingPlan
+- is_quest_completed
 """
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -138,6 +140,188 @@ class InGameDate:
         else:
             event_badge = ""
         return f"Year {self.year}, {self.season.capitalize()} Day {self.day} ({self.day_of_week}, {self.time_str}){event_badge}"
+
+
+# Quest title alias dictionary mapping normalized Wiki titles / variants to internal game save keys
+QUEST_TITLE_ALIASES: Dict[str, str] = {
+    "restocking_mistrias_food_reserves": "replenishing_mistrias_food_reserves_1",
+    "restocking_mistrias_food_reserves_1": "replenishing_mistrias_food_reserves_1",
+    "restocking_mistrias_food_reserves_2": "replenishing_mistrias_food_reserves_2",
+    "request_for_wood_fencing": "request_for_wood_fence",
+    "wood_fencing_request": "request_for_wood_fence",
+    "crown_request_archeology_shards": "crown_request_archaeology_shards",
+    "upgrade_haydens_barn": "repair_haydens_barn",
+    "request_for_a_hay_bale": "request_for_haybale",
+    "request_for_hay_bale": "request_for_haybale",
+    "request_for_a_really_round_rock": "request_for_round_rock",
+    "request_for_really_round_rock": "request_for_round_rock",
+    "request_for_capybara_bristles": "request_for_bristles",
+    "fried_earthshroom_challenge": "crispy_fried_earthshroom_challenge",
+    "request_for_a_daikon_radish": "request_for_daikon",
+    "request_for_daikon_radish": "request_for_daikon",
+    "request_for_bell_berry_bakewell_tart": "request_for_bell_berry_bakewell",
+    "the_mill_restoration_project": "repair_the_mill",
+    "upgrade_the_inn": "repair_the_inn",
+    "expanding_the_saturday_market": "upgrade_the_saturday_market",
+    "request_for_wild_berries": "request_for_wild_berry",
+}
+
+REVERSE_QUEST_TITLE_ALIASES: Dict[str, List[str]] = {}
+for _wiki_k, _save_v in QUEST_TITLE_ALIASES.items():
+    REVERSE_QUEST_TITLE_ALIASES.setdefault(_save_v, []).append(_wiki_k)
+
+GERUND_NOUN_SUFFIXES: Tuple[Tuple[str, str], ...] = (
+    ("_fencing", "_fence"),
+)
+
+
+def _normalize_quest_key(raw_key: str) -> str:
+    """Normalizes a quest ID or quest display title into lowercase snake_case."""
+    if not raw_key:
+        return ""
+    s = str(raw_key).strip().lower()
+    # Strip straight and curly apostrophes (e.g. "Mistria's" -> "mistrias", "Jo's" -> "jos")
+    s = re.sub(r"['’]", "", s)
+    # Replace non-alphanumeric characters with underscore
+    s = re.sub(r"[^a-z0-9]+", "_", s)
+    return s.strip("_")
+
+
+def _strip_articles(s: str) -> str:
+    """Strips leading and internal articles from a normalized snake_case string."""
+    for p in ("a_", "an_", "the_"):
+        if s.startswith(p):
+            s = s[len(p):]
+            break
+    return re.sub(r"_(a|an|the)_", "_", s)
+
+
+def is_quest_completed(quest_name: str, completed_keys: Set[str]) -> bool:
+    """
+    Checks whether a quest (by display title or ID) is marked completed in completed_keys.
+    Normalizes quest_name into snake_case, and checks:
+      1. Exact match
+      2. Direct alias match from QUEST_TITLE_ALIASES
+      3. Article-stripped match ('a', 'an', 'the')
+      4. Request pattern swap ('X_request' <-> 'request_for_X')
+      5. Gerund/noun suffix variants (e.g. '_fencing' <-> '_fence')
+      6. Alias checks across all generated candidates
+      7. Singular / plural match (trailing 's' or 'es')
+    """
+    if not quest_name or not completed_keys:
+        return False
+
+    norm = _normalize_quest_key(quest_name)
+    if not norm:
+        return False
+
+    if norm in completed_keys:
+        return True
+
+    candidates: Set[str] = set()
+
+    # 1. Direct alias lookup for norm
+    if norm in QUEST_TITLE_ALIASES:
+        candidates.add(QUEST_TITLE_ALIASES[norm])
+    for rev in REVERSE_QUEST_TITLE_ALIASES.get(norm, []):
+        candidates.add(rev)
+
+    # 2. Leading article stripping & adding
+    for prefix in ("a_", "an_", "the_"):
+        if norm.startswith(prefix):
+            candidates.add(norm[len(prefix):])
+        candidates.add(prefix + norm)
+
+    # 3. Inner article stripping (e.g. 'request_for_a_red_toadstool' <-> 'request_for_red_toadstool')
+    inner_stripped = re.sub(r"_(a|an|the)_", "_", norm)
+    if inner_stripped != norm:
+        candidates.add(inner_stripped)
+
+    # 4. Request pattern swap (X_request <-> request_for_X) and article variations
+    variants = {norm, inner_stripped} | set(candidates)
+    for v in list(variants):
+        if v.endswith("_request"):
+            core = v[:-8]
+            for art in ("a_", "an_", "the_"):
+                if core.startswith(art):
+                    core = core[len(art):]
+                    break
+            candidates.add(f"request_for_{core}")
+            candidates.add(f"request_for_a_{core}")
+            candidates.add(f"request_for_an_{core}")
+            candidates.add(f"request_for_the_{core}")
+            candidates.add(core)
+            candidates.add(f"a_{core}")
+            candidates.add(f"the_{core}")
+        if v.startswith("request_for_"):
+            core = v[12:]
+            for art in ("a_", "an_", "the_"):
+                if core.startswith(art):
+                    core = core[len(art):]
+                    break
+            candidates.add(f"{core}_request")
+            candidates.add(f"request_for_{core}")
+            candidates.add(f"request_for_a_{core}")
+            candidates.add(f"request_for_an_{core}")
+            candidates.add(f"request_for_the_{core}")
+            candidates.add(core)
+            candidates.add(f"a_{core}")
+            candidates.add(f"the_{core}")
+
+    # 5. Gerund/noun suffix variants (e.g. '_fencing' <-> '_fence')
+    gerund_variants: Set[str] = set()
+    for item in {norm} | candidates:
+        for gerund_sfx, noun_sfx in GERUND_NOUN_SUFFIXES:
+            if item.endswith(gerund_sfx):
+                gerund_variants.add(item[:-len(gerund_sfx)] + noun_sfx)
+            elif item.endswith(noun_sfx):
+                gerund_variants.add(item[:-len(noun_sfx)] + gerund_sfx)
+            if f"{gerund_sfx}_" in item:
+                gerund_variants.add(item.replace(f"{gerund_sfx}_", f"{noun_sfx}_"))
+            elif f"{noun_sfx}_" in item:
+                gerund_variants.add(item.replace(f"{noun_sfx}_", f"{gerund_sfx}_"))
+    candidates |= gerund_variants
+
+    # 6. Check QUEST_TITLE_ALIASES for all generated candidate permutations
+    alias_variants: Set[str] = set()
+    for item in {norm} | candidates:
+        if item in QUEST_TITLE_ALIASES:
+            alias_variants.add(QUEST_TITLE_ALIASES[item])
+        for rev in REVERSE_QUEST_TITLE_ALIASES.get(item, []):
+            alias_variants.add(rev)
+    candidates |= alias_variants
+
+    # 7. Singular / Plural match for norm and all generated candidates
+    all_to_check = {norm} | candidates
+    plural_variants: Set[str] = set()
+    for item in all_to_check:
+        if item.endswith("s"):
+            plural_variants.add(item[:-1])
+        else:
+            plural_variants.add(item + "s")
+        if item.endswith("es"):
+            plural_variants.add(item[:-2])
+        else:
+            plural_variants.add(item + "es")
+
+    all_to_check |= plural_variants
+
+    for item in list(plural_variants):
+        if item in QUEST_TITLE_ALIASES:
+            all_to_check.add(QUEST_TITLE_ALIASES[item])
+        for rev in REVERSE_QUEST_TITLE_ALIASES.get(item, []):
+            all_to_check.add(rev)
+
+    if any(c in completed_keys for c in all_to_check):
+        return True
+
+    # 8. Fallback article-stripped comparison against completed_keys
+    norm_core = _strip_articles(norm)
+    for k in completed_keys:
+        if _strip_articles(k) == norm_core:
+            return True
+
+    return False
 
 
 class SaveData:
@@ -353,6 +537,64 @@ class SaveData:
             return None
         result = {str(r).strip().lower() for r in unlocks if r and isinstance(r, str)}
         return result if result else None
+
+    def get_completed_quest_keys(self) -> Set[str]:
+        """
+        Returns a set of normalized lowercase snake_case quest IDs for all quests
+        marked completed in this save file.
+        Inspects:
+          - self.quests.get("completed_quests", [])
+          - self.quests.get("completion_timestamps", {}).keys()
+          - self.gamedata.get("completed_quests", [])
+        """
+        completed: Set[str] = set()
+
+        # 1. self.quests["completed_quests"]
+        if hasattr(self, "quests") and isinstance(self.quests, dict):
+            raw_cq = self.quests.get("completed_quests", [])
+            if isinstance(raw_cq, (list, set, tuple)):
+                for qid in raw_cq:
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+            elif isinstance(raw_cq, dict):
+                for qid in raw_cq.keys():
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+
+            # 2. self.quests["completion_timestamps"]
+            raw_ct = self.quests.get("completion_timestamps", {})
+            if isinstance(raw_ct, dict):
+                for qid in raw_ct.keys():
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+            elif isinstance(raw_ct, (list, set, tuple)):
+                for qid in raw_ct:
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+
+        # 3. self.gamedata["completed_quests"]
+        if hasattr(self, "gamedata") and isinstance(self.gamedata, dict):
+            raw_gd = self.gamedata.get("completed_quests", [])
+            if isinstance(raw_gd, (list, set, tuple)):
+                for qid in raw_gd:
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+            elif isinstance(raw_gd, dict):
+                for qid in raw_gd.keys():
+                    norm = _normalize_quest_key(str(qid))
+                    if norm:
+                        completed.add(norm)
+
+        return completed
+
+    def is_quest_completed(self, quest_name: str) -> bool:
+        """Helper checking if a quest is marked completed in this save."""
+        return is_quest_completed(quest_name, self.get_completed_quest_keys())
 
     def is_npc_present_in_town_today(self, npc_id: str) -> bool:
         """

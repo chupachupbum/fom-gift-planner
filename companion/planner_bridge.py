@@ -19,6 +19,7 @@ from fom_planner.data_loader import (
     load_item_seasons,
     load_npc_preferences_from_fiddle,
     load_npc_preferences_from_json,
+    load_quest_data,
     load_recipe_sources,
 )
 from fom_planner.models import InGameDate, SaveData
@@ -219,6 +220,7 @@ def execute_plan(
     item_locations_path = resolve_path(config.item_locations, root) or (root / "data" / "item_locations.json")
     recipe_sources_path = resolve_path(config.recipe_sources, root) or (root / "data" / "recipe_sources.json")
     item_seasons_path = resolve_path(config.item_seasons, root) or (root / "data" / "item_seasons.json")
+    quest_data_path = resolve_path(getattr(config, "quest_data", None), root) or (root / "data" / "quest_data.json")
 
     # 3. Load databases
     all_recipes = load_recipes(str(recipes_path)) if recipes_path.exists() else {}
@@ -231,6 +233,7 @@ def execute_plan(
     item_locations = load_item_locations(str(item_locations_path)) if item_locations_path.exists() else {}
     recipe_sources = load_recipe_sources(str(recipe_sources_path)) if recipe_sources_path.exists() else {}
     item_seasons = load_item_seasons(str(item_seasons_path)) if item_seasons_path.exists() else {}
+    quest_data = load_quest_data(str(quest_data_path)) if quest_data_path.exists() else {}
 
     # 4. Load NPC gift preferences & metadata
     npcs_def = None
@@ -324,6 +327,7 @@ def execute_plan(
             focus_mode_enabled=focus_mode_enabled,
             focus_npcs=focus_npcs,
             custom_preset_npcs=custom_preset_npcs,
+            quest_data=quest_data,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -348,6 +352,7 @@ def execute_plan(
             focus_mode_enabled=focus_mode_enabled,
             focus_npcs=focus_npcs,
             custom_preset_npcs=custom_preset_npcs,
+            quest_data=quest_data,
         )
 
     return save, plan_results, metadata, save_path

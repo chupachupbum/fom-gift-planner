@@ -6,6 +6,7 @@ Loaders for game databases, item metadata, item locations, and NPC preferences:
 - load_item_seasons
 - load_recipe_sources
 - load_alt_sources
+- load_quest_data
 - load_npc_preferences_from_fiddle
 - load_npc_preferences_from_json
 - load_item_metadata
@@ -15,7 +16,9 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+from fom_planner.constants import DEFAULT_QUEST_DATA_PATH
 
 try:
     import tomllib
@@ -174,6 +177,172 @@ def load_alt_sources(
     except Exception:
         return {}
     return {}
+
+
+GENERIC_QUEST_PLACEHOLDERS: Set[str] = {
+    "crop",
+    "berry",
+    "fish",
+    "flower",
+    "soup",
+    "mine_forageable",
+    "monster_part",
+    "baked_dishes",
+    "wool",
+    "copper_tool",
+    "dining_tables",
+    "dining_chairs",
+    "stone_path",
+    "feather",
+}
+
+QUEST_ITEM_ALIASES: Dict[str, str] = {
+    # Baseline tree aliases
+    "milk": "cow_milk",
+    "golden_milk": "golden_cow_milk",
+    "wood": "basic_wood",
+    "stone": "ore_stone",
+    "rice_ball": "riceball",
+    "tea": "cup_of_tea",
+    # Quest dataset Wiki naming mismatches
+    "breath_of_flame": "breath_of_fire",
+    "archeology_shard": "shards",
+    "chicken_egg": "egg",
+    "rooster_feather": "feather",
+    "clod_bomb": "bomb",
+    "hay_bale": "spooky_haybale",
+    "scarecrow": "starter_scarecrow",
+    "potted_plant": "starter_potted_plant",
+    "birdhouse": "starter_bird_house_red",
+    "shipping_bin": "starter_shipping_box",
+    "wooden_fence": "starter_wood_fence",
+    "ultimate_large_animal_feed": "ultimate_hay",
+    "silver_sword": "sword_silver",
+    "corrupted_mistril_sword": "sword_corrupted_mistril",
+    "silver_axe": "axe_silver",
+    "copper_shovel": "shovel_copper",
+    "iron_shovel": "shovel_iron",
+    "copper_net": "net_copper",
+    "iron_watering_can": "watering_can_iron",
+    "common_bug_pheromones": "bug_pheromone_common",
+    "uncommon_bug_pheromones": "bug_pheromone_uncommon",
+    "rare_bug_pheromones": "bug_pheromone_rare",
+    "common_fish_bait": "fish_bait_common",
+    "uncommon_fish_bait": "fish_bait_uncommon",
+    "rare_fish_bait": "fish_bait_rare",
+    "grass_starter": "small_grass_starter",
+}
+
+
+def load_quest_data(
+    quest_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Loads quest item requirements from quest_data.json.
+    - Resolves item aliases to canonical IDs with bidirectional lookup.
+    - Excludes Mission Quest entries (monster hunting kill quotas).
+    - Excludes generic category placeholders (crop, berry, fish, etc.).
+    - Recalculates total_required and quest_types per item.
+    - Gracefully returns {} if file is missing or invalid.
+    """
+    if quest_path is None:
+        if DEFAULT_QUEST_DATA_PATH.exists():
+            target = DEFAULT_QUEST_DATA_PATH
+        else:
+            root_path = Path(__file__).resolve().parent.parent / "data" / "quest_data.json"
+            script_path = Path(__file__).resolve().parent / "data" / "quest_data.json"
+            if root_path.exists():
+                target = root_path
+            elif script_path.exists():
+                target = script_path
+            else:
+                target = Path("data/quest_data.json")
+    else:
+        target = Path(quest_path)
+
+    if not target.exists() or not target.is_file():
+        return {}
+
+    try:
+        with open(target, "r", encoding="utf-8") as f:
+            raw_data = json.load(f)
+        if not isinstance(raw_data, dict):
+            return {}
+
+        details = raw_data.get("item_quest_details", {})
+        if not isinstance(details, dict):
+            return {}
+
+        canonical_items: Dict[str, Dict[str, Any]] = {}
+        alias_map: Dict[str, str] = {}
+
+        for raw_id, item_info in details.items():
+            if not isinstance(item_info, dict):
+                continue
+            raw_id_clean = str(raw_id).strip().lower()
+            if raw_id_clean in GENERIC_QUEST_PLACEHOLDERS:
+                continue
+
+            canonical_id = QUEST_ITEM_ALIASES.get(raw_id_clean, raw_id_clean)
+            alias_map[raw_id_clean] = canonical_id
+
+            raw_quests = item_info.get("quests", [])
+            if not isinstance(raw_quests, list):
+                continue
+
+            valid_quests = [
+                q for q in raw_quests
+                if isinstance(q, dict)
+                and q.get("category") != "Mission Quest"
+                and q.get("quest_type") != "Mission Quest"
+            ]
+            if not valid_quests:
+                continue
+
+            if canonical_id not in canonical_items:
+                display_name = item_info.get("name") or canonical_id.replace("_", " ").title()
+                canonical_items[canonical_id] = {
+                    "name": display_name,
+                    "quests": list(valid_quests),
+                }
+            else:
+                existing_quests = canonical_items[canonical_id]["quests"]
+                for q in valid_quests:
+                    if q not in existing_quests:
+                        existing_quests.append(q)
+                if not canonical_items[canonical_id].get("name") and item_info.get("name"):
+                    canonical_items[canonical_id]["name"] = item_info["name"]
+
+        res: Dict[str, Dict[str, Any]] = {}
+        for cid, data in canonical_items.items():
+            quests = data["quests"]
+            if not quests:
+                continue
+            cleaned_types = sorted(list({str(q.get("quest_type", "Request")) for q in quests}))
+            cleaned_total = sum(int(q.get("amount", 0)) for q in quests)
+            res[cid] = {
+                "name": data["name"],
+                "total_required": cleaned_total,
+                "quest_types": cleaned_types,
+                "quests": quests,
+            }
+
+        # Populate bidirectional aliases
+        for alias, canonical in QUEST_ITEM_ALIASES.items():
+            if canonical in res and alias not in res:
+                res[alias] = res[canonical]
+            elif alias in res and canonical not in res:
+                res[canonical] = res[alias]
+
+        for raw_k, canon_k in alias_map.items():
+            if canon_k in res and raw_k not in res:
+                res[raw_k] = res[canon_k]
+            elif raw_k in res and canon_k not in res:
+                res[canon_k] = res[raw_k]
+
+        return res
+    except Exception:
+        return {}
 
 
 def load_npc_preferences_from_fiddle(fiddle_dir: Path) -> Tuple[Dict[str, Any], Dict[str, Any]]:

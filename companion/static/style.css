@@ -753,6 +753,102 @@ main.main-content {
   font-weight: 600;
 }
 
+/* Focus Suggestion Card Quest Reminder Row */
+.focus-quest-row {
+  margin-top: 5px;
+  padding: 6px 8px;
+  background: #fffdf5;
+  border: 1px solid var(--border-outline-soft);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+
+.focus-quest-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.focus-quest-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.quest-cat-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  line-height: 1.3;
+  display: inline-block;
+  white-space: nowrap;
+  background: #fdf8ee;
+  border: 1px solid var(--border-outline-soft);
+  color: var(--ink);
+}
+
+.quest-cat-story-quest {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.quest-cat-request {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.quest-cat-crown-request {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  color: #7e22ce;
+}
+
+.quest-cat-heart-quest {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+}
+
+.quest-cat-town-upgrade {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+.quest-cat-important-quest {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #a16207;
+}
+
+.quest-cat-festival-quest {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  color: #0e7490;
+}
+
+.quest-cat-special-request {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #6d28d9;
+}
+
+.quest-cat-cooking-challenge {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+}
+
 /* Crafting Tree Toggle and Container */
 .tree-section {
   margin-top: 8px;
@@ -1736,6 +1832,30 @@ details.settings-group[open] summary {
   border-color: var(--border-outline);
 }
 
+.d3-tree-node.is-quest {
+  background: #fffdf7;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 3px 0 #7c3aed, 0 4px 10px rgba(139, 92, 246, 0.18);
+}
+
+.d3-tree-node.is-quest:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 5px 0 #6d28d9, 0 8px 16px rgba(124, 58, 237, 0.25);
+  transform: translateY(-2px);
+}
+
+.d3-tree-node.is-group.is-quest-group {
+  background: var(--surface-card, #fdf8ee);
+  border-style: dashed;
+  border-color: #d97706;
+  box-shadow: 0 3px 0 #b45309, 0 4px 10px rgba(217, 119, 6, 0.15);
+}
+
+.d3-tree-node.is-group.is-quest-group:hover {
+  border-color: #b45309;
+  transform: translateY(-2px);
+}
+
 /* Dimmed / Highlighted from Search */
 .d3-tree-node.is-dimmed {
   opacity: 0.25;
@@ -1840,6 +1960,64 @@ details.settings-group[open] summary {
   border: 1px solid #ffe0b2;
   color: #e65100;
   white-space: nowrap;
+}
+
+.d3-quest-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.d3-quest-badge {
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.d3-quest-amount {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+.d3-quest-requester {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--ink-muted, #665c54);
+  margin-top: 2px;
+}
+
+.d3-requester-portrait {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  border: 1px solid var(--border-outline-soft, #c4a882);
+  background: #fff;
+}
+
+.d3-requester-name {
+  font-weight: 600;
+  color: var(--ink, #44382e);
+}
+
+.d3-quest-via {
+  font-size: 0.68rem;
+  font-style: italic;
+  color: var(--ink-muted, #7c6f64);
 }
 
 /* Collapsible Branch Pill */
