@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     MARRIAGE_CANDIDATES,
+    MARRIAGE_EXCLUSIVE_QUEST_NAMES,
     SATURDAY_MARKET_VENDORS,
     AvailabilityTier,
 )
@@ -32,7 +33,13 @@ from fom_planner.data_loader import (
     load_item_seasons,
     load_quest_data,
 )
-from fom_planner.models import SaveData, is_quest_completed
+from fom_planner.models import (
+    SaveData,
+    _normalize_quest_key,
+    is_quest_applicable_for_future_wife,
+    is_quest_completed,
+    normalize_future_wife,
+)
 
 ITEM_LOCATIONS: Dict[str, str] = load_item_locations()
 ITEM_SEASONS: Dict[str, List[str]] = load_item_seasons()
@@ -179,6 +186,7 @@ def compute_focus_suggestions(
     quest_data: Optional[Dict[str, Any]] = None,
     completed_quests: Optional[Set[str]] = None,
     save: Optional[SaveData] = None,
+    future_wife: Optional[str] = "none",
 ) -> List[Dict[str, Any]]:
     """
     Computes a ranked list of top insufficient items (raw materials and direct gifts)
@@ -391,6 +399,8 @@ def compute_focus_suggestions(
                 continue
             if is_quest_completed(q_name, completed_quests_set):
                 continue
+            if not is_quest_applicable_for_future_wife(q, future_wife):
+                continue
             active_quests.append(q)
 
         if not active_quests:
@@ -475,8 +485,13 @@ def compute_focus_suggestions(
                     "requester": q_requester,
                 }
                 raw_quest_summaries.setdefault(raw_clean, []).append(summary_entry)
-                raw_quest_names.setdefault(raw_clean, set()).add(q_name)
-                raw_quest_categories.setdefault(raw_clean, {}).setdefault(q_cat, set()).add(q_name)
+                q_key = (
+                    f"{q_name} ({q_requester})"
+                    if (_normalize_quest_key(q_name) in MARRIAGE_EXCLUSIVE_QUEST_NAMES and q_requester)
+                    else q_name
+                )
+                raw_quest_names.setdefault(raw_clean, set()).add(q_key)
+                raw_quest_categories.setdefault(raw_clean, {}).setdefault(q_cat, set()).add(q_key)
 
     def _get_raw_quest_data(rid: str) -> Tuple[int, List[Dict[str, Any]], Set[str], Dict[str, Set[str]]]:
         dem = raw_quest_demand.get(rid, 0)
@@ -766,6 +781,7 @@ def build_focus_crafting_trees(
     quest_data: Optional[Dict[str, Any]] = None,
     completed_quests: Optional[Set[str]] = None,
     save: Optional[SaveData] = None,
+    future_wife: Optional[str] = "none",
 ) -> List[Dict[str, Any]]:
     """
     Builds a downstream crafting dependency tree for each focus suggestion blocker item.
@@ -821,6 +837,8 @@ def build_focus_crafting_trees(
                 q_name = q.get("quest_name")
                 if not q_name or is_quest_completed(q_name, completed_quests_set):
                     continue
+                if not is_quest_applicable_for_future_wife(q, future_wife):
+                    continue
                 direct_quests_by_item.setdefault(q_clean_id, []).append(q)
 
     def _get_direct_quests(item_id: str) -> List[Dict[str, Any]]:
@@ -840,8 +858,15 @@ def build_focus_crafting_trees(
         for i_id in ids_to_check:
             for q in direct_quests_by_item.get(i_id, []):
                 q_name = q.get("quest_name")
-                if q_name and q_name not in seen_q:
-                    seen_q.add(q_name)
+                if not q_name:
+                    continue
+                dedup_key = (
+                    (q_name, str(q.get("requester") or "").strip().lower())
+                    if _normalize_quest_key(q_name) in MARRIAGE_EXCLUSIVE_QUEST_NAMES
+                    else q_name
+                )
+                if dedup_key not in seen_q:
+                    seen_q.add(dedup_key)
                     res.append(q)
         return res
 
@@ -987,8 +1012,13 @@ def build_focus_crafting_trees(
                 continue
             slug = re.sub(r"[^a-z0-9]+", "_", q_name.lower()).strip("_")
             requester = q.get("requester")
+            if _normalize_quest_key(q_name) in MARRIAGE_EXCLUSIVE_QUEST_NAMES and requester:
+                req_slug = re.sub(r"[^a-z0-9]+", "_", str(requester).lower()).strip("_")
+                quest_item_id = f"_quest_{slug}_{req_slug}"
+            else:
+                quest_item_id = f"_quest_{slug}"
             node["children"].append({
-                "item_id": f"_quest_{slug}",
+                "item_id": quest_item_id,
                 "item_name": q_name,
                 "is_quest": True,
                 "quest_type": q.get("quest_type", "Request"),
@@ -1299,6 +1329,7 @@ def plan_daily_gift_bag(
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
     custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
     quest_data: Optional[Dict[str, Any]] = None,
+    future_wife: Optional[str] = "none",
 ) -> dict:
     """
     Computes the optimal bag loadout for today's gifting session with inventory awareness.
@@ -1809,6 +1840,7 @@ def plan_daily_gift_bag(
         quest_data=quest_data,
         completed_quests=save_completed_quests,
         save=save,
+        future_wife=future_wife,
     )
 
     all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -1838,6 +1870,7 @@ def plan_daily_gift_bag(
         quest_data=quest_data,
         completed_quests=save_completed_quests,
         save=save,
+        future_wife=future_wife,
     )
 
     source_priority = compute_source_priorities(
@@ -1977,6 +2010,7 @@ def plan_max_relationship(
     focus_npcs: Optional[Union[Set[str], List[str], str]] = None,
     custom_preset_npcs: Optional[Union[Set[str], List[str], str]] = None,
     quest_data: Optional[Dict[str, Any]] = None,
+    future_wife: Optional[str] = "none",
 ) -> dict:
     """
     Computes a daily gift assignment to maximize total relationship points earned today.
@@ -2843,6 +2877,7 @@ def plan_max_relationship(
         quest_data=quest_data,
         completed_quests=save_completed_quests,
         save=save,
+        future_wife=future_wife,
     )
 
     all_unobtained_recipes, recipe_unlock_stats = compute_focus_recipes(
@@ -2872,6 +2907,7 @@ def plan_max_relationship(
         quest_data=quest_data,
         completed_quests=save_completed_quests,
         save=save,
+        future_wife=future_wife,
     )
 
     source_priority = compute_source_priorities(

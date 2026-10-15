@@ -12,6 +12,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from fom_planner.models import normalize_future_wife
+
 
 def get_repo_root() -> Path:
     """Finds repository root containing the data/ folder."""
@@ -48,6 +50,7 @@ class CompanionConfig:
     force_all_npcs: bool = False
     max_relationship_points: Optional[float] = None  # None uses default (1755.0)
     no_exclude_max_relationship: bool = False
+    future_wife: str = "none"   # "none", "all", or one of FEMALE_MARRIAGE_CANDIDATES
 
     # 4. Data & Save Paths (stored as strings; can be relative to repo or absolute Windows/Linux paths)
     save_file: Optional[str] = None
@@ -78,6 +81,8 @@ class CompanionConfig:
             filtered["custom_preset_npcs"] = ",".join(str(x).strip() for x in filtered["custom_preset_npcs"] if str(x).strip())
         if "focus_mode_enabled" in filtered and not isinstance(filtered["focus_mode_enabled"], bool):
             filtered["focus_mode_enabled"] = bool(filtered["focus_mode_enabled"])
+        if "future_wife" in filtered:
+            filtered["future_wife"] = normalize_future_wife(filtered["future_wife"])
         return cls(**filtered)
 
 
@@ -248,6 +253,22 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                     "max": 5.0,
                     "step": 0.5,
                     "help": "Priority multiplier for raw materials available in the current season (higher means prioritize more).",
+                },
+                {
+                    "key": "future_wife",
+                    "label": "Future Wife (A Craving Quest)",
+                    "type": "select",
+                    "options": [
+                        {"value": "none", "label": "None / Undecided (Hide A Craving quests)"},
+                        {"value": "adeline", "label": "Adeline (Lemon Pie)"},
+                        {"value": "celine", "label": "Celine (Spring Salad)"},
+                        {"value": "juniper", "label": "Juniper (Pizza)"},
+                        {"value": "reina", "label": "Reina (Ice Cream Sundae)"},
+                        {"value": "seridia", "label": "Seridia (Ice Cream Sundae)"},
+                        {"value": "valen", "label": "Valen (Grilled Cheese)"},
+                        {"value": "all", "label": "Show All 6 Candidates"},
+                    ],
+                    "help": "'A Craving' is a post-marriage quest exclusive to your spouse. Choose your future wife so only her quest is tracked.",
                 },
             ],
         },

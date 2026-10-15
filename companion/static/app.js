@@ -1439,9 +1439,101 @@ function renderSourceSummary(sourcePriority, focusItemsCount) {
 }
 window.renderSourceSummary = renderSourceSummary;
 
+const FUTURE_WIFE_CANDIDATES = [
+  { id: "none", label: "None / Undecided", dish: null, dish_id: null, title: "Hide all 'A Craving' marriage quests until you decide" },
+  { id: "adeline", label: "Adeline", dish: "Lemon Pie", dish_id: "lemon_pie", title: "Adeline — A Craving: Lemon Pie" },
+  { id: "celine", label: "Celine", dish: "Spring Salad", dish_id: "spring_salad", title: "Celine — A Craving: Spring Salad" },
+  { id: "juniper", label: "Juniper", dish: "Pizza", dish_id: "pizza", title: "Juniper — A Craving: Pizza" },
+  { id: "reina", label: "Reina", dish: "Ice Cream Sundae", dish_id: "ice_cream_sundae", title: "Reina — A Craving: Ice Cream Sundae" },
+  { id: "seridia", label: "Seridia", dish: "Ice Cream Sundae", dish_id: "ice_cream_sundae", title: "Seridia — A Craving: Ice Cream Sundae" },
+  { id: "valen", label: "Valen", dish: "Grilled Cheese", dish_id: "grilled_cheese", title: "Valen — A Craving: Grilled Cheese" },
+  { id: "all", label: "All 6", dish: null, dish_id: null, title: "Include 'A Craving' quests for all 6 bachelorettes" },
+];
+
+function renderFutureWifeBanner() {
+  const banner = document.getElementById("futureWifeBanner");
+  if (!banner) return;
+
+  const rawSelected = currentSettings?.future_wife || currentPlan?.config?.future_wife || "none";
+  const selected = String(rawSelected).trim().toLowerCase() || "none";
+
+  const sidebarSelect = document.getElementById("setting_future_wife");
+  if (sidebarSelect && sidebarSelect.value !== selected) {
+    sidebarSelect.value = selected;
+  }
+
+  const activeCand = FUTURE_WIFE_CANDIDATES.find(c => c.id === selected) || FUTURE_WIFE_CANDIDATES[0];
+  let statusBadgeHtml = "";
+  if (selected === "none") {
+    statusBadgeHtml = `<span class="future-wife-status-badge is-none">Quests Hidden</span>`;
+  } else if (selected === "all") {
+    statusBadgeHtml = `<span class="future-wife-status-badge is-all">Tracking All 6 Cravings</span>`;
+  } else {
+    statusBadgeHtml = `<span class="future-wife-status-badge is-active">Tracking: ${escapeHtml(activeCand.label)} (${escapeHtml(activeCand.dish || "")})</span>`;
+  }
+
+  const pillsHtml = FUTURE_WIFE_CANDIDATES.map(c => {
+    const isActive = (c.id === selected);
+    const activeClass = isActive ? "active" : "";
+    if (c.dish_id) {
+      return `
+        <button type="button" class="future-wife-pill ${activeClass}" data-wife="${c.id}" title="${escapeHtml(c.title)}">
+          <img class="future-wife-portrait" src="/assets/sprites/npcs/${c.id}" alt="${escapeHtml(c.label)}" onerror="this.onerror=null; this.src='/assets/sprites/npcs/fallback';" />
+          <span class="future-wife-name">${escapeHtml(c.label)}</span>
+          <span class="future-wife-dish">
+            <img class="future-wife-dish-icon" src="/assets/sprites/items/${c.dish_id}" alt="${escapeHtml(c.dish)}" onerror="this.style.display='none';" />
+            ${escapeHtml(c.dish)}
+          </span>
+        </button>
+      `;
+    }
+    const icon = c.id === "all" ? "💍" : "🚫";
+    return `
+      <button type="button" class="future-wife-pill future-wife-pill-meta ${activeClass}" data-wife="${c.id}" title="${escapeHtml(c.title)}">
+        <span>${icon} ${escapeHtml(c.label)}</span>
+      </button>
+    `;
+  }).join("");
+
+  banner.innerHTML = `
+    <div class="future-wife-banner-top">
+      <div class="future-wife-info">
+        <span class="future-wife-title">💍 Marriage-Exclusive Quest Filter: <strong>"A Craving"</strong></span>
+        <span class="future-wife-desc">Post-marriage quest exclusive to your spouse (requires a cooked dish from one of the 6 bachelorettes). Choose your future wife so only her quest is tracked:</span>
+      </div>
+      ${statusBadgeHtml}
+    </div>
+    <div class="future-wife-pills" id="futureWifePills">
+      ${pillsHtml}
+    </div>
+  `;
+}
+window.renderFutureWifeBanner = renderFutureWifeBanner;
+
+function initFutureWifeBannerEvents() {
+  const banner = document.getElementById("futureWifeBanner");
+  if (!banner || banner._hasFutureWifeEvents) return;
+  banner._hasFutureWifeEvents = true;
+
+  banner.addEventListener("click", async (e) => {
+    const pill = e.target.closest(".future-wife-pill");
+    if (!pill || !pill.dataset.wife) return;
+    const val = pill.dataset.wife;
+    if (currentSettings) currentSettings.future_wife = val;
+    const sidebarSelect = document.getElementById("setting_future_wife");
+    if (sidebarSelect) sidebarSelect.value = val;
+    renderFutureWifeBanner();
+    await submitSettingUpdate("future_wife", val);
+  });
+}
+
 function renderFocusSuggestions(focusItems, focusTrees = [], sourcePriority = null) {
   const grid = document.getElementById("focusGrid");
   const badge = document.getElementById("focusCountBadge");
+
+  if (typeof renderFutureWifeBanner === "function") {
+    renderFutureWifeBanner();
+  }
 
   if (badge) {
     badge.textContent = `${focusItems.length} Blocker Items`;
@@ -1679,6 +1771,7 @@ async function loadSettings() {
     }
     renderSettingsAccordion(data.schema, currentSettings);
     renderBagPresetToolbar();
+    renderFutureWifeBanner();
   } catch (err) {
     console.error("Failed to load settings:", err);
   }
@@ -3062,6 +3155,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initBagPresetToolbarEvents();
   initPresetModalEvents();
   renderBagPresetToolbar();
+  initFutureWifeBannerEvents();
+  renderFutureWifeBanner();
 
   // Calendar Modal Controls & Header Date Badge Interaction
   const dateBadge = document.getElementById("dateBadge");

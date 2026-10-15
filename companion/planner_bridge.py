@@ -302,6 +302,7 @@ def execute_plan(
     focus_sort = config.focus_sort or "impact"
     all_seasons_flag = bool(config.all_seasons)
     seasonal_boost_val = float(config.seasonal_boost)
+    future_wife_val = getattr(config, "future_wife", "none") or "none"
 
     if config.strategy == "max-relationship":
         infused_items = save.get_infused_items() if (save is not None and hasattr(save, "get_infused_items")) else None
@@ -328,6 +329,7 @@ def execute_plan(
             focus_npcs=focus_npcs,
             custom_preset_npcs=custom_preset_npcs,
             quest_data=quest_data,
+            future_wife=future_wife_val,
         )
     else:
         plan_results = plan_daily_gift_bag(
@@ -353,6 +355,7 @@ def execute_plan(
             focus_npcs=focus_npcs,
             custom_preset_npcs=custom_preset_npcs,
             quest_data=quest_data,
+            future_wife=future_wife_val,
         )
 
     return save, plan_results, metadata, save_path

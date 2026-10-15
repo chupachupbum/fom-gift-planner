@@ -19,7 +19,9 @@ from fom_planner.constants import (
     ANIMAL_FESTIVAL_ATTENDING_VENDORS,
     DAYS_OF_WEEK,
     DEFAULT_MAX_RELATIONSHIP_POINTS,
+    FEMALE_MARRIAGE_CANDIDATES,
     FESTIVAL_CALENDAR,
+    MARRIAGE_EXCLUSIVE_QUEST_NAMES,
     NON_LOCATION_KEYS,
     SATURDAY_MARKET_VENDORS,
     AvailabilityTier,
@@ -322,6 +324,47 @@ def is_quest_completed(quest_name: str, completed_keys: Set[str]) -> bool:
             return True
 
     return False
+
+
+def normalize_future_wife(val: Any) -> str:
+    """
+    Normalizes the future_wife setting into 'none', 'all', or one of the 6 lowercased
+    female marriage candidate IDs ('adeline', 'celine', 'juniper', 'reina', 'seridia', 'valen').
+    """
+    if val is None or isinstance(val, bool):
+        return "none"
+    s = str(val).strip().lower()
+    if not s or s in ("none", "null", "undecided", "false", "0"):
+        return "none"
+    if s in ("all", "all_bachelorettes", "keep_all"):
+        return "all"
+    if s in FEMALE_MARRIAGE_CANDIDATES:
+        return s
+    return "none"
+
+
+def is_quest_applicable_for_future_wife(
+    quest: Dict[str, Any],
+    future_wife: Optional[str] = "none",
+) -> bool:
+    """
+    Returns True if the quest is applicable given the player's selected future_wife.
+    Post-marriage pregnancy Heart Quest 'A Craving' only triggers for the single
+    female marriage candidate the player marries. All other quests return True.
+    """
+    if not isinstance(quest, dict):
+        return True
+    q_name = quest.get("quest_name") or ""
+    norm_key = _normalize_quest_key(str(q_name))
+    if norm_key not in MARRIAGE_EXCLUSIVE_QUEST_NAMES:
+        return True
+    norm_wife = normalize_future_wife(future_wife)
+    if norm_wife == "none":
+        return False
+    if norm_wife == "all":
+        return True
+    requester = str(quest.get("requester") or "").strip().lower()
+    return requester == norm_wife
 
 
 class SaveData:

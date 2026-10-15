@@ -52,6 +52,21 @@ MARRIAGE_CANDIDATES: Set[str] = {
     "juniper", "march", "reina", "ryis", "seridia", "valen"
 }
 
+FEMALE_MARRIAGE_CANDIDATES: Set[str] = {
+    "adeline", "celine", "juniper", "reina", "seridia", "valen"
+}
+
+FEMALE_CANDIDATE_CRAVING_DISHES: Dict[str, Dict[str, str]] = {
+    "adeline": {"item_id": "lemon_pie", "item_name": "Lemon Pie"},
+    "celine": {"item_id": "spring_salad", "item_name": "Spring Salad"},
+    "juniper": {"item_id": "pizza", "item_name": "Pizza"},
+    "reina": {"item_id": "ice_cream_sundae", "item_name": "Ice Cream Sundae"},
+    "seridia": {"item_id": "ice_cream_sundae", "item_name": "Ice Cream Sundae"},
+    "valen": {"item_id": "grilled_cheese", "item_name": "Grilled Cheese"},
+}
+
+MARRIAGE_EXCLUSIVE_QUEST_NAMES: Set[str] = {"a_craving"}
+
 # Visiting vendors who attend the Animal Festival on Winter 10
 ANIMAL_FESTIVAL_ATTENDING_VENDORS: Set[str] = {"louis", "merri"}
 

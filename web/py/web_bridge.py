@@ -25,7 +25,7 @@ from fom_planner.data_loader import (
     load_quest_data,
     load_recipe_sources,
 )
-from fom_planner.models import InGameDate, SaveData
+from fom_planner.models import InGameDate, SaveData, normalize_future_wife
 from fom_planner.optimizer import (
     plan_daily_gift_bag,
     plan_max_relationship,
@@ -78,6 +78,7 @@ class WebPlannerConfig:
             float(d["max_relationship_points"]) if d.get("max_relationship_points") is not None else None
         )
         self.no_exclude_max_relationship: bool = bool(d.get("no_exclude_max_relationship", False))
+        self.future_wife: str = normalize_future_wife(d.get("future_wife", "none"))
 
         self.save_file: Optional[str] = d.get("save_file")
         self.recipes: str = str(d.get("recipes", "data/recipes.json"))
@@ -111,6 +112,7 @@ class WebPlannerConfig:
             "force_all_npcs": self.force_all_npcs,
             "max_relationship_points": self.max_relationship_points,
             "no_exclude_max_relationship": self.no_exclude_max_relationship,
+            "future_wife": self.future_wife,
             "save_file": self.save_file,
             "recipes": self.recipes,
             "fiddle": self.fiddle,
@@ -855,6 +857,7 @@ def generate_plan(
                 custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
                 quest_data=quest_data,
+                future_wife=config.future_wife,
             )
         else:
             plan_results = plan_daily_gift_bag(
@@ -881,6 +884,7 @@ def generate_plan(
                 custom_preset_npcs=config.custom_preset_npcs,
                 alt_sources=alt_sources,
                 quest_data=quest_data,
+                future_wife=config.future_wife,
             )
 
         # Ensure loaded assets are accessible to plan_to_json

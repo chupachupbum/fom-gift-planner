@@ -1062,3 +1062,136 @@ class TestBuildFocusCraftingTreesQuestNodes:
         assert len(trees[0]["children"]) == 0
 
 
+class TestFutureWifeFilter:
+    """Tests for Marriage-Exclusive Quest ('A Craving') Future Wife filtering."""
+
+    def test_normalize_future_wife_and_predicate(self):
+        from fom_planner.models import is_quest_applicable_for_future_wife, normalize_future_wife
+
+        assert normalize_future_wife(None) == "none"
+        assert normalize_future_wife("") == "none"
+        assert normalize_future_wife("invalid_npc") == "none"
+        assert normalize_future_wife("march") == "none"
+        assert normalize_future_wife("Adeline") == "adeline"
+        assert normalize_future_wife("ALL") == "all"
+
+        craving_adeline = {"quest_name": "A Craving", "requester": "Adeline", "amount": 1}
+        craving_celine = {"quest_name": "A Craving", "requester": "Celine", "amount": 1}
+        normal_quest = {"quest_name": "Request for Wood", "requester": "Adeline", "amount": 20}
+
+        assert is_quest_applicable_for_future_wife(normal_quest, "none") is True
+        assert is_quest_applicable_for_future_wife(normal_quest, "celine") is True
+
+        assert is_quest_applicable_for_future_wife(craving_adeline, "none") is False
+        assert is_quest_applicable_for_future_wife(craving_adeline, "adeline") is True
+        assert is_quest_applicable_for_future_wife(craving_celine, "adeline") is False
+        assert is_quest_applicable_for_future_wife(craving_adeline, "all") is True
+        assert is_quest_applicable_for_future_wife(craving_celine, "all") is True
+
+    def test_compute_focus_suggestions_filters_a_craving_by_future_wife(self):
+        from fom_planner.optimizer import load_recipes
+        qd = load_quest_data()
+        recipes = load_recipes()
+        rem_map = {"wheat": {"loved": {"Adeline"}}}
+
+        # 1. Default ("none"): "A Craving" is excluded
+        res_none = compute_focus_suggestions(
+            remaining_items_map=rem_map,
+            inventory={},
+            recipes=recipes,
+            quest_data=qd,
+            completed_quests=set(),
+            future_wife="none",
+        )
+        wheat_none = next(s for s in res_none if s["item_id"] == "wheat")
+        craving_none = [q for q in wheat_none["quest_summary"] if q["quest_name"] == "A Craving"]
+        assert len(craving_none) == 0
+
+        # 2. "adeline": only Adeline's "A Craving" (Lemon Pie -> wheat) is included
+        res_adeline = compute_focus_suggestions(
+            remaining_items_map=rem_map,
+            inventory={},
+            recipes=recipes,
+            quest_data=qd,
+            completed_quests=set(),
+            future_wife="adeline",
+        )
+        wheat_adeline = next(s for s in res_adeline if s["item_id"] == "wheat")
+        craving_adeline = [q for q in wheat_adeline["quest_summary"] if q["quest_name"] == "A Craving"]
+        assert len(craving_adeline) == 1
+        assert craving_adeline[0]["requester"] == "Adeline"
+        assert wheat_adeline["quest_demand"] == wheat_none["quest_demand"] + 1
+        assert wheat_adeline["quest_count"] == wheat_none["quest_count"] + 1
+        assert sum(wheat_adeline["quest_categories"].values()) == wheat_adeline["quest_count"]
+
+        # 3. "all": Adeline, Juniper, Reina, Seridia, and Valen all roll up to wheat with distinct quest_count
+        res_all = compute_focus_suggestions(
+            remaining_items_map=rem_map,
+            inventory={},
+            recipes=recipes,
+            quest_data=qd,
+            completed_quests=set(),
+            future_wife="all",
+        )
+        wheat_all = next(s for s in res_all if s["item_id"] == "wheat")
+        craving_all = [q for q in wheat_all["quest_summary"] if q["quest_name"] == "A Craving"]
+        assert {q["requester"] for q in craving_all} == {"Adeline", "Juniper", "Reina", "Seridia", "Valen"}
+        assert wheat_all["quest_demand"] == wheat_none["quest_demand"] + 5
+        assert wheat_all["quest_count"] == wheat_none["quest_count"] + 5
+        assert sum(wheat_all["quest_categories"].values()) == wheat_all["quest_count"]
+
+    def test_build_focus_crafting_trees_filters_a_craving(self):
+        qd = load_quest_data()
+        suggestions = [{"item_id": "lemon", "item_name": "Lemon", "deficit": 2}]
+        recipes = {
+            "lemon_pie": {
+                "item_id": "lemon_pie",
+                "display_name": "Lemon Pie",
+                "ingredients": [{"item_id": "lemon", "count": 1}],
+            }
+        }
+
+        trees_none = build_focus_crafting_trees(
+            focus_suggestions=suggestions,
+            recipes=recipes,
+            remaining_items_map={},
+            quest_data=qd,
+            completed_quests=set(),
+            future_wife="none",
+        )
+        # With future_wife="none", lemon_pie has no active quests or gift demand, so it is pruned
+        child_ids_none = [c["item_id"] for c in trees_none[0]["children"]]
+        assert "lemon_pie" not in child_ids_none
+
+        trees_adeline = build_focus_crafting_trees(
+            focus_suggestions=suggestions,
+            recipes=recipes,
+            remaining_items_map={},
+            quest_data=qd,
+            completed_quests=set(),
+            future_wife="adeline",
+        )
+        lp_node = next(c for c in trees_adeline[0]["children"] if c["item_id"] == "lemon_pie")
+        craving_nodes = [c for c in lp_node["children"] if c.get("is_quest")]
+        assert len(craving_nodes) == 1
+        assert craving_nodes[0]["item_id"] == "_quest_a_craving_adeline"
+        assert craving_nodes[0]["requester"] == "Adeline"
+
+    def test_config_future_wife_normalization(self):
+        from companion.config import CompanionConfig, get_settings_schema
+        from web.py.web_bridge import WebPlannerConfig
+
+        c1 = CompanionConfig.from_dict({"future_wife": "Juniper"})
+        assert c1.future_wife == "juniper"
+        c2 = CompanionConfig.from_dict({"future_wife": "unknown"})
+        assert c2.future_wife == "none"
+
+        w1 = WebPlannerConfig({"future_wife": "Valen"})
+        assert w1.future_wife == "valen"
+        assert w1.to_dict()["future_wife"] == "valen"
+
+        schema = get_settings_schema()
+        focus_group = next(g for g in schema if g["id"] == "focus_suggestions")
+        fw_field = next(f for f in focus_group["fields"] if f["key"] == "future_wife")
+        assert fw_field["type"] == "select"
+        assert len(fw_field["options"]) == 8
