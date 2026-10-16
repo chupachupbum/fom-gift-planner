@@ -44,6 +44,7 @@ CANONICAL_KEYS = (
     "focus_trees",
     "source_priority",
     "npc_progress",
+    "almanac",
     "error",
 )
 

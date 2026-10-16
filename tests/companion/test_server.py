@@ -61,10 +61,11 @@ def test_config_serialization(tmp_path):
 def test_settings_schema_structure():
     schema = get_settings_schema()
     assert isinstance(schema, list)
-    assert len(schema) == 2
+    assert len(schema) == 3
     group_ids = [g["id"] for g in schema]
     assert "planning" in group_ids
     assert "focus_suggestions" in group_ids
+    assert "almanac" in group_ids
 
     planning_group = next(g for g in schema if g["id"] == "planning")
     planning_fields = {f["key"]: f for f in planning_group["fields"]}

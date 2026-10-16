@@ -15,8 +15,10 @@ import tempfile
 import traceback
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+from fom_planner.almanac import plan_almanac
 from fom_planner.crafting import filter_recipes_by_unlocks, load_recipes
 from fom_planner.data_loader import (
+    load_almanac_data,
     load_alt_sources,
     load_item_locations,
     load_item_metadata,
@@ -87,6 +89,13 @@ class WebPlannerConfig:
         self.item_locations: str = str(d.get("item_locations", "data/item_locations.json"))
         self.recipe_sources: str = str(d.get("recipe_sources", "data/recipe_sources.json"))
         self.item_seasons: str = str(d.get("item_seasons", "data/item_seasons.json"))
+        self.almanac_data: str = str(d.get("almanac_data", "data/almanac_data.json"))
+
+        self.almanac_reserve_gifts: bool = bool(d.get("almanac_reserve_gifts", True))
+        self.almanac_include_locked: bool = bool(d.get("almanac_include_locked", True))
+        self.almanac_furniture_mode: str = str(d.get("almanac_furniture_mode", "one_per_recipe")).strip().lower()
+        self.almanac_season_filter: str = str(d.get("almanac_season_filter", "current")).strip().lower()
+        self.almanac_category_filter: str = str(d.get("almanac_category_filter", "all")).strip().lower()
 
         self.game_assets_dir: Optional[str] = d.get("game_assets_dir")
         self.server_host: str = str(d.get("server_host", "127.0.0.1"))
@@ -120,6 +129,12 @@ class WebPlannerConfig:
             "item_locations": self.item_locations,
             "recipe_sources": self.recipe_sources,
             "item_seasons": self.item_seasons,
+            "almanac_data": self.almanac_data,
+            "almanac_reserve_gifts": self.almanac_reserve_gifts,
+            "almanac_include_locked": self.almanac_include_locked,
+            "almanac_furniture_mode": self.almanac_furniture_mode,
+            "almanac_season_filter": self.almanac_season_filter,
+            "almanac_category_filter": self.almanac_category_filter,
             "game_assets_dir": self.game_assets_dir,
             "server_host": self.server_host,
             "server_port": self.server_port,
@@ -658,6 +673,7 @@ def plan_to_json(
         "focus_trees": _to_serializable(plan_results.get("focus_trees", [])),
         "source_priority": source_priority,
         "npc_progress": npc_progress,
+        "almanac": _to_serializable(plan_results.get("almanac", {})),
         "error": None,
     }
 
@@ -695,6 +711,7 @@ def init_bridge(data_dir: str = "web/data") -> None:
     alt_sources_path = resolved / "alt_sources.json"
     item_data_path = resolved / "item_data.json"
     quest_data_path = resolved / "quest_data.json"
+    almanac_data_path = resolved / "almanac_data.json"
 
     _CACHED_DATA["data_dir"] = resolved
     _CACHED_DATA["all_recipes"] = load_recipes(str(recipes_path)) if recipes_path.exists() else {}
@@ -703,6 +720,10 @@ def init_bridge(data_dir: str = "web/data") -> None:
     _CACHED_DATA["item_seasons"] = load_item_seasons(str(item_seasons_path)) if item_seasons_path.exists() else {}
     _CACHED_DATA["alt_sources"] = load_alt_sources(str(alt_sources_path)) if alt_sources_path.exists() else {}
     _CACHED_DATA["quest_data"] = load_quest_data(str(quest_data_path)) if quest_data_path.exists() else {}
+    if almanac_data_path.exists():
+        _CACHED_DATA["almanac_data"] = load_almanac_data(str(almanac_data_path))
+    else:
+        _CACHED_DATA["almanac_data"] = load_almanac_data()
 
     if item_data_path.exists():
         npc_defs, _ = load_npc_preferences_from_json(item_data_path)
@@ -887,6 +908,23 @@ def generate_plan(
                 future_wife=config.future_wife,
             )
 
+        # Almanac planner integration
+        almanac_data = _CACHED_DATA.get("almanac_data")
+        if not almanac_data:
+            almanac_data = load_almanac_data()
+
+        almanac_plan = plan_almanac(
+            save=save,
+            almanac_data=almanac_data,
+            gift_plan_result=plan_results,
+            reserve_gifts=getattr(config, "almanac_reserve_gifts", True),
+            include_locked_recipes=getattr(config, "almanac_include_locked", True),
+            furniture_mode=getattr(config, "almanac_furniture_mode", "one_per_recipe"),
+            season_filter=getattr(config, "almanac_season_filter", "current"),
+            category_filter=getattr(config, "almanac_category_filter", "all"),
+        )
+        plan_results["almanac"] = almanac_plan
+
         # Ensure loaded assets are accessible to plan_to_json
         plan_results["all_recipes"] = all_recipes
         plan_results["alt_sources"] = alt_sources
@@ -943,6 +981,15 @@ def generate_plan(
             "focus_trees": [],
             "source_priority": [],
             "npc_progress": {},
+            "almanac": {
+                "summary": {"obtained": 0, "total": 0, "percentage": 0.0},
+                "categories": {},
+                "ready_to_craft": [],
+                "raw_material_blockers": [],
+                "sources_by_tier": {"quick": [], "grind": [], "farm": []},
+                "source_priority": [],
+                "reserved_by_gifts": {},
+            },
             "error": str(e),
         }
         return json.dumps(error_payload)

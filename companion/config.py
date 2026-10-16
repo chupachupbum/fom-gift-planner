@@ -60,8 +60,16 @@ class CompanionConfig:
     item_locations: str = "data/item_locations.json"
     recipe_sources: str = "data/recipe_sources.json"
     item_seasons: str = "data/item_seasons.json"
+    almanac_data: str = "data/almanac_data.json"
 
-    # 5. Game Assets & Server Settings
+    # 5. Almanac Planner Settings
+    almanac_reserve_gifts: bool = True
+    almanac_include_locked: bool = True
+    almanac_furniture_mode: str = "one_per_recipe"
+    almanac_season_filter: str = "current"
+    almanac_category_filter: str = "all"
+
+    # 6. Game Assets & Server Settings
     game_assets_dir: Optional[str] = None
     server_host: str = "127.0.0.1"
     server_port: int = 8000
@@ -83,6 +91,16 @@ class CompanionConfig:
             filtered["focus_mode_enabled"] = bool(filtered["focus_mode_enabled"])
         if "future_wife" in filtered:
             filtered["future_wife"] = normalize_future_wife(filtered["future_wife"])
+        if "almanac_reserve_gifts" in filtered:
+            filtered["almanac_reserve_gifts"] = bool(filtered["almanac_reserve_gifts"])
+        if "almanac_include_locked" in filtered:
+            filtered["almanac_include_locked"] = bool(filtered["almanac_include_locked"])
+        if "almanac_furniture_mode" in filtered:
+            filtered["almanac_furniture_mode"] = str(filtered["almanac_furniture_mode"]).strip().lower()
+        if "almanac_season_filter" in filtered:
+            filtered["almanac_season_filter"] = str(filtered["almanac_season_filter"]).strip().lower()
+        if "almanac_category_filter" in filtered:
+            filtered["almanac_category_filter"] = str(filtered["almanac_category_filter"]).strip().lower()
         return cls(**filtered)
 
 
@@ -269,6 +287,69 @@ def get_settings_schema() -> List[Dict[str, Any]]:
                         {"value": "all", "label": "Show All 6 Candidates"},
                     ],
                     "help": "'A Craving' is a post-marriage quest exclusive to your spouse. Choose your future wife so only her quest is tracked.",
+                },
+            ],
+        },
+        {
+            "group": "Almanac Planner",
+            "id": "almanac",
+            "fields": [
+                {
+                    "key": "almanac_reserve_gifts",
+                    "label": "Reserve Today's Gifts",
+                    "type": "checkbox",
+                    "help": "Deduct items and crafting materials needed for today's gift bag before computing Almanac crafting and deficits.",
+                },
+                {
+                    "key": "almanac_include_locked",
+                    "label": "Include Locked Recipes",
+                    "type": "checkbox",
+                    "help": "Include locked crafting recipes in raw material deficit calculations and source priority.",
+                },
+                {
+                    "key": "almanac_furniture_mode",
+                    "label": "Furniture Swatch Mode",
+                    "type": "select",
+                    "options": [
+                        {"value": "one_per_recipe", "label": "1 Craft per Base Recipe (Count base variant)"},
+                        {"value": "all_swatches", "label": "All Swatches (Craft every color variant)"},
+                    ],
+                    "help": "Choose whether Furniture unlocks count once per base recipe or require crafting every color swatch.",
+                },
+                {
+                    "key": "almanac_season_filter",
+                    "label": "Almanac Season Filter",
+                    "type": "select",
+                    "options": [
+                        {"value": "current", "label": "Current Save Season"},
+                        {"value": "all", "label": "All Seasons"},
+                        {"value": "spring", "label": "Spring"},
+                        {"value": "summer", "label": "Summer"},
+                        {"value": "fall", "label": "Fall"},
+                        {"value": "winter", "label": "Winter"},
+                    ],
+                    "help": "Filter direct collectibles and material blockers by in-game season.",
+                },
+                {
+                    "key": "almanac_category_filter",
+                    "label": "Almanac Category Filter",
+                    "type": "select",
+                    "options": [
+                        {"value": "all", "label": "All 12 Categories"},
+                        {"value": "artifacts", "label": "Artifacts"},
+                        {"value": "blacksmithing", "label": "Blacksmithing"},
+                        {"value": "bugs", "label": "Bugs"},
+                        {"value": "cooked_dishes", "label": "Cooked Dishes"},
+                        {"value": "crops", "label": "Crops"},
+                        {"value": "date_inspiration", "label": "Date Inspiration"},
+                        {"value": "fish", "label": "Fishing & Diving"},
+                        {"value": "forageables", "label": "Forageables"},
+                        {"value": "furniture", "label": "Furniture"},
+                        {"value": "materials", "label": "Materials"},
+                        {"value": "ranching", "label": "Ranching"},
+                        {"value": "song_crystal", "label": "Song Crystals"},
+                    ],
+                    "help": "Focus acquisition sources and category browser on a specific Almanac category.",
                 },
             ],
         },

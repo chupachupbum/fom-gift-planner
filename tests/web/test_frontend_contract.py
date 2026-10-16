@@ -159,7 +159,7 @@ def test_sprite_alias_dictionary_and_resolvers():
 
 
 def test_localstorage_schema_and_all_15_settings():
-    """Verify localStorage key and all 15 settings keys are mapped with defaults matching companion/config.py."""
+    """Verify localStorage key and all 20 settings keys are mapped with defaults matching companion/config.py."""
     js = APP_JS.read_text(encoding="utf-8")
 
     # LocalStorage key
@@ -170,7 +170,7 @@ def test_localstorage_schema_and_all_15_settings():
     assert defaults_match is not None, "Could not find DEFAULT_SETTINGS in web/app.js"
     defaults = json.loads(defaults_match.group(1))
 
-    expected_15_keys = {
+    expected_20_keys = {
         # Planning Core (10)
         "strategy",
         "mode",
@@ -188,10 +188,16 @@ def test_localstorage_schema_and_all_15_settings():
         "focus_sort",
         "all_seasons",
         "seasonal_boost",
+        # Almanac Planner (5)
+        "almanac_reserve_gifts",
+        "almanac_include_locked",
+        "almanac_furniture_mode",
+        "almanac_season_filter",
+        "almanac_category_filter",
     }
 
-    assert set(defaults.keys()) == expected_15_keys, (
-        f"Mismatch in 15 settings keys! Found: {set(defaults.keys())}, Missing: {expected_15_keys - set(defaults.keys())}"
+    assert set(defaults.keys()) == expected_20_keys, (
+        f"Mismatch in 20 settings keys! Found: {set(defaults.keys())}, Missing: {expected_20_keys - set(defaults.keys())}"
     )
 
     # Check key default values
@@ -206,6 +212,11 @@ def test_localstorage_schema_and_all_15_settings():
     assert defaults["focus_mode_enabled"] is False
     assert defaults["force_all_npcs"] is False
     assert defaults["no_exclude_max_relationship"] is False
+    assert defaults["almanac_reserve_gifts"] is True
+    assert defaults["almanac_include_locked"] is True
+    assert defaults["almanac_furniture_mode"] == "one_per_recipe"
+    assert defaults["almanac_season_filter"] == "current"
+    assert defaults["almanac_category_filter"] == "all"
 
 
 def test_worker_integration_in_app_js():

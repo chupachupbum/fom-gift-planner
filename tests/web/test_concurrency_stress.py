@@ -43,6 +43,7 @@ Adversarial challenge and empirical stress-testing for the client-side Pyodide w
 """
 
 import concurrent.futures
+import gc
 import json
 import os
 from pathlib import Path
@@ -187,7 +188,10 @@ class TestRapidSequentialRecomputationsAndMemoryBounds:
         for conf in slider_permutations[:5]:
             raw = self.bridge.generate_plan(self.sample_bytes, config_dict=conf, filename="rapid_slider.sav")
             assert raw is not None
+            data = json.loads(raw)
 
+        del data
+        gc.collect()
         snapshot_warm = tracemalloc.take_snapshot()
 
         # Execute remaining 45 iterations
@@ -199,6 +203,8 @@ class TestRapidSequentialRecomputationsAndMemoryBounds:
             assert data["stats"]["max_slots"] == conf["slots"]
             assert data["stats"]["strategy"] == conf["strategy"]
 
+        del data
+        gc.collect()
         snapshot_end = tracemalloc.take_snapshot()
         tracemalloc.stop()
 

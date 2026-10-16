@@ -43,6 +43,9 @@ function setupEventSource() {
   evtSource.addEventListener("plan_updated", (event) => {
     try {
       const payload = JSON.parse(event.data);
+      if (typeof resetReadyToCraftChecks === "function") {
+        resetReadyToCraftChecks();
+      }
       renderPlan(payload.data);
       showToast("Game save updated — plan refreshed!");
     } catch (e) {
@@ -95,6 +98,10 @@ function renderPlan(data) {
   if (!data) return;
   currentPlan = data;
 
+  if (typeof syncReadyToCraftSaveIdentity === "function") {
+    syncReadyToCraftSaveIdentity(data);
+  }
+
   if (data.error) {
     showError(data.error);
   } else {
@@ -118,6 +125,11 @@ function renderPlan(data) {
 
   // 5. Sidebar Summary
   renderSidebarSummary(data);
+
+  // 6. Almanac Planner Section
+  if (data.almanac) {
+    renderAlmanacPlanner(data.almanac);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -703,6 +715,16 @@ function openCraftingTreeModal(rawTreeData, deficit) {
     let h = 44; // base header
     if (isRoot && deficit) h += 24; // deficit badge
 
+    // Almanac missing slot badge
+    if (data.is_almanac_missing !== undefined) {
+      h += 24;
+    }
+
+    // Category pill
+    if (data.category && !data.is_group && !data.is_quest) {
+      h += 20;
+    }
+
     if (data.alt_sources && data.alt_sources.length > 0) {
       h += Math.min(data.alt_sources.length, 3) * 26 + 4;
     }
@@ -795,6 +817,7 @@ function openCraftingTreeModal(rawTreeData, deficit) {
       else if (isQuest) cardClass += ' is-quest';
       else if (isIntermediate) cardClass += ' is-intermediate';
       else if (isGift) cardClass += ' is-gift';
+      if (data.is_almanac_missing === true) cardClass += ' is-almanac-missing';
 
       const cardH = getCardHeight(d);
 
@@ -865,6 +888,19 @@ function openCraftingTreeModal(rawTreeData, deficit) {
         // Deficit badge on root
         if (isRoot && deficit) {
           bodyHtml += `<span class="d3-node-deficit">Need: ${deficit}</span>`;
+        }
+
+        // Almanac slot status badge
+        if (data.is_almanac_missing === true) {
+          bodyHtml += `<span class="d3-node-almanac-badge is-missing" title="Unobtained in Almanac">📖 Missing Slot</span>`;
+        } else if (data.is_almanac_missing === false) {
+          bodyHtml += `<span class="d3-node-almanac-badge is-obtained" title="Already Acquired in Almanac">✓ Acquired</span>`;
+        }
+
+        // Category badge
+        if (data.category && !isGroup && !isQuest) {
+          const catName = data.category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          bodyHtml += `<span class="d3-node-cat-badge">${escapeHtml(catName)}</span>`;
         }
 
         // Alt source badges
@@ -1782,11 +1818,12 @@ function renderSettingsAccordion(schema, config) {
   if (!accordion || !schema) return;
 
   accordion.innerHTML = schema.map((group, idx) => {
-    const openAttr = idx === 0 ? "open" : "";
+    const groupId = group.id || (group.group === "Almanac Planner" ? "almanac" : group.group === "Focus Suggestions" ? "focus_suggestions" : "planning");
+    const openAttr = (idx === 0 || groupId === "almanac") ? "open" : "";
     const fieldsHtml = (group.fields || []).map(f => renderField(f, config[f.key], config)).join("");
 
     return `
-      <details class="settings-group" ${openAttr}>
+      <details class="settings-group" data-settings-group="${escapeHtml(groupId)}" ${openAttr}>
         <summary>${group.group}</summary>
         <div class="settings-fields">
           ${fieldsHtml}
@@ -2036,6 +2073,9 @@ function renderSettingsAccordion(schema, config) {
 
   // Adjust all parameter help tooltips so they don't overflow the right border
   updateAllHelpTooltipPositions();
+  if (typeof updateSidebarForPlannerMode === "function") {
+    updateSidebarForPlannerMode(activePlannerMode);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -2117,6 +2157,9 @@ async function uploadSaveFile(file) {
       currentSettings.focus_mode_enabled = false;
     }
     localStorage.removeItem("fom_companion_active_preset_id");
+    if (typeof resetReadyToCraftChecks === "function") {
+      resetReadyToCraftChecks();
+    }
     if (resData.plan) {
       renderPlan(resData.plan);
     }
@@ -3158,6 +3201,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initFutureWifeBannerEvents();
   renderFutureWifeBanner();
 
+  // Mode Switcher & Almanac Events
+  initModeSwitcher();
+  initAlmanacEventListeners();
+
   // Calendar Modal Controls & Header Date Badge Interaction
   const dateBadge = document.getElementById("dateBadge");
   if (dateBadge) {
@@ -3248,6 +3295,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const fileInput = document.getElementById("globalSaveFileInput");
         if (fileInput) fileInput.click();
       } else if (val === "__auto__") {
+        if (typeof resetReadyToCraftChecks === "function") {
+          resetReadyToCraftChecks();
+        }
         currentSettings.mode = "auto";
         currentSettings.active_preset_id = null;
         currentSettings.custom_preset_npcs = "";
@@ -3264,6 +3314,9 @@ document.addEventListener("DOMContentLoaded", () => {
         renderBagPresetToolbar();
         showToast("Switched to auto-detecting newest game save");
       } else if (val) {
+        if (typeof resetReadyToCraftChecks === "function") {
+          resetReadyToCraftChecks();
+        }
         currentSettings.mode = "auto";
         currentSettings.active_preset_id = null;
         currentSettings.custom_preset_npcs = "";
@@ -3287,6 +3340,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickResetBtn = document.getElementById("quickResetBtn");
   if (quickResetBtn) {
     quickResetBtn.addEventListener("click", async () => {
+      if (typeof resetReadyToCraftChecks === "function") {
+        resetReadyToCraftChecks();
+      }
       currentSettings.mode = "auto";
       currentSettings.active_preset_id = null;
       currentSettings.custom_preset_npcs = "";
@@ -3347,6 +3403,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch("/api/plan/refresh", { method: "POST" });
         const data = await res.json();
+        if (typeof resetReadyToCraftChecks === "function") {
+          resetReadyToCraftChecks();
+        }
         renderPlan(data);
         showToast("Plan refreshed manually");
       } catch (err) {
@@ -3465,4 +3524,1855 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// ===========================================================================
+// Milestone 4: Almanac Planner Engine & Interactive Controls
+// ===========================================================================
+
+// Alias support for element IDs between specifications
+const _origGetElementById = document.getElementById.bind(document);
+const ID_ALIASES = {
+  tabGiftPlanner: "tabBtnGiftPlanner",
+  tabAlmanacPlanner: "tabBtnAlmanacPlanner",
+  almanacItemDrawer: "almanacCategoryDrawer",
+  readyToCraftCountBadge: "readyToCraftBadge",
+  almanacBlockersCountBadge: "almanacBlockersBadge",
+  almanacSourcesCountBadge: "almanacSourcesBadge",
+  almanacCraftQueue: "almanacBatchQueueContainer",
+  almanacSourcesPanel: "almanacSourcesContainer",
+};
+document.getElementById = function(id) {
+  let el = _origGetElementById(id);
+  if (!el && ID_ALIASES[id]) {
+    el = _origGetElementById(ID_ALIASES[id]);
+  }
+  return el;
+};
+
+let activePlannerMode = "gift";
+let currentAlmanacCategory = null;
+let currentAlmanacStatusFilter = "all";
+let currentAlmanacSeasonFilter = "all";
+let currentAlmanacSearchQuery = "";
+let currentAlmanacBlockerSearchQuery = "";
+let almanacBatchViewMode = "chains";
+let currentAlmanacTier = "all";
+let furnitureActiveSwatches = {};
+try {
+  const savedSwatches = localStorage.getItem("fom_selected_swatches");
+  if (savedSwatches) furnitureActiveSwatches = JSON.parse(savedSwatches);
+} catch (e) {
+  furnitureActiveSwatches = {};
+}
+
+window._almanacTreeData = window._almanacTreeData || {};
+window.__giftScrollY = 0;
+window.__almanacScrollY = 0;
+
+const ALMANAC_STATIONS = {
+  cooking: {
+    label: "Cooking",
+    icon: "/static/icons/ui/spr_ui_skill_icon_cooking.png",
+    class: "station-cooking",
+    actionVerb: "Cook"
+  },
+  milling: {
+    label: "Milling",
+    icon: "/static/icons/locations/mill.png",
+    class: "station-milling",
+    actionVerb: "Mill"
+  },
+  woodcrafting: {
+    label: "Woodcrafting",
+    icon: "/static/icons/ui/spr_ui_skill_icon_woodcrafting.png",
+    class: "station-woodcrafting",
+    actionVerb: "Craft"
+  },
+  blacksmithing: {
+    label: "Blacksmithing",
+    icon: "/static/icons/ui/spr_ui_skill_icon_blacksmithing.png",
+    class: "station-blacksmithing",
+    actionVerb: "Forge"
+  },
+  refining: {
+    label: "Stone Refining",
+    icon: "/static/icons/ui/spr_ui_skill_icon_mining.png",
+    class: "station-refining",
+    actionVerb: "Refine"
+  },
+  dragon_forging: {
+    label: "Dragon Forging",
+    icon: "/static/icons/ui/spr_ui_journal_almanac_icon_artifacts.png",
+    class: "station-dragon_forging",
+    actionVerb: "Infuse"
+  }
+};
+
+function resolveAlmanacCategoryIconUrl(categoryId) {
+  return `/static/icons/ui/spr_ui_journal_almanac_icon_${categoryId}.png`;
+}
+
+function resolveAlmanacItemSpriteUrl(item) {
+  if (!item) return "/static/icons/ui/icon_gift.png";
+  if (item.icon_sprite) {
+    return `/static/icons/items/${item.icon_sprite}.png`;
+  }
+  return `/static/icons/items/spr_ui_item_${item.item_id}.png`;
+}
+
+function updateSidebarForPlannerMode(mode) {
+  const targetMode = mode === "almanac" ? "almanac" : "gift";
+  const groups = document.querySelectorAll("#settingsAccordion .settings-group");
+  groups.forEach(detailsEl => {
+    const groupId = detailsEl.getAttribute("data-settings-group") || "";
+    const isAlmanacGroup = groupId === "almanac";
+    if (targetMode === "almanac") {
+      if (isAlmanacGroup) {
+        detailsEl.style.display = "";
+        detailsEl.open = true;
+      } else {
+        detailsEl.style.display = "none";
+      }
+    } else {
+      if (isAlmanacGroup) {
+        detailsEl.style.display = "none";
+      } else {
+        detailsEl.style.display = "";
+      }
+    }
+  });
+
+  const giftMetaRows = document.querySelectorAll('.save-status-row[data-planner-mode="gift"]');
+  giftMetaRows.forEach(row => {
+    row.style.display = targetMode === "gift" ? "" : "none";
+  });
+}
+
+function initModeSwitcher() {
+  const tabGift = document.getElementById("tabBtnGiftPlanner") || document.getElementById("tabGiftPlanner");
+  const tabAlmanac = document.getElementById("tabBtnAlmanacPlanner") || document.getElementById("tabAlmanacPlanner");
+
+  if (tabGift) {
+    tabGift.addEventListener("click", () => switchPlannerMode("gift"));
+  }
+  if (tabAlmanac) {
+    tabAlmanac.addEventListener("click", () => switchPlannerMode("almanac"));
+  }
+
+  let savedMode = "gift";
+  try {
+    savedMode = localStorage.getItem("fom_active_planner_mode") || "gift";
+  } catch (e) {}
+
+  if (savedMode === "almanac") {
+    switchPlannerMode("almanac", false);
+  } else {
+    updateSidebarForPlannerMode("gift");
+  }
+}
+
+function switchPlannerMode(mode, saveScroll = true) {
+  const targetMode = mode === "almanac" ? "almanac" : "gift";
+  if (targetMode === activePlannerMode && saveScroll) {
+    updateSidebarForPlannerMode(targetMode);
+    return;
+  }
+
+  const tabGift = document.getElementById("tabBtnGiftPlanner") || document.getElementById("tabGiftPlanner");
+  const tabAlmanac = document.getElementById("tabBtnAlmanacPlanner") || document.getElementById("tabAlmanacPlanner");
+  const sectionGift = document.getElementById("giftPlannerSection");
+  const sectionAlmanac = document.getElementById("almanacPlannerSection");
+
+  if (activePlannerMode === "gift") {
+    window.__giftScrollY = window.scrollY;
+  } else {
+    window.__almanacScrollY = window.scrollY;
+  }
+
+  activePlannerMode = targetMode;
+  try {
+    localStorage.setItem("fom_active_planner_mode", targetMode);
+  } catch (e) {}
+
+  if (tabGift) {
+    tabGift.classList.toggle("active", targetMode === "gift");
+    tabGift.setAttribute("aria-selected", targetMode === "gift" ? "true" : "false");
+  }
+  if (tabAlmanac) {
+    tabAlmanac.classList.toggle("active", targetMode === "almanac");
+    tabAlmanac.setAttribute("aria-selected", targetMode === "almanac" ? "true" : "false");
+  }
+
+  if (sectionGift) sectionGift.style.display = targetMode === "gift" ? "block" : "none";
+  if (sectionAlmanac) sectionAlmanac.style.display = targetMode === "almanac" ? "block" : "none";
+
+  updateSidebarForPlannerMode(targetMode);
+
+  const restoreY = targetMode === "gift" ? (window.__giftScrollY || 0) : (window.__almanacScrollY || 0);
+  window.scrollTo({ top: restoreY, behavior: "instant" });
+}
+
+function renderAlmanacPlanner(almanac) {
+  if (!almanac) return;
+  renderAlmanacDashboard(almanac);
+  renderReadyToCraftQueue(almanac.ready_to_craft || [], almanacBatchViewMode);
+  renderRawMaterialBlockers(almanac.raw_material_blockers || []);
+  renderSourcePriority(almanac.sources_by_tier, currentAlmanacTier);
+
+  // If category drawer is open, keep it open and re-render drawer items
+  const backdrop = document.getElementById("almanacDrawerBackdrop");
+  if (backdrop && backdrop.classList.contains("active") && currentAlmanacCategory) {
+    const catData = almanac.categories?.[currentAlmanacCategory];
+    if (catData) {
+      const subtitle = document.getElementById("almanacDrawerSubtitle");
+      if (subtitle) subtitle.textContent = `${catData.obtained} / ${catData.total} Obtained (${catData.percentage}%)`;
+      renderDrawerItems();
+    }
+  }
+}
+
+function renderAlmanacDashboard(almanac) {
+  if (!almanac) return;
+
+  const summary = almanac.summary || {};
+  const headerPct = document.getElementById("headerAlmanacPct");
+  const overallBadge = document.getElementById("almanacOverallBadge");
+  const grid = document.getElementById("almanacCategoryGrid");
+
+  const pct = (summary.percentage !== undefined) ? summary.percentage : 0;
+  if (headerPct) headerPct.textContent = `${pct}%`;
+  if (overallBadge) {
+    overallBadge.textContent = `${summary.obtained || 0} / ${summary.total || 0} Collected (${pct}%)`;
+  }
+
+  if (!grid) return;
+  const categories = almanac.categories || {};
+  const catKeys = [
+    "artifacts", "blacksmithing", "bugs", "cooked_dishes", "crops",
+    "date_inspiration", "fish", "forageables", "furniture",
+    "materials", "ranching", "song_crystal"
+  ];
+
+  grid.innerHTML = catKeys.map(catKey => {
+    const cat = categories[catKey] || { name: catKey, obtained: 0, total: 0, percentage: 0 };
+    const iconUrl = resolveAlmanacCategoryIconUrl(catKey);
+    const isComplete = cat.total > 0 && cat.obtained >= cat.total;
+    const missingCount = Math.max(0, cat.total - cat.obtained);
+
+    return `
+      <div class="almanac-category-card" role="button" tabindex="0" onclick="openAlmanacDrawer('${catKey}')" onkeydown="if(event.key==='Enter'||event.key===' ')openAlmanacDrawer('${catKey}')" aria-label="Open ${cat.name} details">
+        <div class="almanac-card-header">
+          <div class="almanac-card-title-group">
+            <img class="almanac-card-icon" src="${iconUrl}" onerror="this.src='/static/icons/ui/icon_gift.png';" alt="${escapeHtml(cat.name)}" />
+            <h3 class="almanac-card-name">${escapeHtml(cat.name)}</h3>
+          </div>
+          ${isComplete ? '<span class="status-pill pill-obtained">COMPLETE</span>' : `<span class="badge-counter">${missingCount} Missing</span>`}
+        </div>
+
+        <div class="almanac-card-metrics">
+          <span class="almanac-card-count">${cat.obtained} / ${cat.total}</span>
+          <span class="almanac-card-pct">${cat.percentage}%</span>
+        </div>
+
+        <div class="stat-progress-track">
+          <div class="stat-progress-fill" style="width: ${Math.min(100, Math.max(0, cat.percentage))}%; ${isComplete ? 'background: #16a34a;' : ''}"></div>
+        </div>
+
+        <div class="almanac-card-subtext">
+          <span>${catKey === 'furniture' ? `${cat.groups_obtained || 0}/${cat.groups_total || 0} groups` : `${cat.obtained} acquired`}</span>
+          <span class="almanac-card-action">Browse Items →</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openAlmanacDrawer(categoryKey) {
+  currentAlmanacCategory = categoryKey;
+  const backdrop = document.getElementById("almanacDrawerBackdrop");
+  const title = document.getElementById("almanacDrawerTitle");
+  const subtitle = document.getElementById("almanacDrawerSubtitle");
+  const icon = document.getElementById("almanacDrawerIcon");
+
+  const catData = currentPlan?.almanac?.categories?.[categoryKey];
+  if (!catData) return;
+
+  if (title) title.textContent = catData.name;
+  if (subtitle) subtitle.textContent = `${catData.obtained} / ${catData.total} Obtained (${catData.percentage}%)`;
+  if (icon) icon.src = resolveAlmanacCategoryIconUrl(categoryKey);
+
+  currentAlmanacStatusFilter = "all";
+  currentAlmanacSeasonFilter = "all";
+  currentAlmanacSearchQuery = "";
+  const sInput = document.getElementById("almanacSearchInput");
+  if (sInput) sInput.value = "";
+  const sClear = document.getElementById("almanacSearchClearBtn");
+  if (sClear) sClear.style.display = "none";
+
+  const readyToCraftSet = new Set((currentPlan?.almanac?.ready_to_craft || []).map(r => r.item_id));
+  const countAllEl = document.getElementById("countStatusAll");
+  const countObtEl = document.getElementById("countStatusObtained");
+  const countMisEl = document.getElementById("countStatusMissing");
+  const countCrfEl = document.getElementById("countStatusCraftable");
+
+  if (categoryKey === "furniture" && catData.groups) {
+    if (countAllEl) countAllEl.textContent = catData.groups.length;
+    if (countObtEl) countObtEl.textContent = catData.groups.filter(g => g.is_obtained).length;
+    if (countMisEl) countMisEl.textContent = catData.groups.filter(g => !g.is_obtained).length;
+    if (countCrfEl) countCrfEl.textContent = catData.groups.filter(g => (g.swatches || []).some(s => readyToCraftSet.has(s.item_id))).length;
+  } else {
+    const items = catData.items || [];
+    if (countAllEl) countAllEl.textContent = items.length;
+    if (countObtEl) countObtEl.textContent = items.filter(it => it.is_obtained).length;
+    if (countMisEl) countMisEl.textContent = items.filter(it => !it.is_obtained).length;
+    if (countCrfEl) countCrfEl.textContent = items.filter(it => readyToCraftSet.has(it.item_id)).length;
+  }
+
+  updateFilterPillStates();
+  renderDrawerItems();
+
+  if (backdrop) {
+    backdrop.style.display = "flex";
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => {
+        if (backdrop.classList && typeof backdrop.classList.add === "function") {
+          backdrop.classList.add("active");
+        }
+      });
+    } else if (backdrop.classList && typeof backdrop.classList.add === "function") {
+      backdrop.classList.add("active");
+    }
+  }
+  if (document.body && document.body.style) {
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function closeAlmanacDrawer() {
+  const backdrop = document.getElementById("almanacDrawerBackdrop");
+  if (!backdrop) return;
+  if (backdrop.classList && typeof backdrop.classList.remove === "function") {
+    backdrop.classList.remove("active");
+  }
+  setTimeout(() => {
+    backdrop.style.display = "none";
+    if (document.body && document.body.style) {
+      document.body.style.overflow = "";
+    }
+  }, 240);
+}
+
+function updateFilterPillStates() {
+  document.querySelectorAll("#almanacStatusFilters .pill-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.filter === currentAlmanacStatusFilter);
+  });
+  document.querySelectorAll("#almanacSeasonFilters .pill-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.season === currentAlmanacSeasonFilter);
+  });
+}
+
+function renderDrawerItems() {
+  const container = document.getElementById("almanacItemsGrid");
+  const showingCount = document.getElementById("almanacShowingCount");
+  if (!container || !currentAlmanacCategory || !currentPlan?.almanac) return;
+
+  const catData = currentPlan.almanac.categories[currentAlmanacCategory];
+  if (!catData) return;
+
+  const readyToCraftSet = new Set((currentPlan.almanac.ready_to_craft || []).map(r => r.item_id));
+  const bagPlanSet = new Set((currentPlan.bag_plan || []).map(b => String(b.item_id).toLowerCase()));
+
+  if (currentAlmanacCategory === "furniture" && catData.groups) {
+    renderFurnitureDrawerGroups(catData.groups, container, showingCount, readyToCraftSet, bagPlanSet);
+    return;
+  }
+
+  const items = catData.items || [];
+  const filtered = items.filter(it => {
+    if (currentAlmanacStatusFilter === "obtained" && !it.is_obtained) return false;
+    if (currentAlmanacStatusFilter === "missing" && it.is_obtained) return false;
+    if (currentAlmanacStatusFilter === "craftable" && !readyToCraftSet.has(it.item_id)) return false;
+
+    if (currentAlmanacSeasonFilter !== "all") {
+      const itSeasons = (it.seasons || []).map(s => String(s).toLowerCase());
+      if (itSeasons.length > 0 && !itSeasons.includes(currentAlmanacSeasonFilter)) return false;
+    }
+
+    if (currentAlmanacSearchQuery) {
+      const name = (it.name || "").toLowerCase();
+      const sources = (it.sources || []).map(s => (s.location || "")).join(" ").toLowerCase();
+      const station = (it.recipe?.station || "").toLowerCase();
+      if (!name.includes(currentAlmanacSearchQuery) && !sources.includes(currentAlmanacSearchQuery) && !station.includes(currentAlmanacSearchQuery)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (showingCount) showingCount.textContent = `Showing ${filtered.length} of ${items.length} items`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">No items found matching the selected filters.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(it => {
+    const isCraftable = readyToCraftSet.has(it.item_id);
+    const inTodayBag = bagPlanSet.has(String(it.item_id).toLowerCase());
+    const spriteUrl = resolveAlmanacItemSpriteUrl(it);
+    const seasonsStr = (it.seasons && it.seasons.length > 0)
+      ? it.seasons.map(s => String(s).toUpperCase()).join(", ")
+      : "All Seasons";
+
+    return `
+      <div class="almanac-item-card ${it.is_obtained ? 'is-obtained' : ''}">
+        <div class="almanac-item-thumb-box">
+          <img class="almanac-item-thumb" src="${spriteUrl}" onerror="this.src='/static/icons/ui/icon_gift.png';" alt="${escapeHtml(it.name)}" />
+        </div>
+        <div class="almanac-item-content">
+          <div class="almanac-item-header">
+            <span class="almanac-item-name">${escapeHtml(it.name)}</span>
+            ${it.is_obtained ? '<span class="status-pill pill-obtained">Obtained</span>' : '<span class="status-pill pill-missing">Missing</span>'}
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--ink-muted);">
+            🪙 ${it.value?.bin ? it.value.bin + 't' : 'Non-sellable'} • ${seasonsStr}
+          </div>
+
+          <div class="almanac-item-tags">
+            ${inTodayBag ? '<span class="badge-synergy-gift">🎁 Today\'s Gift</span>' : ''}
+            ${(it.gift_synergy || []).map(g => `<span class="badge-synergy-gift">❤️ ${escapeHtml(g)}</span>`).join('')}
+            ${(it.quest_synergy || []).map(q => `<span class="badge-synergy-quest">📜 ${escapeHtml(q)}</span>`).join('')}
+            ${isCraftable ? '<span class="badge-craftable-now">⚒️ Craftable Now</span>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderFurnitureDrawerGroups(groups, container, showingCount, readyToCraftSet, bagPlanSet) {
+  const filtered = groups.filter(g => {
+    if (currentAlmanacStatusFilter === "obtained" && !g.is_obtained) return false;
+    if (currentAlmanacStatusFilter === "missing" && g.is_obtained) return false;
+    if (currentAlmanacStatusFilter === "craftable") {
+      const hasCraftableSwatch = (g.swatches || []).some(s => readyToCraftSet.has(s.item_id));
+      if (!hasCraftableSwatch) return false;
+    }
+    if (currentAlmanacSearchQuery) {
+      const matchName = (g.name || "").toLowerCase().includes(currentAlmanacSearchQuery);
+      const matchSwatch = (g.swatches || []).some(s => (s.name || s.swatch_name || "").toLowerCase().includes(currentAlmanacSearchQuery));
+      if (!matchName && !matchSwatch) return false;
+    }
+    return true;
+  });
+
+  if (showingCount) showingCount.textContent = `Showing ${filtered.length} of ${groups.length} furniture recipes`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state-notice">No furniture recipes matching the selected filters.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(g => {
+    const swatches = g.swatches || [];
+    let selectedItemId = furnitureActiveSwatches[g.group_key];
+    if (!selectedItemId || !swatches.some(s => s.item_id === selectedItemId)) {
+      const unobtained = swatches.find(s => !s.is_obtained);
+      selectedItemId = unobtained ? unobtained.item_id : (swatches[0]?.item_id || "");
+    }
+    const activeSwatch = swatches.find(s => s.item_id === selectedItemId) || swatches[0] || {};
+    const spriteUrl = resolveAlmanacItemSpriteUrl(activeSwatch);
+
+    return `
+      <div class="swatch-group-card" id="furn_group_${escapeHtml(g.group_key)}">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="almanac-item-thumb-box">
+            <img class="almanac-item-thumb" id="thumb_${escapeHtml(g.group_key)}" src="${spriteUrl}" onerror="this.src='/static/icons/ui/icon_gift.png';" alt="${escapeHtml(g.name)}" />
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="almanac-item-name">${escapeHtml(g.name)}</span>
+              <span class="badge-counter">${g.swatches_obtained || 0} / ${g.swatches_total || swatches.length} Swatches</span>
+            </div>
+            <div class="swatch-pills-row" style="margin-top: 8px;">
+              ${swatches.map(s => `
+                <button type="button" class="swatch-pill ${s.is_obtained ? 'is-obtained' : ''} ${s.item_id === activeSwatch.item_id ? 'active' : ''}" onclick="selectFurnitureSwatch('${escapeHtml(g.group_key)}', '${escapeHtml(s.item_id)}')">
+                  ${escapeHtml(s.swatch_name || 'Standard')}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function selectFurnitureSwatch(groupKey, itemId) {
+  furnitureActiveSwatches[groupKey] = itemId;
+  try {
+    localStorage.setItem("fom_selected_swatches", JSON.stringify(furnitureActiveSwatches));
+  } catch (e) {}
+
+  const catData = currentPlan?.almanac?.categories?.furniture;
+  if (!catData) return;
+  const group = (catData.groups || []).find(g => g.group_key === groupKey);
+  if (!group) return;
+  const swatch = (group.swatches || []).find(s => s.item_id === itemId);
+  if (!swatch) return;
+
+  const thumb = document.getElementById(`thumb_${groupKey}`);
+  if (thumb) thumb.src = resolveAlmanacItemSpriteUrl(swatch);
+
+  const container = document.getElementById(`furn_group_${groupKey}`);
+  if (container) {
+    container.querySelectorAll(".swatch-pill").forEach(p => {
+      const match = p.getAttribute("onclick")?.includes(itemId);
+      p.classList.toggle("active", Boolean(match));
+    });
+  }
+}
+
+const readyToCraftState = {
+  viewMode: "chains",
+  stationFilter: "all",
+  visibleLimit: 5,
+  showCompleted: false,
+  checkedStepKeys: new Set(),
+  saveIdentity: null,
+};
+
+const almanacBlockersState = {
+  categoryFilter: "all",
+  visibleLimit: 5,
+  showCompleted: false,
+  checkedItemIds: new Set(),
+};
+
+const almanacSourcesState = {
+  visibleLimit: 5,
+  showCompleted: false,
+  checkedSourceKeys: new Set(),
+};
+
+function resetReadyToCraftChecks() {
+  readyToCraftState.checkedStepKeys.clear();
+  readyToCraftState.showCompleted = false;
+  readyToCraftState.visibleLimit = 5;
+  readyToCraftState.stationFilter = "all";
+
+  almanacBlockersState.checkedItemIds.clear();
+  almanacBlockersState.showCompleted = false;
+  almanacBlockersState.visibleLimit = 5;
+  almanacBlockersState.categoryFilter = "all";
+  currentAlmanacBlockerSearchQuery = "";
+  const blockerSearchInput = document.getElementById("almanacBlockerSearch");
+  if (blockerSearchInput) blockerSearchInput.value = "";
+
+  almanacSourcesState.checkedSourceKeys.clear();
+  almanacSourcesState.showCompleted = false;
+  almanacSourcesState.visibleLimit = 5;
+  currentAlmanacTier = "all";
+  const tierTabs = document.querySelectorAll("#almanacTierTabs .tier-tab-btn");
+  tierTabs.forEach(b => b.classList.toggle("active", (b.dataset.tier || "all") === "all"));
+}
+
+function syncReadyToCraftSaveIdentity(data) {
+  if (!data) {
+    resetReadyToCraftChecks();
+    readyToCraftState.saveIdentity = null;
+    return;
+  }
+  const sd = data.in_game_date?.save_date || {};
+  const fingerprint = `${data.save_info?.filename || ""}::${sd.year ?? ""}::${sd.season ?? ""}::${sd.day ?? ""}`;
+  if (readyToCraftState.saveIdentity !== null && readyToCraftState.saveIdentity !== fingerprint) {
+    resetReadyToCraftChecks();
+  }
+  readyToCraftState.saveIdentity = fingerprint;
+}
+
+function isCraftStepChecked(step) {
+  return Boolean(step && step._stepKey && readyToCraftState.checkedStepKeys.has(step._stepKey));
+}
+
+function isCraftBatchCompleted(batch) {
+  return Boolean(batch && Array.isArray(batch.steps) && batch.steps.length > 0 && batch.steps.every(isCraftStepChecked));
+}
+
+function setReadyToCraftStationFilter(station) {
+  readyToCraftState.stationFilter = station || "all";
+  readyToCraftState.visibleLimit = 5;
+  if (currentPlan?.almanac?.ready_to_craft) {
+    renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+  }
+}
+
+function toggleCraftBatchCheck(batchKey) {
+  const queueSteps = currentPlan?.almanac?.ready_to_craft || [];
+  const batches = groupBatchQueue(queueSteps);
+  const targetBatch = batches.find(b => b.batchKey === batchKey);
+  if (!targetBatch) return;
+
+  const allChecked = isCraftBatchCompleted(targetBatch);
+  targetBatch.steps.forEach(s => {
+    if (!s._stepKey) return;
+    if (allChecked) {
+      readyToCraftState.checkedStepKeys.delete(s._stepKey);
+    } else {
+      readyToCraftState.checkedStepKeys.add(s._stepKey);
+    }
+  });
+  renderReadyToCraftQueue(queueSteps, almanacBatchViewMode);
+}
+
+function toggleCraftStepCheck(stepKey) {
+  if (!stepKey) return;
+  if (readyToCraftState.checkedStepKeys.has(stepKey)) {
+    readyToCraftState.checkedStepKeys.delete(stepKey);
+  } else {
+    readyToCraftState.checkedStepKeys.add(stepKey);
+  }
+  if (currentPlan?.almanac?.ready_to_craft) {
+    renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+  }
+}
+
+function toggleShowCompletedCrafts() {
+  readyToCraftState.showCompleted = !readyToCraftState.showCompleted;
+  if (currentPlan?.almanac?.ready_to_craft) {
+    renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+  }
+}
+
+function showNext5ReadyToCraft() {
+  readyToCraftState.visibleLimit += 5;
+  if (currentPlan?.almanac?.ready_to_craft) {
+    renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+  }
+}
+
+function collapseReadyToCraft() {
+  readyToCraftState.visibleLimit = 5;
+  if (currentPlan?.almanac?.ready_to_craft) {
+    renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+  }
+}
+
+function groupBatchQueue(queueSteps) {
+  if (!queueSteps || !Array.isArray(queueSteps) || queueSteps.length === 0) return [];
+  const batches = [];
+  let currentSteps = [];
+  const batchCountsByTarget = {};
+
+  const finalizeBatch = (stepsArr) => {
+    const targetStep = stepsArr[stepsArr.length - 1];
+    const baseTargetId = String(targetStep.item_id || targetStep.item_name || "batch");
+    batchCountsByTarget[baseTargetId] = (batchCountsByTarget[baseTargetId] || 0) + 1;
+    const batchKey = batchCountsByTarget[baseTargetId] === 1
+      ? baseTargetId
+      : `${baseTargetId}#${batchCountsByTarget[baseTargetId]}`;
+
+    stepsArr.forEach((s, idx) => {
+      s._batchKey = batchKey;
+      s._stepKey = `${batchKey}::${s.item_id || idx}::${idx}`;
+    });
+
+    const totalUnlocks = stepsArr.filter(s => s.unlocks_almanac).length;
+    const stations = [...new Set(stepsArr.map(s => s.station || "cooking"))];
+    const giftSynergies = [...new Set(stepsArr.flatMap(s => s.gift_synergy || []))];
+    const questSynergies = [...new Set(stepsArr.flatMap(s => s.quest_synergy || []))];
+
+    batches.push({
+      batchKey,
+      target: targetStep,
+      steps: [...stepsArr],
+      totalUnlocks,
+      stations,
+      giftSynergies,
+      questSynergies
+    });
+  };
+
+  for (const step of queueSteps) {
+    currentSteps.push(step);
+    if (!step.is_intermediate) {
+      finalizeBatch(currentSteps);
+      currentSteps = [];
+    }
+  }
+
+  if (currentSteps.length > 0) {
+    finalizeBatch(currentSteps);
+  }
+
+  return batches;
+}
+
+function renderReadyToCraftStationFilters(queueSteps, batches, viewMode) {
+  const filterBar = document.getElementById("readyToCraftStationFilters");
+  if (!filterBar) return;
+
+  if (!queueSteps || queueSteps.length === 0) {
+    filterBar.innerHTML = "";
+    filterBar.style.display = "none";
+    return;
+  }
+
+  const presentStationSet = new Set(queueSteps.map(s => s.station || "cooking"));
+  const availableStations = [
+    ...Object.keys(ALMANAC_STATIONS).filter(st => presentStationSet.has(st)),
+    ...[...presentStationSet].filter(st => !ALMANAC_STATIONS[st])
+  ];
+
+  if (readyToCraftState.stationFilter !== "all" && !presentStationSet.has(readyToCraftState.stationFilter)) {
+    readyToCraftState.stationFilter = "all";
+  }
+
+  const activeBatchesAll = batches.filter(b => !isCraftBatchCompleted(b));
+  const activeStepsAll = queueSteps.filter(s => !isCraftStepChecked(s));
+  const allCount = viewMode === "steps" ? activeStepsAll.length : activeBatchesAll.length;
+
+  const pillsHtml = [
+    `<button type="button" class="craft-station-pill ${readyToCraftState.stationFilter === "all" ? "active" : ""}" data-station="all" onclick="setReadyToCraftStationFilter('all')">
+      <span>All</span>
+      <span class="craft-station-count">${allCount}</span>
+    </button>`
+  ];
+
+  availableStations.forEach(st => {
+    const meta = ALMANAC_STATIONS[st] || { label: st, icon: "/static/icons/ui/icon_cooking.png", class: "station-cooking" };
+    const count = viewMode === "steps"
+      ? activeStepsAll.filter(s => (s.station || "cooking") === st).length
+      : activeBatchesAll.filter(b => b.steps.some(s => !isCraftStepChecked(s) && (s.station || "cooking") === st)).length;
+    const isActive = readyToCraftState.stationFilter === st;
+
+    pillsHtml.push(`
+      <button type="button" class="craft-station-pill ${isActive ? "active" : ""}" data-station="${escapeHtml(st)}" onclick="setReadyToCraftStationFilter('${escapeHtml(st)}')">
+        <img class="mini-station-icon" src="${meta.icon}" alt="">
+        <span>${escapeHtml(meta.label)}</span>
+        <span class="craft-station-count">${count}</span>
+      </button>
+    `);
+  });
+
+  filterBar.style.display = "flex";
+  filterBar.innerHTML = pillsHtml.join("");
+}
+
+function renderCraftStepRowHtml(step, stepLabel, extraClass = "") {
+  const stMeta = ALMANAC_STATIONS[step.station] || ALMANAC_STATIONS.cooking;
+  const itemSprite = resolveAlmanacItemSpriteUrl(step);
+  const isStepDone = isCraftStepChecked(step);
+
+  const ingsHtml = (step.ingredients || []).map(ing => `
+    <span class="ing-chip">
+      <img class="mini-sprite" src="${resolveAlmanacItemSpriteUrl(ing)}" alt="" onerror="this.style.display='none'">
+      ${ing.count}× ${escapeHtml(ing.display_name || ing.item_id)}
+    </span>
+  `).join(" + ");
+
+  const unlockBadge = step.unlocks_almanac
+    ? `<span class="step-unlock-pill">📖 Unlocks Slot</span>`
+    : `<span class="step-intermediate-pill">⚡ Intermediate</span>`;
+
+  const consumedNote = (step.is_intermediate && step.consumed_by)
+    ? `<span class="step-consumed-note">↳ Consumed to craft ${escapeHtml(step.consumed_by)}</span>`
+    : ``;
+
+  return `
+    <div class="batch-step-row ${isStepDone ? "is-checked" : ""} ${extraClass}">
+      <label class="craft-check-label step-check-label" title="${isStepDone ? "Uncheck step" : "Mark step as crafted"}">
+        <input type="checkbox" class="craft-checkbox" ${isStepDone ? "checked" : ""} onchange="toggleCraftStepCheck('${escapeHtml(step._stepKey || "")}')">
+      </label>
+      <span class="step-num-pill">${escapeHtml(stepLabel)}</span>
+      <span class="station-badge ${stMeta.class}">
+        <img class="mini-station-icon" src="${stMeta.icon}" alt=""> ${stMeta.label}
+      </span>
+      <div class="step-action-desc">
+        ${ingsHtml} <span class="flow-arrow">➔</span>
+        <span class="prod-chip">
+          <img class="mini-sprite" src="${itemSprite}" alt="" onerror="this.src='/static/icons/ui/icon_gift.png'">
+          ${step.quantity || 1}× ${escapeHtml(step.item_name)}
+        </span>
+      </div>
+      ${unlockBadge}
+      ${consumedNote}
+    </div>
+  `;
+}
+
+function renderCraftBatchCardHtml(batch, bIdx) {
+  const target = batch.target;
+  const targetSprite = resolveAlmanacItemSpriteUrl(target);
+  const isBatchDone = isCraftBatchCompleted(batch);
+
+  const stationBadgesHtml = batch.stations.map(st => {
+    const meta = ALMANAC_STATIONS[st] || ALMANAC_STATIONS.cooking;
+    return `<span class="station-badge ${meta.class}"><img class="station-icon" src="${meta.icon}" alt=""> ${meta.label}</span>`;
+  }).join(" ");
+
+  const unlockBadge = batch.totalUnlocks > 0
+    ? `<span class="almanac-unlock-badge"><img class="inline-icon" src="/static/icons/ui/spr_ui_journal_tab_almanac_enabled.png" alt=""> Unlocks ${batch.totalUnlocks} Slot${batch.totalUnlocks > 1 ? 's' : ''}</span>`
+    : ``;
+
+  const giftTagsHtml = batch.giftSynergies.map(tag => `<span class="d3-node-npc-chip">❤️ ${escapeHtml(tag)}</span>`).join(" ");
+  const questTagsHtml = batch.questSynergies.map(tag => `<span class="d3-quest-badge" style="background:#f3e8ff; border:1px solid #d8b4fe; color:#6b21a8;">📜 ${escapeHtml(tag)}</span>`).join(" ");
+
+  const stepsTimelineHtml = batch.steps.map((st, idx) =>
+    renderCraftStepRowHtml(st, `Step ${idx + 1}`)
+  ).join("");
+
+  return `
+    <div class="almanac-batch-card ${isBatchDone ? "is-checked" : ""}" data-batch-index="${bIdx}" data-batch-key="${escapeHtml(batch.batchKey)}">
+      <div class="batch-card-header">
+        <div class="batch-target-info">
+          <label class="craft-check-label batch-check-label" title="${isBatchDone ? "Uncheck entire batch" : "Mark entire batch as crafted"}">
+            <input type="checkbox" class="craft-checkbox" ${isBatchDone ? "checked" : ""} onchange="toggleCraftBatchCheck('${escapeHtml(batch.batchKey)}')">
+          </label>
+          <img class="batch-product-sprite" src="${targetSprite}" alt="${escapeHtml(target.item_name)}" onerror="this.src='/static/icons/ui/icon_gift.png'">
+          <span class="batch-target-name">${escapeHtml(target.item_name)}</span>
+        </div>
+        <div class="batch-header-badges">
+          ${stationBadgesHtml}
+          ${unlockBadge}
+          ${giftTagsHtml}
+          ${questTagsHtml}
+        </div>
+      </div>
+      <div class="batch-steps-timeline">
+        ${stepsTimelineHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderReadyToCraftQueue(queueSteps, viewMode = "chains") {
+  readyToCraftState.viewMode = viewMode;
+  const container = document.getElementById("almanacBatchQueueContainer");
+  const countBadge = document.getElementById("readyToCraftBadge") || document.getElementById("readyToCraftCountBadge");
+  const filterBar = document.getElementById("readyToCraftStationFilters");
+  const paginationRow = document.getElementById("readyToCraftPaginationRow");
+  const btnShowNext5 = document.getElementById("btnShowNext5Crafts");
+  const btnCollapse = document.getElementById("btnCollapseCrafts");
+  const btnToggleCompleted = document.getElementById("btnToggleCompletedCrafts");
+  const btnResetChecks = document.getElementById("btnResetCraftChecks");
+  if (!container) return;
+
+  if (!queueSteps || queueSteps.length === 0) {
+    if (countBadge) countBadge.textContent = "0 Batches";
+    if (filterBar) {
+      filterBar.innerHTML = "";
+      filterBar.style.display = "none";
+    }
+    if (paginationRow) paginationRow.style.display = "none";
+    if (btnToggleCompleted) btnToggleCompleted.style.display = "none";
+    if (btnResetChecks) btnResetChecks.style.display = "none";
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 28px 16px; color: var(--ink-muted); font-style: italic;">
+        No items currently ready to craft. Check Raw Material Blockers below to see what ingredients to gather!
+      </div>
+    `;
+    return;
+  }
+
+  const batches = groupBatchQueue(queueSteps);
+  renderReadyToCraftStationFilters(queueSteps, batches, viewMode);
+
+  const activeBatchesAll = batches.filter(b => !isCraftBatchCompleted(b));
+  const completedBatchesAll = batches.filter(b => isCraftBatchCompleted(b));
+  const activeStepsAll = queueSteps.filter(s => !isCraftStepChecked(s));
+  const completedStepsAll = queueSteps.filter(s => isCraftStepChecked(s));
+
+  const remainingUnlocks = queueSteps.filter(s => s.unlocks_almanac && !isCraftStepChecked(s)).length;
+  if (countBadge) {
+    if (completedBatchesAll.length > 0) {
+      countBadge.textContent = `${activeBatchesAll.length} / ${batches.length} Batches (${remainingUnlocks} Unlocks)`;
+    } else {
+      countBadge.textContent = `${batches.length} Batches (${remainingUnlocks} Unlocks)`;
+    }
+  }
+
+  const totalCheckedSteps = readyToCraftState.checkedStepKeys.size;
+  const completedCount = viewMode === "steps" ? completedStepsAll.length : completedBatchesAll.length;
+  if (totalCheckedSteps === 0) {
+    readyToCraftState.showCompleted = false;
+  }
+
+  if (btnResetChecks) {
+    if (totalCheckedSteps > 0) {
+      btnResetChecks.style.display = "inline-flex";
+      btnResetChecks.textContent = `↺ Reset (${totalCheckedSteps})`;
+    } else {
+      btnResetChecks.style.display = "none";
+    }
+  }
+
+  if (btnToggleCompleted) {
+    if (completedCount > 0 || (readyToCraftState.showCompleted && totalCheckedSteps > 0)) {
+      btnToggleCompleted.style.display = "inline-flex";
+      btnToggleCompleted.classList.toggle("active", readyToCraftState.showCompleted);
+      btnToggleCompleted.textContent = `${readyToCraftState.showCompleted ? "Hide" : "Show"} Completed (${completedCount})`;
+    } else {
+      btnToggleCompleted.style.display = "none";
+    }
+  }
+
+  const stFilter = readyToCraftState.stationFilter || "all";
+
+  if (viewMode === "steps") {
+    const filteredActiveSteps = activeStepsAll.filter(s => stFilter === "all" || (s.station || "cooking") === stFilter);
+    const filteredCompletedSteps = completedStepsAll.filter(s => stFilter === "all" || (s.station || "cooking") === stFilter);
+    const visibleActiveSteps = filteredActiveSteps.slice(0, readyToCraftState.visibleLimit);
+    const remainingActiveCount = Math.max(0, filteredActiveSteps.length - visibleActiveSteps.length);
+
+    if (paginationRow) {
+      if (filteredActiveSteps.length > 5) {
+        paginationRow.style.display = "flex";
+        if (btnShowNext5) {
+          if (remainingActiveCount > 0) {
+            btnShowNext5.style.display = "inline-flex";
+            btnShowNext5.innerHTML = `<span>Show Next 5 (${remainingActiveCount} remaining) ▼</span>`;
+          } else {
+            btnShowNext5.style.display = "none";
+          }
+        }
+        if (btnCollapse) {
+          btnCollapse.style.display = readyToCraftState.visibleLimit > 5 ? "inline-flex" : "none";
+        }
+      } else {
+        paginationRow.style.display = "none";
+      }
+    }
+
+    let html = "";
+    if (visibleActiveSteps.length === 0) {
+      html += `
+        <div class="almanac-craft-all-done-banner">
+          <span>✨ All crafting steps in this station filter are checked off!</span>
+          ${filteredCompletedSteps.length > 0 && !readyToCraftState.showCompleted
+            ? `<button type="button" class="action-btn" onclick="toggleShowCompletedCrafts()">Show Completed (${filteredCompletedSteps.length})</button>`
+            : ``}
+        </div>
+      `;
+    } else {
+      html += visibleActiveSteps.map(step => renderCraftStepRowHtml(step, `Step ${step.step_number}`)).join("");
+    }
+
+    if (readyToCraftState.showCompleted && filteredCompletedSteps.length > 0) {
+      html += `
+        <div class="almanac-completed-crafts-group">
+          <div class="completed-crafts-divider">
+            <span>✓ Completed Steps (${filteredCompletedSteps.length})</span>
+          </div>
+          <div class="completed-crafts-list">
+            ${filteredCompletedSteps.map(step => renderCraftStepRowHtml(step, `Step ${step.step_number}`)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+    return;
+  }
+
+  const filteredActiveBatches = activeBatchesAll.filter(b =>
+    stFilter === "all" || b.steps.some(s => !isCraftStepChecked(s) && (s.station || "cooking") === stFilter)
+  );
+  const filteredCompletedBatches = completedBatchesAll.filter(b =>
+    stFilter === "all" || b.steps.some(s => (s.station || "cooking") === stFilter)
+  );
+  const visibleActiveBatches = filteredActiveBatches.slice(0, readyToCraftState.visibleLimit);
+  const remainingActiveCount = Math.max(0, filteredActiveBatches.length - visibleActiveBatches.length);
+
+  if (paginationRow) {
+    if (filteredActiveBatches.length > 5) {
+      paginationRow.style.display = "flex";
+      if (btnShowNext5) {
+        if (remainingActiveCount > 0) {
+          btnShowNext5.style.display = "inline-flex";
+          btnShowNext5.innerHTML = `<span>Show Next 5 (${remainingActiveCount} remaining) ▼</span>`;
+        } else {
+          btnShowNext5.style.display = "none";
+        }
+      }
+      if (btnCollapse) {
+        btnCollapse.style.display = readyToCraftState.visibleLimit > 5 ? "inline-flex" : "none";
+      }
+    } else {
+      paginationRow.style.display = "none";
+    }
+  }
+
+  let html = "";
+  if (visibleActiveBatches.length === 0) {
+    html += `
+      <div class="almanac-craft-all-done-banner">
+        <span>✨ All crafting batches in this station filter are checked off!</span>
+        ${filteredCompletedBatches.length > 0 && !readyToCraftState.showCompleted
+          ? `<button type="button" class="action-btn" onclick="toggleShowCompletedCrafts()">Show Completed (${filteredCompletedBatches.length})</button>`
+          : ``}
+      </div>
+    `;
+  } else {
+    html += visibleActiveBatches.map((batch, bIdx) => renderCraftBatchCardHtml(batch, bIdx)).join("");
+  }
+
+  if (readyToCraftState.showCompleted && filteredCompletedBatches.length > 0) {
+    html += `
+      <div class="almanac-completed-crafts-group">
+        <div class="completed-crafts-divider">
+          <span>✓ Completed Batches (${filteredCompletedBatches.length})</span>
+        </div>
+        <div class="completed-crafts-list">
+          ${filteredCompletedBatches.map((batch, bIdx) => renderCraftBatchCardHtml(batch, bIdx)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function copyCraftingListToClipboard() {
+  const queueSteps = currentPlan?.almanac?.ready_to_craft || [];
+  if (queueSteps.length === 0) {
+    showToast("No ready-to-craft items to copy.");
+    return;
+  }
+  const batches = groupBatchQueue(queueSteps);
+  const stFilter = readyToCraftState.stationFilter || "all";
+  const activeBatches = batches.filter(b =>
+    !isCraftBatchCompleted(b) &&
+    (stFilter === "all" || b.steps.some(s => !isCraftStepChecked(s) && (s.station || "cooking") === stFilter))
+  );
+  if (activeBatches.length === 0) {
+    showToast("All items in this view are already checked off!");
+    return;
+  }
+  const lines = ["=== Fields of Mistria: Ready to Craft Checklist ==="];
+  activeBatches.forEach((b, idx) => {
+    lines.push(`\nBatch ${idx + 1}: ${b.target.item_name} (${b.stations.join(", ")})`);
+    b.steps.filter(s => !isCraftStepChecked(s)).forEach(s => {
+      const ings = (s.ingredients || []).map(i => `${i.count}x ${i.display_name || i.item_id}`).join(", ");
+      lines.push(`  [ ] Step ${s.step_number}: ${s.station} -> ${s.quantity || 1}x ${s.item_name} (using ${ings})`);
+    });
+  });
+  const text = lines.join("\n");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("Crafting checklist copied to clipboard!");
+    }).catch(() => {
+      showToast("Could not copy checklist.");
+    });
+  } else {
+    showToast("Clipboard not supported.");
+  }
+}
+
+const ALMANAC_BLOCKER_CATEGORY_META = {
+  crops: { label: "Crops", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_crops.png" },
+  forageables: { label: "Forageables", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_forageables.png" },
+  materials: { label: "Materials", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_materials.png" },
+  ranching: { label: "Ranching", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_ranching.png" },
+  fish: { label: "Fish", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_fish.png" },
+  bugs: { label: "Bugs", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_bugs.png" },
+  artifacts: { label: "Artifacts", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_artifacts.png" },
+  cooked_dishes: { label: "Cooked Dishes", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_cooked_dishes.png" },
+  blacksmithing: { label: "Blacksmithing", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_blacksmithing.png" },
+  furniture: { label: "Furniture", icon: "/static/icons/ui/spr_ui_journal_almanac_icon_furniture.png" },
+};
+
+function normalizeBlockerCategoryKey(rawCat) {
+  const slug = String(rawCat || "Materials")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (slug === "forage") return "forageables";
+  return slug || "materials";
+}
+
+function getBlockerItemKey(b) {
+  return String(b?.item_id || b?.item_name || "");
+}
+
+function isAlmanacBlockerChecked(b) {
+  const k = getBlockerItemKey(b);
+  return Boolean(k && almanacBlockersState.checkedItemIds.has(k));
+}
+
+function matchesBlockerSearch(b, query) {
+  if (!query) return true;
+  const hay = [
+    b.item_name || "",
+    b.item_id || "",
+    b.category || "",
+    ...(b.unblocked_almanac_items || []).map(u => `${u.name || ""} ${u.category || ""}`)
+  ].join(" ").toLowerCase();
+  return hay.includes(query);
+}
+
+function setAlmanacBlockerCategoryFilter(catKey) {
+  almanacBlockersState.categoryFilter = catKey || "all";
+  almanacBlockersState.visibleLimit = 5;
+  if (currentPlan?.almanac?.raw_material_blockers) {
+    renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+  }
+}
+
+function toggleAlmanacBlockerCheck(itemKey) {
+  if (!itemKey) return;
+  if (almanacBlockersState.checkedItemIds.has(itemKey)) {
+    almanacBlockersState.checkedItemIds.delete(itemKey);
+  } else {
+    almanacBlockersState.checkedItemIds.add(itemKey);
+  }
+  if (currentPlan?.almanac?.raw_material_blockers) {
+    renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+  }
+}
+
+function toggleShowCompletedBlockers() {
+  almanacBlockersState.showCompleted = !almanacBlockersState.showCompleted;
+  if (currentPlan?.almanac?.raw_material_blockers) {
+    renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+  }
+}
+
+function showNext5AlmanacBlockers() {
+  almanacBlockersState.visibleLimit += 5;
+  if (currentPlan?.almanac?.raw_material_blockers) {
+    renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+  }
+}
+
+function collapseAlmanacBlockers() {
+  almanacBlockersState.visibleLimit = 5;
+  if (currentPlan?.almanac?.raw_material_blockers) {
+    renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+  }
+}
+
+function renderBlockerCardHtml(b, idx) {
+  const sprite = resolveAlmanacItemSpriteUrl(b);
+  const bKey = getBlockerItemKey(b);
+  const isChecked = isAlmanacBlockerChecked(b);
+  const treeKey = `almanac_blocker_${b.item_id}_${idx}`;
+  if (b.tree) {
+    window._almanacTreeData[treeKey] = b.tree;
+  }
+
+  const unblocked = b.unblocked_almanac_items || [];
+  const previewChips = unblocked.slice(0, 6).map(u => `
+    <span class="unblocked-item-chip" title="${escapeHtml(u.name)} (${escapeHtml(u.category)})">
+      <img class="mini-sprite" src="${resolveAlmanacItemSpriteUrl(u)}" alt="" onerror="this.style.display='none'">
+      ${escapeHtml(u.name)}
+    </span>
+  `).join("");
+
+  const moreChip = unblocked.length > 6
+    ? `<span class="unblocked-more-chip">+${unblocked.length - 6} more</span>`
+    : ``;
+
+  const treeBtn = b.tree && b.tree.children && b.tree.children.length > 0
+    ? `
+      <button type="button" class="almanac-tree-btn" onclick="openCraftingTreeModal(window._almanacTreeData['${treeKey}'], ${b.combined_deficit})">
+        <img class="inline-icon" src="/static/icons/ui/icon_tree.png" alt="Tree"> View Crafting Tree (${unblocked.length})
+      </button>
+    `
+    : ``;
+
+  const giftNote = b.gift_deficit > 0 ? `<span class="metric-pill">🎁 Gift Deficit: <strong>${b.gift_deficit}</strong></span>` : ``;
+  const questNote = b.quest_demand > 0 ? `<span class="metric-pill">📜 Quest Need: <strong>${b.quest_demand}</strong></span>` : ``;
+
+  return `
+    <div class="almanac-blocker-card ${isChecked ? "is-checked" : ""}" data-item-id="${escapeHtml(b.item_id)}">
+      <div class="blocker-top-row">
+        <div class="blocker-item-lead">
+          <label class="craft-check-label blocker-check-label" title="${isChecked ? "Uncheck material" : "Mark material as gathered"}">
+            <input type="checkbox" class="craft-checkbox" ${isChecked ? "checked" : ""} onchange="toggleAlmanacBlockerCheck('${escapeHtml(bKey)}')">
+          </label>
+          <img class="blocker-sprite" src="${sprite}" alt="${escapeHtml(b.item_name)}" onerror="this.src='/static/icons/ui/icon_gift.png'">
+          <div class="blocker-name-cat">
+            <span class="blocker-item-name">${escapeHtml(b.item_name)}</span>
+            <span class="blocker-category-pill">${escapeHtml(b.category || "Materials")}</span>
+          </div>
+        </div>
+        <div class="blocker-deficit-badge">
+          <span class="deficit-badge-label">Deficit</span>
+          <span class="deficit-badge-value">-${(b.combined_deficit || 0).toLocaleString()}</span>
+        </div>
+      </div>
+
+      <div class="blocker-metrics-bar">
+        <span class="metric-pill">Inventory: <strong>${(b.inventory || 0).toLocaleString()}</strong></span>
+        <span class="metric-pill">Almanac Need: <strong>${(b.almanac_deficit || 0).toLocaleString()}</strong></span>
+        ${giftNote}
+        ${questNote}
+      </div>
+
+      <div class="blocker-unblocked-section">
+        <div class="unblocked-header">
+          <span>Unblocks ${unblocked.length} Almanac Item${unblocked.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="unblocked-chips-wrap">
+          ${previewChips}
+          ${moreChip}
+        </div>
+      </div>
+
+      <div class="blocker-action-row">
+        ${treeBtn}
+      </div>
+    </div>
+  `;
+}
+
+function renderRawMaterialBlockers(blockers) {
+  const container = document.getElementById("almanacBlockersContainer");
+  const countBadge = document.getElementById("almanacBlockersBadge") || document.getElementById("almanacBlockersCountBadge");
+  const filterBar = document.getElementById("almanacBlockerCategoryFilters");
+  const paginationRow = document.getElementById("almanacBlockersPaginationRow");
+  const btnShowNext5 = document.getElementById("btnShowNext5Blockers");
+  const btnCollapse = document.getElementById("btnCollapseBlockers");
+  const btnToggleCompleted = document.getElementById("btnToggleCompletedBlockers");
+  const btnResetChecks = document.getElementById("btnResetBlockerChecks");
+  if (!container) return;
+
+  if (!blockers || blockers.length === 0) {
+    if (countBadge) countBadge.textContent = "0 Blockers";
+    if (filterBar) {
+      filterBar.innerHTML = "";
+      filterBar.style.display = "none";
+    }
+    if (paginationRow) paginationRow.style.display = "none";
+    if (btnToggleCompleted) btnToggleCompleted.style.display = "none";
+    if (btnResetChecks) btnResetChecks.style.display = "none";
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 28px 16px; color: var(--ink-muted); font-style: italic;">
+        No raw material blockers found! You have all base materials needed for unobtained craftable items.
+      </div>
+    `;
+    return;
+  }
+
+  window._almanacTreeData = window._almanacTreeData || {};
+
+  const presentCatMap = new Map();
+  blockers.forEach(b => {
+    const key = normalizeBlockerCategoryKey(b.category);
+    if (!presentCatMap.has(key)) {
+      const meta = ALMANAC_BLOCKER_CATEGORY_META[key] || {
+        label: b.category || "Materials",
+        icon: "/static/icons/ui/icon_gift.png"
+      };
+      presentCatMap.set(key, meta);
+    }
+  });
+
+  if (almanacBlockersState.categoryFilter !== "all" && !presentCatMap.has(almanacBlockersState.categoryFilter)) {
+    almanacBlockersState.categoryFilter = "all";
+  }
+
+  const activeBlockersAll = blockers.filter(b => !isAlmanacBlockerChecked(b));
+  const completedBlockersAll = blockers.filter(b => isAlmanacBlockerChecked(b));
+
+  if (countBadge) {
+    if (completedBlockersAll.length > 0) {
+      countBadge.textContent = `${activeBlockersAll.length} / ${blockers.length} Missing Materials`;
+    } else {
+      countBadge.textContent = `${blockers.length} Missing Materials`;
+    }
+  }
+
+  const totalChecked = completedBlockersAll.length;
+  if (totalChecked === 0) {
+    almanacBlockersState.showCompleted = false;
+  }
+
+  if (btnResetChecks) {
+    if (totalChecked > 0) {
+      btnResetChecks.style.display = "inline-flex";
+      btnResetChecks.textContent = `↺ Reset (${totalChecked})`;
+    } else {
+      btnResetChecks.style.display = "none";
+    }
+  }
+
+  if (btnToggleCompleted) {
+    if (totalChecked > 0) {
+      btnToggleCompleted.style.display = "inline-flex";
+      btnToggleCompleted.classList.toggle("active", almanacBlockersState.showCompleted);
+      btnToggleCompleted.textContent = `${almanacBlockersState.showCompleted ? "Hide" : "Show"} Completed (${totalChecked})`;
+    } else {
+      btnToggleCompleted.style.display = "none";
+    }
+  }
+
+  const searchMatchesActive = activeBlockersAll.filter(b => matchesBlockerSearch(b, currentAlmanacBlockerSearchQuery));
+
+  if (filterBar) {
+    const canonicalOrder = Object.keys(ALMANAC_BLOCKER_CATEGORY_META).filter(k => presentCatMap.has(k));
+    const extraKeys = [...presentCatMap.keys()].filter(k => !ALMANAC_BLOCKER_CATEGORY_META[k]);
+    const orderedKeys = [...canonicalOrder, ...extraKeys];
+
+    const pills = [
+      `<button type="button" class="craft-station-pill ${almanacBlockersState.categoryFilter === "all" ? "active" : ""}" data-category="all" onclick="setAlmanacBlockerCategoryFilter('all')">
+        <span>All</span>
+        <span class="craft-station-count">${searchMatchesActive.length}</span>
+      </button>`
+    ];
+
+    orderedKeys.forEach(catKey => {
+      const meta = presentCatMap.get(catKey);
+      const count = searchMatchesActive.filter(b => normalizeBlockerCategoryKey(b.category) === catKey).length;
+      const isActive = almanacBlockersState.categoryFilter === catKey;
+      pills.push(`
+        <button type="button" class="craft-station-pill ${isActive ? "active" : ""}" data-category="${escapeHtml(catKey)}" onclick="setAlmanacBlockerCategoryFilter('${escapeHtml(catKey)}')">
+          <img class="mini-station-icon" src="${meta.icon}" alt="" onerror="this.style.display='none'">
+          <span>${escapeHtml(meta.label)}</span>
+          <span class="craft-station-count">${count}</span>
+        </button>
+      `);
+    });
+
+    filterBar.style.display = "flex";
+    filterBar.innerHTML = pills.join("");
+  }
+
+  const catFilter = almanacBlockersState.categoryFilter || "all";
+  const filteredActive = searchMatchesActive.filter(b =>
+    catFilter === "all" || normalizeBlockerCategoryKey(b.category) === catFilter
+  );
+  const filteredCompleted = completedBlockersAll.filter(b =>
+    matchesBlockerSearch(b, currentAlmanacBlockerSearchQuery) &&
+    (catFilter === "all" || normalizeBlockerCategoryKey(b.category) === catFilter)
+  );
+
+  const visibleActive = filteredActive.slice(0, almanacBlockersState.visibleLimit);
+  const remainingCount = Math.max(0, filteredActive.length - visibleActive.length);
+
+  if (paginationRow) {
+    if (filteredActive.length > 5) {
+      paginationRow.style.display = "flex";
+      if (btnShowNext5) {
+        if (remainingCount > 0) {
+          btnShowNext5.style.display = "inline-flex";
+          btnShowNext5.innerHTML = `<span>Show Next 5 (${remainingCount} remaining) ▼</span>`;
+        } else {
+          btnShowNext5.style.display = "none";
+        }
+      }
+      if (btnCollapse) {
+        btnCollapse.style.display = almanacBlockersState.visibleLimit > 5 ? "inline-flex" : "none";
+      }
+    } else {
+      paginationRow.style.display = "none";
+    }
+  }
+
+  let html = "";
+  if (visibleActive.length === 0) {
+    html += `
+      <div class="almanac-craft-all-done-banner">
+        <span>${filteredCompleted.length > 0 ? "✨ All raw material blockers in this view are checked off!" : "No raw material blockers match the current filter."}</span>
+        ${filteredCompleted.length > 0 && !almanacBlockersState.showCompleted
+          ? `<button type="button" class="action-btn" onclick="toggleShowCompletedBlockers()">Show Completed (${filteredCompleted.length})</button>`
+          : ``}
+      </div>
+    `;
+  } else {
+    html += visibleActive.map((b, idx) => renderBlockerCardHtml(b, idx)).join("");
+  }
+
+  if (almanacBlockersState.showCompleted && filteredCompleted.length > 0) {
+    html += `
+      <div class="almanac-completed-crafts-group">
+        <div class="completed-crafts-divider">
+          <span>✓ Completed Materials (${filteredCompleted.length})</span>
+        </div>
+        <div class="almanac-blockers-grid">
+          ${filteredCompleted.map((b, idx) => renderBlockerCardHtml(b, idx + 1000)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function getAlmanacSourceKey(src) {
+  return `${src?.tier || "quick"}::${src?.source || ""}`;
+}
+
+function isAlmanacSourceChecked(src) {
+  return almanacSourcesState.checkedSourceKeys.has(getAlmanacSourceKey(src));
+}
+
+function toggleAlmanacSourceCheck(srcKey) {
+  if (!srcKey) return;
+  if (almanacSourcesState.checkedSourceKeys.has(srcKey)) {
+    almanacSourcesState.checkedSourceKeys.delete(srcKey);
+  } else {
+    almanacSourcesState.checkedSourceKeys.add(srcKey);
+  }
+  if (currentPlan?.almanac?.sources_by_tier) {
+    renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+  }
+}
+
+function toggleShowCompletedSources() {
+  almanacSourcesState.showCompleted = !almanacSourcesState.showCompleted;
+  if (currentPlan?.almanac?.sources_by_tier) {
+    renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+  }
+}
+
+function showNext5AlmanacSources() {
+  almanacSourcesState.visibleLimit += 5;
+  if (currentPlan?.almanac?.sources_by_tier) {
+    renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+  }
+}
+
+function collapseAlmanacSources() {
+  almanacSourcesState.visibleLimit = 5;
+  if (currentPlan?.almanac?.sources_by_tier) {
+    renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+  }
+}
+
+function renderSourceCardHtml(src) {
+  const tierIcon = `/static/icons/ui/tier_${src.tier}.png`;
+  const tierLabel = src.tier.charAt(0).toUpperCase() + src.tier.slice(1);
+  const srcKey = getAlmanacSourceKey(src);
+  const isChecked = isAlmanacSourceChecked(src);
+
+  const directChips = (src.direct_collectibles || []).slice(0, 10).map(d => `
+    <span class="unblocked-item-chip">
+      <img class="mini-sprite" src="${resolveAlmanacItemSpriteUrl(d)}" alt="" onerror="this.style.display='none'">
+      ${escapeHtml(d.name)}
+    </span>
+  `).join("");
+
+  const rawChips = (src.raw_materials || []).slice(0, 8).map(r => `
+    <span class="unblocked-item-chip" style="border-color:#fca5a5; background:#fff5f5;">
+      <img class="mini-sprite" src="${resolveAlmanacItemSpriteUrl(r)}" alt="" onerror="this.style.display='none'">
+      ${escapeHtml(r.name)} <strong style="color:#dc2626;">(-${(r.deficit || 0).toLocaleString()})</strong>
+    </span>
+  `).join("");
+
+  const unblockedChips = (src.unblocked_craftables || []).slice(0, 8).map(u => `
+    <span class="unblocked-item-chip" style="border-color:#fde68a; background:#fefce8;">
+      <img class="mini-sprite" src="${resolveAlmanacItemSpriteUrl(u)}" alt="" onerror="this.style.display='none'">
+      ${escapeHtml(u.name)}
+    </span>
+  `).join("");
+
+  return `
+    <div class="almanac-source-card ${isChecked ? "is-checked" : ""}" data-tier="${escapeHtml(src.tier)}" data-source-key="${escapeHtml(srcKey)}">
+      <div class="source-card-header">
+        <div class="source-name-wrap">
+          <label class="craft-check-label source-check-label" title="${isChecked ? "Uncheck source" : "Mark source as visited/completed"}">
+            <input type="checkbox" class="craft-checkbox" ${isChecked ? "checked" : ""} onchange="toggleAlmanacSourceCheck('${escapeHtml(srcKey)}')">
+          </label>
+          <span class="station-badge station-${src.tier}">
+            <img class="station-icon" src="${tierIcon}" alt="${tierLabel}"> ${tierLabel}
+          </span>
+          <span class="source-name">${escapeHtml(src.source)}</span>
+        </div>
+        <span class="source-impact-badge" title="Total unobtained items you can get or unblock here">
+          ★ Impact: +${src.total_impact || 0}
+        </span>
+      </div>
+
+      <div class="source-metrics-summary">
+        <span class="source-metric-pill">Direct Finds: <strong>${(src.direct_collectibles || []).length}</strong></span>
+        <span class="source-metric-pill">Raw Materials: <strong>${(src.raw_materials || []).length}</strong></span>
+        <span class="source-metric-pill">Unblocked Recipes: <strong>${(src.unblocked_craftables || []).length}</strong></span>
+      </div>
+
+      <div class="source-items-accordion">
+        ${src.direct_collectibles && src.direct_collectibles.length > 0 ? `
+          <span class="source-sub-label">Direct Gatherables:</span>
+          <div class="source-chips-cloud">${directChips}</div>
+        ` : ''}
+
+        ${src.raw_materials && src.raw_materials.length > 0 ? `
+          <span class="source-sub-label" style="margin-top:4px;">Shortage Materials Found Here:</span>
+          <div class="source-chips-cloud">${rawChips}</div>
+        ` : ''}
+
+        ${src.unblocked_craftables && src.unblocked_craftables.length > 0 ? `
+          <span class="source-sub-label" style="margin-top:4px;">Unblocks Almanac Recipes:</span>
+          <div class="source-chips-cloud">${unblockedChips}</div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderSourcePriority(sourcesByTier, activeTier = "all") {
+  const container = document.getElementById("almanacSourcesContainer");
+  const countBadge = document.getElementById("almanacSourcesBadge") || document.getElementById("almanacSourcesCountBadge");
+  const paginationRow = document.getElementById("almanacSourcesPaginationRow");
+  const btnShowNext5 = document.getElementById("btnShowNext5Sources");
+  const btnCollapse = document.getElementById("btnCollapseSources");
+  const btnToggleCompleted = document.getElementById("btnToggleCompletedSources");
+  const btnResetChecks = document.getElementById("btnResetSourceChecks");
+  if (!container) return;
+
+  if (!sourcesByTier) {
+    if (countBadge) countBadge.textContent = "0 Sources";
+    if (paginationRow) paginationRow.style.display = "none";
+    if (btnToggleCompleted) btnToggleCompleted.style.display = "none";
+    if (btnResetChecks) btnResetChecks.style.display = "none";
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 24px;">No sources available.</div>`;
+    return;
+  }
+
+  const allSources = [
+    ...(sourcesByTier.quick || []),
+    ...(sourcesByTier.grind || []),
+    ...(sourcesByTier.farm || [])
+  ];
+
+  // Update tier tab counts dynamically
+  const tierTabs = document.querySelectorAll("#almanacTierTabs .tier-tab-btn");
+  tierTabs.forEach(btn => {
+    const t = btn.dataset.tier || "all";
+    const pool = t === "all" ? allSources : (sourcesByTier[t] || []);
+    const activeCount = pool.filter(s => !isAlmanacSourceChecked(s)).length;
+    if (t === "all") {
+      btn.textContent = `All Sources (${activeCount})`;
+    } else {
+      const label = t.charAt(0).toUpperCase() + t.slice(1);
+      btn.innerHTML = `<img class="inline-icon" src="/static/icons/ui/tier_${t}.png" alt="${label}"> ${label} (${activeCount})`;
+    }
+  });
+
+  const list = activeTier === "all" ? allSources : (sourcesByTier[activeTier] || []);
+  const activeList = list.filter(s => !isAlmanacSourceChecked(s));
+  const completedList = list.filter(s => isAlmanacSourceChecked(s));
+  const totalCheckedAll = allSources.filter(s => isAlmanacSourceChecked(s)).length;
+
+  if (totalCheckedAll === 0) {
+    almanacSourcesState.showCompleted = false;
+  }
+
+  if (countBadge) {
+    if (completedList.length > 0) {
+      countBadge.textContent = `${activeList.length} / ${list.length} Source${list.length === 1 ? '' : 's'}`;
+    } else {
+      countBadge.textContent = `${list.length} Source${list.length === 1 ? '' : 's'}`;
+    }
+  }
+
+  if (btnResetChecks) {
+    if (totalCheckedAll > 0) {
+      btnResetChecks.style.display = "inline-flex";
+      btnResetChecks.textContent = `↺ Reset (${totalCheckedAll})`;
+    } else {
+      btnResetChecks.style.display = "none";
+    }
+  }
+
+  if (btnToggleCompleted) {
+    if (completedList.length > 0 || (almanacSourcesState.showCompleted && totalCheckedAll > 0)) {
+      btnToggleCompleted.style.display = "inline-flex";
+      btnToggleCompleted.classList.toggle("active", almanacSourcesState.showCompleted);
+      btnToggleCompleted.textContent = `${almanacSourcesState.showCompleted ? "Hide" : "Show"} Completed (${completedList.length})`;
+    } else {
+      btnToggleCompleted.style.display = "none";
+    }
+  }
+
+  if (list.length === 0) {
+    if (paginationRow) paginationRow.style.display = "none";
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 28px 16px; color: var(--ink-muted); font-style: italic;">
+        No acquisition sources match this filter for the selected season.
+      </div>
+    `;
+    return;
+  }
+
+  const visibleActive = activeList.slice(0, almanacSourcesState.visibleLimit);
+  const remainingCount = Math.max(0, activeList.length - visibleActive.length);
+
+  if (paginationRow) {
+    if (activeList.length > 5) {
+      paginationRow.style.display = "flex";
+      if (btnShowNext5) {
+        if (remainingCount > 0) {
+          btnShowNext5.style.display = "inline-flex";
+          btnShowNext5.innerHTML = `<span>Show Next 5 (${remainingCount} remaining) ▼</span>`;
+        } else {
+          btnShowNext5.style.display = "none";
+        }
+      }
+      if (btnCollapse) {
+        btnCollapse.style.display = almanacSourcesState.visibleLimit > 5 ? "inline-flex" : "none";
+      }
+    } else {
+      paginationRow.style.display = "none";
+    }
+  }
+
+  let html = "";
+  if (visibleActive.length === 0) {
+    html += `
+      <div class="almanac-craft-all-done-banner">
+        <span>✨ All acquisition sources in this tier are checked off!</span>
+        ${completedList.length > 0 && !almanacSourcesState.showCompleted
+          ? `<button type="button" class="action-btn" onclick="toggleShowCompletedSources()">Show Completed (${completedList.length})</button>`
+          : ``}
+      </div>
+    `;
+  } else {
+    html += visibleActive.map(src => renderSourceCardHtml(src)).join("");
+  }
+
+  if (almanacSourcesState.showCompleted && completedList.length > 0) {
+    html += `
+      <div class="almanac-completed-crafts-group">
+        <div class="completed-crafts-divider">
+          <span>✓ Completed Sources (${completedList.length})</span>
+        </div>
+        <div class="almanac-sources-grid">
+          ${completedList.map(src => renderSourceCardHtml(src)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+let _almanacEventsInitialized = false;
+function initAlmanacEventListeners() {
+  if (_almanacEventsInitialized) return;
+  _almanacEventsInitialized = true;
+
+  const closeBtn = document.getElementById("closeAlmanacDrawerBtn");
+  const closeBottomBtn = document.getElementById("closeAlmanacDrawerBottomBtn");
+  const backdrop = document.getElementById("almanacDrawerBackdrop");
+  const searchInput = document.getElementById("almanacSearchInput");
+  const searchClearBtn = document.getElementById("almanacSearchClearBtn");
+
+  if (closeBtn) closeBtn.onclick = closeAlmanacDrawer;
+  if (closeBottomBtn) closeBottomBtn.onclick = closeAlmanacDrawer;
+  if (backdrop) {
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) closeAlmanacDrawer();
+    };
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && backdrop) {
+      const isOpen = (backdrop.style && backdrop.style.display !== "none") &&
+                     (backdrop.classList && typeof backdrop.classList.contains === "function" ? backdrop.classList.contains("active") : true);
+      if (isOpen) {
+        closeAlmanacDrawer();
+      }
+    }
+  });
+
+  const statusPills = document.querySelectorAll("#almanacStatusFilters .pill-btn");
+  statusPills.forEach(btn => {
+    btn.onclick = () => {
+      currentAlmanacStatusFilter = btn.dataset.filter || "all";
+      updateFilterPillStates();
+      renderDrawerItems();
+    };
+  });
+
+  const seasonPills = document.querySelectorAll("#almanacSeasonFilters .pill-btn");
+  seasonPills.forEach(btn => {
+    btn.onclick = () => {
+      currentAlmanacSeasonFilter = btn.dataset.season || "all";
+      updateFilterPillStates();
+      renderDrawerItems();
+    };
+  });
+
+  if (searchInput) {
+    searchInput.oninput = () => {
+      currentAlmanacSearchQuery = searchInput.value.trim().toLowerCase();
+      if (searchClearBtn) {
+        searchClearBtn.style.display = currentAlmanacSearchQuery ? "inline-flex" : "none";
+      }
+      renderDrawerItems();
+    };
+  }
+  if (searchClearBtn) {
+    searchClearBtn.onclick = () => {
+      if (searchInput) searchInput.value = "";
+      currentAlmanacSearchQuery = "";
+      searchClearBtn.style.display = "none";
+      renderDrawerItems();
+    };
+  }
+
+  const btnChains = document.getElementById("btnBatchViewChains");
+  const btnSteps = document.getElementById("btnBatchViewSteps");
+  if (btnChains) {
+    btnChains.onclick = () => {
+      almanacBatchViewMode = "chains";
+      btnChains.classList.add("active");
+      if (btnSteps) btnSteps.classList.remove("active");
+      if (currentPlan?.almanac?.ready_to_craft) {
+        renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, "chains");
+      }
+    };
+  }
+  if (btnSteps) {
+    btnSteps.onclick = () => {
+      almanacBatchViewMode = "steps";
+      btnSteps.classList.add("active");
+      if (btnChains) btnChains.classList.remove("active");
+      if (currentPlan?.almanac?.ready_to_craft) {
+        renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, "steps");
+      }
+    };
+  }
+
+  const btnToggleCompleted = document.getElementById("btnToggleCompletedCrafts");
+  if (btnToggleCompleted) {
+    btnToggleCompleted.onclick = toggleShowCompletedCrafts;
+  }
+
+  const btnResetChecks = document.getElementById("btnResetCraftChecks");
+  if (btnResetChecks) {
+    btnResetChecks.onclick = () => {
+      readyToCraftState.checkedStepKeys.clear();
+      readyToCraftState.showCompleted = false;
+      if (currentPlan?.almanac?.ready_to_craft) {
+        renderReadyToCraftQueue(currentPlan.almanac.ready_to_craft, almanacBatchViewMode);
+      }
+      showToast("Reset all temporary crafting checks.");
+    };
+  }
+
+  const btnShowNext5 = document.getElementById("btnShowNext5Crafts");
+  if (btnShowNext5) {
+    btnShowNext5.onclick = showNext5ReadyToCraft;
+  }
+
+  const btnCollapse = document.getElementById("btnCollapseCrafts");
+  if (btnCollapse) {
+    btnCollapse.onclick = collapseReadyToCraft;
+  }
+
+  const copyBtn = document.getElementById("btnCopyCraftList");
+  if (copyBtn) {
+    copyBtn.onclick = copyCraftingListToClipboard;
+  }
+
+  const blockerSearch = document.getElementById("almanacBlockerSearch");
+  if (blockerSearch) {
+    blockerSearch.oninput = () => {
+      currentAlmanacBlockerSearchQuery = blockerSearch.value.trim().toLowerCase();
+      almanacBlockersState.visibleLimit = 5;
+      if (currentPlan?.almanac?.raw_material_blockers) {
+        renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+      }
+    };
+  }
+
+  const btnToggleCompletedBlockers = document.getElementById("btnToggleCompletedBlockers");
+  if (btnToggleCompletedBlockers) {
+    btnToggleCompletedBlockers.onclick = toggleShowCompletedBlockers;
+  }
+
+  const btnResetBlockerChecks = document.getElementById("btnResetBlockerChecks");
+  if (btnResetBlockerChecks) {
+    btnResetBlockerChecks.onclick = () => {
+      almanacBlockersState.checkedItemIds.clear();
+      almanacBlockersState.showCompleted = false;
+      if (currentPlan?.almanac?.raw_material_blockers) {
+        renderRawMaterialBlockers(currentPlan.almanac.raw_material_blockers);
+      }
+      showToast("Reset all temporary material blocker checks.");
+    };
+  }
+
+  const btnShowNext5Blockers = document.getElementById("btnShowNext5Blockers");
+  if (btnShowNext5Blockers) {
+    btnShowNext5Blockers.onclick = showNext5AlmanacBlockers;
+  }
+
+  const btnCollapseBlockers = document.getElementById("btnCollapseBlockers");
+  if (btnCollapseBlockers) {
+    btnCollapseBlockers.onclick = collapseAlmanacBlockers;
+  }
+
+  const btnToggleCompletedSources = document.getElementById("btnToggleCompletedSources");
+  if (btnToggleCompletedSources) {
+    btnToggleCompletedSources.onclick = toggleShowCompletedSources;
+  }
+
+  const btnResetSourceChecks = document.getElementById("btnResetSourceChecks");
+  if (btnResetSourceChecks) {
+    btnResetSourceChecks.onclick = () => {
+      almanacSourcesState.checkedSourceKeys.clear();
+      almanacSourcesState.showCompleted = false;
+      if (currentPlan?.almanac?.sources_by_tier) {
+        renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+      }
+      showToast("Reset all temporary source checks.");
+    };
+  }
+
+  const btnShowNext5Sources = document.getElementById("btnShowNext5Sources");
+  if (btnShowNext5Sources) {
+    btnShowNext5Sources.onclick = showNext5AlmanacSources;
+  }
+
+  const btnCollapseSources = document.getElementById("btnCollapseSources");
+  if (btnCollapseSources) {
+    btnCollapseSources.onclick = collapseAlmanacSources;
+  }
+
+  const tierTabs = document.querySelectorAll("#almanacTierTabs .tier-tab-btn");
+  tierTabs.forEach(btn => {
+    btn.onclick = () => {
+      tierTabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentAlmanacTier = btn.dataset.tier || "all";
+      almanacSourcesState.visibleLimit = 5;
+      if (currentPlan?.almanac?.sources_by_tier) {
+        renderSourcePriority(currentPlan.almanac.sources_by_tier, currentAlmanacTier);
+      }
+    };
+  });
+}
+
+// Global window bindings for inline HTML onclick handlers
+window.switchPlannerMode = switchPlannerMode;
+window.setPlannerMode = switchPlannerMode;
+window.updateSidebarForPlannerMode = updateSidebarForPlannerMode;
+window.openAlmanacDrawer = openAlmanacDrawer;
+window.closeAlmanacDrawer = closeAlmanacDrawer;
+window.selectFurnitureSwatch = selectFurnitureSwatch;
+window.renderAlmanacPlanner = renderAlmanacPlanner;
+window.resetReadyToCraftChecks = resetReadyToCraftChecks;
+window.setReadyToCraftStationFilter = setReadyToCraftStationFilter;
+window.toggleCraftBatchCheck = toggleCraftBatchCheck;
+window.toggleCraftStepCheck = toggleCraftStepCheck;
+window.toggleShowCompletedCrafts = toggleShowCompletedCrafts;
+window.showNext5ReadyToCraft = showNext5ReadyToCraft;
+window.collapseReadyToCraft = collapseReadyToCraft;
+window.setAlmanacBlockerCategoryFilter = setAlmanacBlockerCategoryFilter;
+window.toggleAlmanacBlockerCheck = toggleAlmanacBlockerCheck;
+window.toggleShowCompletedBlockers = toggleShowCompletedBlockers;
+window.showNext5AlmanacBlockers = showNext5AlmanacBlockers;
+window.collapseAlmanacBlockers = collapseAlmanacBlockers;
+window.toggleAlmanacSourceCheck = toggleAlmanacSourceCheck;
+window.toggleShowCompletedSources = toggleShowCompletedSources;
+window.showNext5AlmanacSources = showNext5AlmanacSources;
+window.collapseAlmanacSources = collapseAlmanacSources;
+
+
 

@@ -8,7 +8,7 @@ Extracted from core test suites to provide reusable fixtures across tests/core, 
 import json
 from pathlib import Path
 import struct
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 import zlib
 
 from fom_planner.constants import (
@@ -48,6 +48,9 @@ def create_synthetic_save_entries(
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
     npc_ids: Optional[List[str]] = None,
     bag_slots: Optional[List[Dict[str, Any]]] = None,
+    items_acquired: Optional[List[str]] = None,
+    recipe_unlocks: Optional[List[str]] = None,
+    recipes_created: Optional[Union[List[str], Dict[str, Any]]] = None,
 ) -> Dict[str, str]:
     """Generates a complete dictionary of raw_entries for a FoM save file."""
     season_idx = {"spring": 0, "summer": 1, "autumn": 2, "winter": 3}.get(season.lower(), 0)
@@ -77,11 +80,17 @@ def create_synthetic_save_entries(
         while len(bag_slots_to_use) < 30:
             bag_slots_to_use.append(create_mock_slot(None, 0))
 
-    player_data = {
+    player_data: Dict[str, Any] = {
         "name": player_name,
         "farm_name": farm_name,
         "inventory": bag_slots_to_use,
     }
+    if items_acquired is not None:
+        player_data["items_acquired"] = items_acquired
+    if recipe_unlocks is not None:
+        player_data["recipe_unlocks"] = recipe_unlocks
+    if recipes_created is not None:
+        player_data["recipes_created"] = recipes_created
     entries["player"] = json.dumps(player_data)
 
     npcs_data: Dict[str, Any] = {}
@@ -138,6 +147,9 @@ def create_synthetic_save_file(
     gifted_npcs: Optional[Dict[str, List[str]]] = None,
     npc_ids: Optional[List[str]] = None,
     bag_slots: Optional[List[Dict[str, Any]]] = None,
+    items_acquired: Optional[List[str]] = None,
+    recipe_unlocks: Optional[List[str]] = None,
+    recipes_created: Optional[Union[List[str], Dict[str, Any]]] = None,
 ) -> Path:
     """Encodes and writes a synthetic binary FoM .sav file to disk."""
     entries = create_synthetic_save_entries(
@@ -152,6 +164,9 @@ def create_synthetic_save_file(
         gifted_npcs=gifted_npcs,
         npc_ids=npc_ids,
         bag_slots=bag_slots,
+        items_acquired=items_acquired,
+        recipe_unlocks=recipe_unlocks,
+        recipes_created=recipes_created,
     )
     raw = bytearray()
     raw.extend(struct.pack("<Q", len(entries)))

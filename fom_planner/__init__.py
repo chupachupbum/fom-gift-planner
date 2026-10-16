@@ -21,7 +21,9 @@ from fom_planner.crafting import (
     format_crafting_chain,
     load_recipes,
 )
+from fom_planner.almanac import plan_almanac
 from fom_planner.data_loader import (
+    load_almanac_data,
     load_item_locations,
     load_item_metadata,
     load_item_seasons,
@@ -78,6 +80,7 @@ __all__ = [
     "load_item_seasons",
     "load_recipe_sources",
     "load_item_metadata",
+    "load_almanac_data",
     "load_npc_preferences_from_fiddle",
     "load_npc_preferences_from_json",
     "build_ranked_rows",
@@ -88,4 +91,5 @@ __all__ = [
     "compute_focus_recipes",
     "plan_daily_gift_bag",
     "plan_max_relationship",
+    "plan_almanac",
 ]

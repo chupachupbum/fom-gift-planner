@@ -32,6 +32,7 @@ CANONICAL_KEYS = (
     "focus_trees",
     "source_priority",
     "npc_progress",
+    "almanac",
     "error",
 )
 
@@ -119,12 +120,12 @@ def test_init_bridge_caches_databases():
 
 
 def test_generate_plan_canonical_keys(sample_save_path):
-    """Verify generate_plan returns all 16 canonical JSON keys."""
+    """Verify generate_plan returns all 17 canonical JSON keys."""
     result_json = generate_plan(str(sample_save_path))
     data = json.loads(result_json)
 
     assert isinstance(data, dict)
-    assert len(data.keys()) == 16
+    assert len(data.keys()) == 17
     for key in CANONICAL_KEYS:
         assert key in data, f"Missing canonical key: '{key}' in plan output"
 
@@ -150,7 +151,7 @@ def test_generate_plan_bytes_input(sample_save_path):
     assert data["error"] is None
     assert data["save_info"]["found"] is True
     assert data["save_info"]["filename"] == "uploaded_test.sav"
-    assert len(data.keys()) == 16
+    assert len(data.keys()) == 17
     assert len(data["bag_plan"]) > 0
 
 
@@ -261,7 +262,7 @@ def test_error_handling_corrupted_save():
     data = json.loads(result_json)
 
     assert isinstance(data, dict)
-    assert len(data.keys()) == 16
+    assert len(data.keys()) == 17
     assert data["error"] is not None
     assert "Failed to zlib-decompress" in data["error"] or "error" in data["error"].lower()
     assert data["save_info"]["found"] is False

@@ -44,6 +44,7 @@ CANONICAL_KEYS = (
     "focus_trees",
     "source_priority",
     "npc_progress",
+    "almanac",
     "error",
 )
 
@@ -69,9 +70,9 @@ def sample_save_bytes(sample_save_path):
 
 
 def assert_canonical_schema(data: dict):
-    """Helper asserting strict presence of all 16 canonical keys."""
+    """Helper asserting strict presence of all 17 canonical keys."""
     assert isinstance(data, dict), f"Payload is not dict: {type(data)}"
-    assert len(data.keys()) == 16, f"Expected 16 keys, found {len(data.keys())}: {list(data.keys())}"
+    assert len(data.keys()) == 17, f"Expected 17 keys, found {len(data.keys())}: {list(data.keys())}"
     for k in CANONICAL_KEYS:
         assert k in data, f"Missing canonical key: '{k}'"
     assert isinstance(data["save_info"], dict)

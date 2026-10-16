@@ -10,6 +10,7 @@ Loaders for game databases, item metadata, item locations, and NPC preferences:
 - load_npc_preferences_from_fiddle
 - load_npc_preferences_from_json
 - load_item_metadata
+- load_almanac_data
 """
 
 import json
@@ -545,3 +546,49 @@ def load_item_metadata(
             print(f"Warning: Failed to read item_data.json: {e}", file=sys.stderr)
 
     return metadata
+
+
+_ALMANAC_DATA_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+def load_almanac_data(path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
+    """
+    Loads canonical Almanac dataset from JSON file with in-memory caching and schema validation.
+    If path is None, looks for 'data/almanac_data.json' relative to repo root, package dir, or CWD.
+    Returns dictionary with 'categories' and 'items'.
+    """
+    if path is None:
+        root_path = Path(__file__).resolve().parent.parent / "data" / "almanac_data.json"
+        script_path = Path(__file__).resolve().parent / "data" / "almanac_data.json"
+        if root_path.exists():
+            target = root_path
+        elif script_path.exists():
+            target = script_path
+        else:
+            target = Path("data/almanac_data.json")
+    else:
+        target = Path(path)
+
+    cache_key = str(target.resolve()) if target.exists() else str(target)
+    if cache_key in _ALMANAC_DATA_CACHE:
+        return _ALMANAC_DATA_CACHE[cache_key]
+
+    if not target.exists() or not target.is_file():
+        return {"categories": {}, "items": {}}
+
+    try:
+        with open(target, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if (
+            isinstance(data, dict)
+            and "categories" in data
+            and "items" in data
+            and isinstance(data["categories"], dict)
+            and isinstance(data["items"], dict)
+        ):
+            _ALMANAC_DATA_CACHE[cache_key] = data
+            return data
+    except Exception:
+        return {"categories": {}, "items": {}}
+    return {"categories": {}, "items": {}}
+

@@ -12,8 +12,10 @@ import time
 from typing import Any, Dict, Optional, Set, Tuple
 
 from companion.config import CompanionConfig, get_repo_root
+from fom_planner.almanac import plan_almanac
 from fom_planner.crafting import filter_recipes_by_unlocks, load_recipes
 from fom_planner.data_loader import (
+    load_almanac_data,
     load_item_locations,
     load_item_metadata,
     load_item_seasons,
@@ -221,6 +223,7 @@ def execute_plan(
     recipe_sources_path = resolve_path(config.recipe_sources, root) or (root / "data" / "recipe_sources.json")
     item_seasons_path = resolve_path(config.item_seasons, root) or (root / "data" / "item_seasons.json")
     quest_data_path = resolve_path(getattr(config, "quest_data", None), root) or (root / "data" / "quest_data.json")
+    almanac_data_path = resolve_path(getattr(config, "almanac_data", None), root) or (root / "data" / "almanac_data.json")
 
     # 3. Load databases
     all_recipes = load_recipes(str(recipes_path)) if recipes_path.exists() else {}
@@ -234,6 +237,7 @@ def execute_plan(
     recipe_sources = load_recipe_sources(str(recipe_sources_path)) if recipe_sources_path.exists() else {}
     item_seasons = load_item_seasons(str(item_seasons_path)) if item_seasons_path.exists() else {}
     quest_data = load_quest_data(str(quest_data_path)) if quest_data_path.exists() else {}
+    almanac_data = load_almanac_data(str(almanac_data_path)) if almanac_data_path.exists() else load_almanac_data()
 
     # 4. Load NPC gift preferences & metadata
     npcs_def = None
@@ -358,4 +362,22 @@ def execute_plan(
             future_wife=future_wife_val,
         )
 
+    # 8. Run Almanac Planner
+    almanac_plan_res = plan_almanac(
+        save=save,
+        almanac_data=almanac_data,
+        gift_plan_result=plan_results,
+        reserve_gifts=getattr(config, "almanac_reserve_gifts", True),
+        include_locked_recipes=getattr(config, "almanac_include_locked", True),
+        furniture_mode=getattr(config, "almanac_furniture_mode", "one_per_recipe"),
+        season_filter=getattr(config, "almanac_season_filter", "current"),
+        category_filter=getattr(config, "almanac_category_filter", "all"),
+    )
+    plan_results["almanac"] = almanac_plan_res
+
     return save, plan_results, metadata, save_path
+
+
+# Public alias
+run_planner = execute_plan
+

@@ -96,6 +96,7 @@ CANONICAL_KEYS = (
     "focus_trees",
     "source_priority",
     "npc_progress",
+    "almanac",
     "error",
 )
 
@@ -115,7 +116,7 @@ def ensure_bridge_initialized():
 
 
 def assert_canonical_schema(payload: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
-    """Helper asserting valid JSON and presence of all 16 canonical schema keys."""
+    """Helper asserting valid JSON and presence of all 17 canonical schema keys."""
     if isinstance(payload, str):
         try:
             data = json.loads(payload)
@@ -125,7 +126,7 @@ def assert_canonical_schema(payload: Union[str, Dict[str, Any]]) -> Dict[str, An
         data = payload
 
     assert isinstance(data, dict), f"Plan payload is not a dict: {type(data)}"
-    assert len(data.keys()) == 16, f"Expected 16 keys, found {len(data.keys())}: {list(data.keys())}"
+    assert len(data.keys()) == 17, f"Expected 17 keys, found {len(data.keys())}: {list(data.keys())}"
     for k in CANONICAL_KEYS:
         assert k in data, f"Missing canonical key: '{k}'"
 

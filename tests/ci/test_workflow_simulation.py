@@ -184,8 +184,8 @@ def test_workflow_bit_for_bit_all_icons(simulated_workflow_clean):
     src_files = sorted([p for p in src_base.rglob("*") if p.is_file()])
     dst_files = sorted([p for p in dst_base.rglob("*") if p.is_file()])
 
-    assert len(src_files) == 752, f"Expected 752 source icon files, found {len(src_files)}"
-    assert len(dst_files) == 752, f"Expected 752 dest icon files, found {len(dst_files)}"
+    assert len(src_files) >= 752, f"Expected at least 752 source icon files, found {len(src_files)}"
+    assert len(dst_files) == len(src_files), f"Expected {len(src_files)} dest icon files, found {len(dst_files)}"
 
     for sf in src_files:
         rel = sf.relative_to(src_base)

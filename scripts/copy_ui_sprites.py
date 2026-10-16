@@ -13,8 +13,16 @@ from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ANIM_DIR = Path("/home/tyrell/Downloads/assets/animations")
-UI_DIR = PROJECT_ROOT / "companion" / "static" / "icons" / "ui"
-FAVICON_PATH = PROJECT_ROOT / "companion" / "static" / "icons" / "favicon.png"
+UI_DIRS = [
+    PROJECT_ROOT / "companion" / "static" / "icons" / "ui",
+    PROJECT_ROOT / "web" / "icons" / "ui",
+]
+FAVICON_PATHS = [
+    PROJECT_ROOT / "companion" / "static" / "icons" / "favicon.png",
+    PROJECT_ROOT / "web" / "icons" / "favicon.png",
+]
+UI_DIR = UI_DIRS[0]
+FAVICON_PATH = FAVICON_PATHS[0]
 
 # Mapping: destination filename -> (source path relative to ANIM_DIR or PROJECT_ROOT, is_relative_to_project, crop_box_or_none)
 SPRITE_MAP = {
@@ -132,10 +140,71 @@ SPRITE_MAP = {
     ),
 }
 
+# Almanac Category Sprites
+ALMANAC_CATEGORIES = [
+    "artifacts",
+    "blacksmithing",
+    "bugs",
+    "cooked_dishes",
+    "crops",
+    "date_inspiration",
+    "fish",
+    "forageables",
+    "furniture",
+    "materials",
+    "ranching",
+    "song_crystals",
+]
+
+for cat in ALMANAC_CATEGORIES:
+    src = ANIM_DIR / f"UI NEW/Journal/Almanac/spr_ui_journal_almanac_icon_{cat}.png"
+    # Canonical name
+    SPRITE_MAP[f"spr_ui_journal_almanac_icon_{cat}.png"] = (src, None)
+    # itemcategory alias
+    SPRITE_MAP[f"spr_ui_journal_almanac_icon_itemcategory_{cat}.png"] = (src, None)
+    # short alias
+    SPRITE_MAP[f"almanac_{cat}.png"] = (src, None)
+
+# Handle singular song_crystal aliases
+_song_crystals_src = ANIM_DIR / "UI NEW/Journal/Almanac/spr_ui_journal_almanac_icon_song_crystals.png"
+SPRITE_MAP["spr_ui_journal_almanac_icon_song_crystal.png"] = (_song_crystals_src, None)
+SPRITE_MAP["spr_ui_journal_almanac_icon_itemcategory_song_crystal.png"] = (_song_crystals_src, None)
+SPRITE_MAP["almanac_song_crystal.png"] = (_song_crystals_src, None)
+
+# Almanac Header and Tab Sprites
+_header_src = ANIM_DIR / "UI NEW/Journal/Almanac/spr_ui_journal_almanac_header_icon.png"
+SPRITE_MAP["spr_ui_journal_almanac_header_icon.png"] = (_header_src, None)
+SPRITE_MAP["almanac_header.png"] = (_header_src, None)
+
+_tab_enabled_src = ANIM_DIR / "UI NEW/Journal/Tabs/spr_ui_journal_tab_almanac_enabled.png"
+SPRITE_MAP["spr_ui_journal_tab_almanac_enabled.png"] = (_tab_enabled_src, None)
+SPRITE_MAP["spr_ui_journal_tab_almanac.png"] = (_tab_enabled_src, None)
+SPRITE_MAP["almanac_tab.png"] = (_tab_enabled_src, None)
+
+_tab_selected_src = ANIM_DIR / "UI NEW/Journal/Tabs/spr_ui_journal_tab_almanac_selected_enabled.png"
+SPRITE_MAP["spr_ui_journal_tab_almanac_selected_enabled.png"] = (_tab_selected_src, None)
+
+# Crafting station skill badges for batch queue
+SKILL_STATIONS = [
+    "cooking",
+    "woodcrafting",
+    "blacksmithing",
+    "mining",
+    "farming",
+    "archaeology",
+    "fishing",
+    "ranching",
+]
+for skill in SKILL_STATIONS:
+    skill_src = ANIM_DIR / f"UI NEW/Generic/Icons/Skill/spr_ui_skill_icon_{skill}.png"
+    if skill_src.exists():
+        SPRITE_MAP[f"spr_ui_skill_icon_{skill}.png"] = (skill_src, None)
+
 
 def harvest_sprites() -> None:
-    UI_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"Target UI icons directory: {UI_DIR}")
+    for ui_dir in UI_DIRS:
+        ui_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Target UI icons directory: {ui_dir}")
 
     success_count = 0
     for dest_name, (src_path, crop_box) in SPRITE_MAP.items():
@@ -143,18 +212,21 @@ def harvest_sprites() -> None:
             print(f"WARNING: Source file not found: {src_path}")
             continue
 
-        dest_path = UI_DIR / dest_name
         if crop_box:
             with Image.open(src_path) as im:
                 cropped = im.crop(crop_box)
-                cropped.save(dest_path)
+                for ui_dir in UI_DIRS:
+                    dest_path = ui_dir / dest_name
+                    cropped.save(dest_path)
             print(f"Cropped & saved: {dest_name} from {src_path.name} {crop_box}")
         else:
-            shutil.copy2(src_path, dest_path)
+            for ui_dir in UI_DIRS:
+                dest_path = ui_dir / dest_name
+                shutil.copy2(src_path, dest_path)
             print(f"Copied: {dest_name} from {src_path.name}")
         success_count += 1
 
-    print(f"Successfully processed {success_count}/{len(SPRITE_MAP)} UI sprites.")
+    print(f"Successfully processed {success_count}/{len(SPRITE_MAP)} UI sprites across {len(UI_DIRS)} directories.")
 
 
 def generate_favicon() -> None:
@@ -163,12 +235,13 @@ def generate_favicon() -> None:
         print(f"ERROR: Cannot generate favicon, missing {src}")
         return
 
-    FAVICON_PATH.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(src) as im:
         # Scale to 32x32 using nearest neighbor interpolation to preserve pixel art
         fav = im.resize((32, 32), resample=Image.Resampling.NEAREST)
-        fav.save(FAVICON_PATH)
-    print(f"Generated 32x32 favicon at: {FAVICON_PATH}")
+        for fav_path in FAVICON_PATHS:
+            fav_path.parent.mkdir(parents=True, exist_ok=True)
+            fav.save(fav_path)
+            print(f"Generated 32x32 favicon at: {fav_path}")
 
 
 if __name__ == "__main__":

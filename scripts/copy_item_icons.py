@@ -291,14 +291,34 @@ CRITICAL_EXCLUDED_ITEMS: Set[str] = set()
 DEFAULT_ASSET_DIR = Path("/home/tyrell/Downloads/assets/animations/Item Icons")
 
 
-def extract_item_ids(repo_root: Path) -> Set[str]:
+def extract_item_ids(repo_root: Path) -> Tuple[Set[str], Dict[str, str]]:
     """
-    Extracts all unique item IDs from data/item_data.json, data/recipes.json,
-    data/item_locations.json, and data/item_seasons.json, filtering out metadata keys.
+    Extracts all unique item IDs from data/almanac_data.json, data/item_data.json,
+    data/recipes.json, data/item_locations.json, and data/item_seasons.json,
+    filtering out metadata keys. Also returns a dictionary of explicit icon_sprite stems.
     """
     item_ids: Set[str] = set()
+    explicit_sprites: Dict[str, str] = {}
 
-    # 1. Extract from data/item_data.json
+    # 1. Extract from data/almanac_data.json
+    almanac_path = repo_root / "data" / "almanac_data.json"
+    if almanac_path.exists():
+        with open(almanac_path, "r", encoding="utf-8") as f:
+            almanac = json.load(f)
+        for key, entry in almanac.get("items", {}).items():
+            k = key.strip().lower()
+            if k and k not in METADATA_KEYS_TO_EXCLUDE and k not in CRITICAL_EXCLUDED_ITEMS:
+                item_ids.add(k)
+                if isinstance(entry, dict) and entry.get("icon_sprite"):
+                    explicit_sprites[k] = entry["icon_sprite"].strip().lower()
+                rec = entry.get("recipe") if isinstance(entry, dict) else None
+                if isinstance(rec, dict):
+                    for ing in rec.get("ingredients", []):
+                        ing_id = ing.get("item_id", "").strip().lower()
+                        if ing_id and ing_id not in METADATA_KEYS_TO_EXCLUDE and ing_id not in CRITICAL_EXCLUDED_ITEMS:
+                            item_ids.add(ing_id)
+
+    # 2. Extract from data/item_data.json
     item_data_path = repo_root / "data" / "item_data.json"
     if item_data_path.exists():
         with open(item_data_path, "r", encoding="utf-8") as f:
@@ -308,7 +328,7 @@ def extract_item_ids(repo_root: Path) -> Set[str]:
             if k and k not in METADATA_KEYS_TO_EXCLUDE and k not in CRITICAL_EXCLUDED_ITEMS:
                 item_ids.add(k)
 
-    # 2. Extract from data/recipes.json
+    # 3. Extract from data/recipes.json
     recipes_path = repo_root / "data" / "recipes.json"
     if recipes_path.exists():
         with open(recipes_path, "r", encoding="utf-8") as f:
@@ -322,7 +342,7 @@ def extract_item_ids(repo_root: Path) -> Set[str]:
                 if ing_id and ing_id not in METADATA_KEYS_TO_EXCLUDE and ing_id not in CRITICAL_EXCLUDED_ITEMS:
                     item_ids.add(ing_id)
 
-    # 3. Extract from data/item_locations.json
+    # 4. Extract from data/item_locations.json
     locations_path = repo_root / "data" / "item_locations.json"
     if locations_path.exists():
         with open(locations_path, "r", encoding="utf-8") as f:
@@ -332,7 +352,7 @@ def extract_item_ids(repo_root: Path) -> Set[str]:
             if k_clean and k_clean not in METADATA_KEYS_TO_EXCLUDE and k_clean not in CRITICAL_EXCLUDED_ITEMS:
                 item_ids.add(k_clean)
 
-    # 4. Extract from data/item_seasons.json
+    # 5. Extract from data/item_seasons.json
     seasons_path = repo_root / "data" / "item_seasons.json"
     if seasons_path.exists():
         with open(seasons_path, "r", encoding="utf-8") as f:
@@ -342,7 +362,7 @@ def extract_item_ids(repo_root: Path) -> Set[str]:
             if k_clean and k_clean not in METADATA_KEYS_TO_EXCLUDE and k_clean not in CRITICAL_EXCLUDED_ITEMS:
                 item_ids.add(k_clean)
 
-    return item_ids
+    return item_ids, explicit_sprites
 
 
 def build_asset_index(asset_dir: Path) -> Dict[str, Path]:
@@ -350,14 +370,20 @@ def build_asset_index(asset_dir: Path) -> Dict[str, Path]:
     Builds an in-memory hash map of lowercased file stem -> Path
     for fast O(1) icon lookup across thousands of asset files.
     Excludes outline sprites (*_outline.png).
+    Also includes Placeables/Furniture/ (such as Mineshaft wooden arch).
     """
     index: Dict[str, Path] = {}
-    if not asset_dir.exists():
-        return index
+    search_dirs = [asset_dir]
+    placeables_dir = asset_dir.parent / "Placeables" / "Furniture"
+    if placeables_dir.exists():
+        search_dirs.append(placeables_dir)
 
-    for p in asset_dir.glob("**/*.png"):
-        if p.is_file() and not p.name.endswith("_outline.png"):
-            index[p.stem.lower()] = p
+    for sdir in search_dirs:
+        if not sdir.exists():
+            continue
+        for p in sdir.glob("**/*.png"):
+            if p.is_file() and not p.name.endswith("_outline.png"):
+                index[p.stem.lower()] = p
 
     return index
 
@@ -365,14 +391,22 @@ def build_asset_index(asset_dir: Path) -> Dict[str, Path]:
 def resolve_item_icon(
     item_id: str,
     asset_index: Dict[str, Path],
+    explicit_sprites: Optional[Dict[str, str]] = None,
 ) -> Tuple[Optional[str], Optional[Path]]:
     """
-    Attempts to match an item ID to an asset file using three naming strategies:
+    Attempts to match an item ID to an asset file using four naming strategies:
+    0. Explicit Almanac mapping: item.icon_sprite
     1. Exact match: spr_ui_item_{id}.png
     2. No-underscore match: spr_ui_item_{id_without_underscores}.png
     3. Manual remap: spr_ui_item_{remap}.png
     """
     clean_id = item_id.strip().lower()
+
+    # Strategy 0: Explicit mapping from Almanac dataset
+    if explicit_sprites and clean_id in explicit_sprites:
+        exp_stem = explicit_sprites[clean_id]
+        if exp_stem in asset_index:
+            return "almanac_explicit", asset_index[exp_stem]
 
     # Strategy 1: Exact match
     stem_exact = f"spr_ui_item_{clean_id}"
@@ -398,24 +432,34 @@ def copy_icons(
     repo_root: Path,
 ) -> Dict[str, Any]:
     """
-    Copies matched item and NPC icons to static asset directories.
-    Ensures idempotency and regression safety.
+    Copies matched item and NPC icons to static asset directories in both
+    companion/static/icons/ and web/icons/.
+    Ensures idempotency, regression safety, and dual-alias availability.
     """
-    dest_items_dir = repo_root / "companion" / "static" / "icons" / "items"
-    dest_npcs_dir = repo_root / "companion" / "static" / "icons" / "npcs"
+    dest_items_dirs = [
+        repo_root / "companion" / "static" / "icons" / "items",
+        repo_root / "web" / "icons" / "items",
+    ]
+    dest_npcs_dirs = [
+        repo_root / "companion" / "static" / "icons" / "npcs",
+        repo_root / "web" / "icons" / "npcs",
+    ]
 
-    dest_items_dir.mkdir(parents=True, exist_ok=True)
-    dest_npcs_dir.mkdir(parents=True, exist_ok=True)
+    for d in dest_items_dirs:
+        d.mkdir(parents=True, exist_ok=True)
+    for d in dest_npcs_dirs:
+        d.mkdir(parents=True, exist_ok=True)
 
     # Build asset index
     asset_index = build_asset_index(asset_dir)
 
-    # Extract items
-    item_ids = extract_item_ids(repo_root)
+    # Extract items and explicit sprite stems
+    item_ids, explicit_sprites = extract_item_ids(repo_root)
 
     matched_items: Dict[str, Tuple[str, Path]] = {}
     missing_items: List[str] = []
     strategy_counts: Dict[str, int] = {
+        "almanac_explicit": 0,
         "exact": 0,
         "no_underscore": 0,
         "manual_remap": 0,
@@ -423,27 +467,33 @@ def copy_icons(
 
     # Resolve items
     for it in sorted(item_ids):
-        strategy, src_path = resolve_item_icon(it, asset_index)
+        strategy, src_path = resolve_item_icon(it, asset_index, explicit_sprites)
         if strategy and src_path:
             matched_items[it] = (strategy, src_path)
             strategy_counts[strategy] += 1
         else:
             missing_items.append(it)
 
-    # Copy item icons flat, preserving original asset filenames
+    # Copy item icons flat, preserving original asset filenames, and write alias
     copied_items_count = 0
     for it, (strat, src_path) in matched_items.items():
-        dst = dest_items_dir / src_path.name
-        shutil.copy2(src_path, dst)
+        clean_id = it.strip().lower()
+        alias_name = f"spr_ui_item_{clean_id}.png"
+        for dest_dir in dest_items_dirs:
+            # 1. Canonical asset filename
+            dst = dest_dir / src_path.name
+            shutil.copy2(src_path, dst)
+            # 2. Dual-alias filename (spr_ui_item_{clean_id}.png)
+            if src_path.name.lower() != alias_name:
+                alias_dst = dest_dir / alias_name
+                shutil.copy2(src_path, alias_dst)
+            if it == "animal_currency":
+                shutil.copy2(src_path, dest_dir / "spr_ui_item_animal_currency.png")
         copied_items_count += 1
-        if it == "animal_currency":
-            alias_dst = dest_items_dir / "spr_ui_item_animal_currency.png"
-            shutil.copy2(src_path, alias_dst)
 
     # Copy NPC icons:
     # Use UI NEW/Generic/Icons/NPC/ (all 35 full-town centered NPC portraits: spr_ui_generic_icon_npc_*.png)
-    # Also write spr_ui_item_sub_npc_<name>.png as copies of the centered generic portrait so
-    # all avatars remain centered and not offset to bottom-left corner badges.
+    # Also write spr_ui_item_sub_npc_<name>.png as copies of the centered generic portrait
     copied_npcs_count = 0
     copied_npc_names: List[str] = []
 
@@ -451,22 +501,23 @@ def copy_icons(
     if ui_npc_dir.exists():
         for p in sorted(ui_npc_dir.glob("spr_ui_generic_icon_npc_*.png")):
             if p.is_file() and "outline" not in p.name:
-                dst = dest_npcs_dir / p.name
-                shutil.copy2(p, dst)
+                for dest_npcs_dir in dest_npcs_dirs:
+                    dst = dest_npcs_dir / p.name
+                    shutil.copy2(p, dst)
+                    npc_name = p.stem.replace("spr_ui_generic_icon_npc_", "")
+                    sub_dst = dest_npcs_dir / f"spr_ui_item_sub_npc_{npc_name}.png"
+                    shutil.copy2(p, sub_dst)
                 copied_npcs_count += 1
                 copied_npc_names.append(p.name)
-                # Create centered compatibility copy as spr_ui_item_sub_npc_<name>.png
-                npc_name = p.stem.replace("spr_ui_generic_icon_npc_", "")
-                sub_dst = dest_npcs_dir / f"spr_ui_item_sub_npc_{npc_name}.png"
-                shutil.copy2(p, sub_dst)
     else:
         # Fallback to _SUB ICONS/NPC if UI NEW is missing
         npc_src_dir = asset_dir / "_SUB ICONS" / "NPC"
         if npc_src_dir.exists():
             for p in sorted(npc_src_dir.glob("spr_ui_item_sub_npc_*.png")):
                 if p.is_file() and not p.name.endswith("_outline.png"):
-                    dst = dest_npcs_dir / p.name
-                    shutil.copy2(p, dst)
+                    for dest_npcs_dir in dest_npcs_dirs:
+                        dst = dest_npcs_dir / p.name
+                        shutil.copy2(p, dst)
                     if p.name not in copied_npc_names:
                         copied_npcs_count += 1
                         copied_npc_names.append(p.name)
@@ -480,8 +531,8 @@ def copy_icons(
         "strategy_counts": strategy_counts,
         "copied_npcs_count": copied_npcs_count,
         "copied_npc_names": copied_npc_names,
-        "dest_items_dir": dest_items_dir,
-        "dest_npcs_dir": dest_npcs_dir,
+        "dest_items_dirs": dest_items_dirs,
+        "dest_npcs_dirs": dest_npcs_dirs,
     }
 
 
@@ -492,13 +543,14 @@ def print_summary(report: Dict[str, Any]) -> None:
     print("=" * 60)
     print(f"Total Unique Items Analyzed:  {report['total_items_analyzed']}")
     print(f"Matched & Copied Items:      {report['matched_count']}")
+    print(f"  - Almanac Explicit Matches: {report['strategy_counts']['almanac_explicit']}")
     print(f"  - Exact Matches:            {report['strategy_counts']['exact']}")
     print(f"  - No-Underscore Matches:    {report['strategy_counts']['no_underscore']}")
     print(f"  - Manual Remaps:            {report['strategy_counts']['manual_remap']}")
     print(f"Unmatched (Missing) Items:   {report['missing_count']}")
-    print(f"Target Items Directory:      {report['dest_items_dir']}")
-    print(f"Items Copied:                {report['copied_items_count']} PNG files")
-    print(f"Target NPCs Directory:       {report['dest_npcs_dir']}")
+    print(f"Target Items Directories:    {[str(d) for d in report['dest_items_dirs']]}")
+    print(f"Items Copied:                {report['copied_items_count']} items across {len(report['dest_items_dirs'])} dirs")
+    print(f"Target NPCs Directories:     {[str(d) for d in report['dest_npcs_dirs']]}")
     print(f"NPC Avatars Copied:          {report['copied_npcs_count']} PNG files")
     print(f"Idempotent Status:           SUCCESS (no collisions, clean copy)")
     print("=" * 60)
@@ -506,7 +558,7 @@ def print_summary(report: Dict[str, Any]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Copy game asset icons into companion static directory."
+        description="Copy game asset icons into companion and web static directories."
     )
     parser.add_argument(
         "--source-dir",
@@ -529,9 +581,9 @@ def main() -> int:
     report = copy_icons(args.source_dir, args.repo_root)
     print_summary(report)
 
-    if report["copied_items_count"] < 180:
+    if report["copied_items_count"] < 1000:
         print(
-            f"Error: Expected at least 180 items copied, got {report['copied_items_count']}",
+            f"Error: Expected at least 1000 items copied, got {report['copied_items_count']}",
             file=sys.stderr,
         )
         return 1

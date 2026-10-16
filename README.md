@@ -39,7 +39,13 @@ It inspects your game save file (`.sav`), tracks remaining ungifted items for ea
 - **Quest Demand & Completion Tracking (`data/quest_data.json`)**:
   - Tracks item requirements across 214 quests (Request Board, Story Quests, Crown Requests, and Date Invites) covering 277 distinct items.
   - Reads completed quests directly from your `.sav` file and normalizes internal quest IDs against wiki quest titles so finished quests are automatically excluded.
+  - Filters post-marriage "A Craving" quests via the **Future Wife** selector (`none`, `all`, or a specific candidate).
   - Rolls up crafted quest requirements to root raw materials and surfaces quest demand badges on Focus Suggestion cards.
+- **Almanac Completion Planner (`data/almanac_data.json`)**:
+  - Tracks collection progress across all 12 Almanac categories (Artifacts, Blacksmithing, Bugs, Cooked Dishes, Crops, Date Inspiration, Fish, Forageables, Furniture, Materials, Ranching, and Song Crystals) covering 2,369 items.
+  - Supports furniture swatch grouping (`one_per_recipe` vs `all_swatches`), gift bag reservation deduction, locked recipe filtering, and seasonal filtering.
+  - **Ready to Craft Now Queue**: Computes a greedy batch crafting queue with intermediate recipe chaining and crafting station badges.
+  - **Raw Material Breakdown & Source Priority**: Resolves missing Almanac crafts to root raw materials with interactive D3 dependency trees and scores acquisition sources across Quick, Grind, and Farm tiers by total Almanac impact.
 - **Focus Crafting Trees & Downstream Dependency Breakdown**:
   - Automatically calculates downstream crafting dependencies for top blocker items (e.g. `milk` → `cheese`, `wood` → `wooden_chest`).
   - Displays recipient NPCs unlocked by each downstream craft, required crafting stations (Kitchen, Mill, Crafting Bench, Smelter), and expandable `📜 Quests` nodes showing quest category, required quantity, and requester portrait in the Web Companion UI.
@@ -75,11 +81,12 @@ uv run fom-companion
 
 Then open **[http://localhost:8000](http://localhost:8000)** in any browser.
 
-- 📡 **Instant Live Sync**: Uses Server-Sent Events (SSE) and watchdog to automatically update the gift plan the moment you save or sleep in-game.
+- 📡 **Instant Live Sync**: Uses Server-Sent Events (SSE) and watchdog to automatically update the gift and Almanac plans the moment you save or sleep in-game.
 - 📂 **Save File Picker & Direct Upload**: Browse and select from auto-detected saves or upload any `.sav` file directly through the web UI without manual file paths.
 - 🎒 **Optimal Daily Bag Cards**: Shows item status (`📦 HAVE`, `✅ CRAFT`, `❌ NEED`), quantities, pixel-art item sprites, and recipient NPC avatar chips.
+- 📖 **Almanac Completion View**: Switch between the Gift Planner and Almanac Planner to inspect 12-category collection progress, ready-to-craft queues, raw material deficits, and ranked acquisition sources.
 - 🌾 **Focus Suggestions & Interactive Crafting Trees**: Pinpoints top blocker raw materials to gather or plant today, with expandable downstream crafting trees and vendor/alternate-source badges.
-- ⚙️ **All Parameters Configurable**: Change strategy (`journal` vs `max-relationship`), bag slot budget, date overrides, scoring multipliers, or NPC exclusions directly from the sidebar.
+- ⚙️ **All Parameters Configurable**: Change strategy (`journal` vs `max-relationship`), bag slot budget, date overrides, scoring multipliers, Almanac rules, or NPC exclusions directly from the sidebar.
 - 🪟 **Cross-Platform & Windows Optimized**: Supports Windows filesystem semantics, atomic save rename handling, and Proton/Steam Deck/Linux save detection.
 
 ### 2. Client-Side Static Web App
@@ -121,12 +128,17 @@ All planner features are dynamically controlled through the companion web interf
 |---|---|---|
 | **Save File** | Auto-detect or file upload | Select an existing save or drop in a new `.sav` file. |
 | **Strategy** | `journal` / `max-relationship` | Optimization strategy: `journal` targets unrecorded preferences; `max-relationship` maximizes daily friendship points gained across all characters. |
-| **Mode** | `auto`, `saturday`, `market-only`, `townsfolk`, `all` | Planning mode: `auto` uses save day; `saturday` plans for market day; `market-only` targets visiting vendors; `townsfolk` targets permanent residents; `all` plans all eligible NPCs. |
+| **Mode** | `auto`, `today`, `saturday`, `marriage`, `market-only`, `townsfolk`, `weekday`, `all`, `custom` | Planning mode targeting today's active NPCs, market day, marriage candidates, permanent residents, or a custom preset. |
 | **Bag Slots Budget** | Integer (default: `20`) | Maximum backpack slots budgeted for gift items. |
 | **Max Relationship Cap** | 1,755 points / 10 hearts | Characters at max relationship are automatically excluded unless disabled in settings. |
 | **Date Override** | Day number, season name, or festival | Simulate future dates (e.g. `saturday`, `winter 10` for Animal Festival) without advancing your game save. |
 | **Focus Sort** | `impact`, `deficit`, `quick-wins` | Ranking criteria for focus suggestions: `impact` (most blocked gifts first), `deficit` (largest missing count first), or `quick-wins` (closest to completion first). |
+| **Future Wife** | `none`, `all`, or candidate ID | Controls which post-marriage "A Craving" quests are included in focus demand and crafting trees. |
 | **NPC Exclusions** | Selection list | Exclude specific NPCs from planning. |
+| **Almanac Furniture Mode** | `one_per_recipe` / `all_swatches` | Count a furniture recipe complete once any color variant is collected (`one_per_recipe`) or require every swatch variant (`all_swatches`). |
+| **Almanac Reserve Gifts** | Boolean (default: `true`) | Deduct items reserved for today's gift bag before calculating Almanac craftability and material deficits. |
+| **Almanac Include Locked** | Boolean (default: `true`) | Include recipes not yet unlocked in your save file when computing Almanac material deficits. |
+| **Almanac Filters** | Season (`current`, `all`, `spring`..`winter`) & Category | Filter Almanac items, crafting queues, and raw material breakdowns by season and category. |
 
 ---
 
@@ -141,11 +153,12 @@ fom-gift-planner/
 │
 ├── fom_planner/              # Core optimization and domain package
 │   ├── __init__.py           # Public API exports
+│   ├── almanac.py            # Almanac progress tracker, batch crafting queue & raw material rollup
 │   ├── constants.py          # Vendors, festivals, and availability tiers
 │   ├── models.py             # Domain models (InGameDate, SaveData, CraftingPlan)
 │   ├── parser.py             # Binary save decompressor & parser
 │   ├── crafting.py           # Recursive DAG recipe calculator & material deduction
-│   ├── data_loader.py        # Database loaders (locations, recipes, metadata, alt sources)
+│   ├── data_loader.py        # Database loaders (locations, recipes, metadata, alt sources, almanac)
 │   ├── optimizer.py          # Greedy set-cover, max-relationship, focus suggestions & trees
 │   └── rankings.py           # Gift popularity ranking builder
 │
@@ -165,6 +178,7 @@ fom-gift-planner/
 │   └── py/web_bridge.py      # In-browser Python bridge
 │
 ├── data/
+│   ├── almanac_data.json     # Database of 2,369 Almanac items across 12 categories & swatch groups
 │   ├── item_data.json        # Database of 34 NPCs, 556 items, affinities, and tags
 │   ├── item_locations.json   # Database of 452 item spawn and acquisition locations
 │   ├── alt_sources.json      # Database of alternate acquisition paths (shops, wells, etc.)
@@ -172,14 +186,17 @@ fom-gift-planner/
 │   ├── recipe_sources.json   # Cooking recipe unlock sources
 │   ├── item_seasons.json     # Seasonal availability metadata
 │   └── recipes.json          # Complete cooking, crafting, and milling recipes
+├── scripts/                  # Dataset builders and sprite synchronization scripts
 ├── samples/
 │   └── sample_save.sav       # Sample save file for testing
 └── tests/                    # Automated test suite
     ├── fixtures.py           # Reusable synthetic save and item fixture generators
     ├── conftest.py           # Pytest root configuration and shared fixtures
-    ├── core/                 # Core engine tests (planner, crafting, parser, focus, quests)
-    ├── companion/            # Companion FastAPI backend & calendar tests
+    ├── test_almanac.py       # Almanac engine unit and property tests
+    ├── core/                 # Core engine tests (planner, crafting, parser, focus, quests, almanac)
+    ├── companion/            # Companion FastAPI backend, calendar & Almanac integration tests
     ├── web/                  # Pyodide web worker, bridge, sprites & UI contract tests
+    ├── e2e/                  # Headless Chrome CDP live browser verification suite
     └── ci/                   # GitHub Actions CI/CD contracts & security audits
 ```
 
@@ -187,7 +204,7 @@ fom-gift-planner/
 
 ## Running the Test Suite
 
-Run the full automated test suite (1,257 tests):
+Run the full automated test suite (1,307 tests):
 
 ```bash
 # Run all tests with uv (recommended)
@@ -197,5 +214,6 @@ uv run pytest
 uv run pytest tests/core/         # Core engine & domain tests
 uv run pytest tests/companion/    # Companion API & server tests
 uv run pytest tests/web/          # Pyodide web application & worker tests
+uv run pytest tests/e2e/          # Live headless browser end-to-end tests
 uv run pytest tests/ci/           # CI/CD contract & security audit tests
 ```

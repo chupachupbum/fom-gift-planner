@@ -49,6 +49,7 @@ CANONICAL_PLAN_KEYS = [
     "recipe_stats",
     "infused_items",
     "config",
+    "almanac",
     "error",
 ]
 
@@ -60,6 +61,7 @@ EXPECTED_DATA_FILES = [
     "recipe_sources.json",
     "item_seasons.json",
     "quest_data.json",
+    "almanac_data.json",
 ]
 
 
@@ -532,9 +534,9 @@ class TestPlanDataCanonicalSchemaCompliance:
         assert len(results) == 1
         self.plan = results[0]["plan"]
 
-    def test_all_16_canonical_keys_present(self):
-        """Verify presence of all 16 canonical keys."""
-        assert len(self.plan.keys()) == 16
+    def test_all_17_canonical_keys_present(self):
+        """Verify presence of all 17 canonical keys."""
+        assert len(self.plan.keys()) == 17
         for key in CANONICAL_PLAN_KEYS:
             assert key in self.plan, f"Missing canonical key: {key}"
 

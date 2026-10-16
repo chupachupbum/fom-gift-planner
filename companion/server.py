@@ -135,10 +135,31 @@ async def get_plan():
     return state.current_plan
 
 
+@app.get("/api/state")
+async def get_state():
+    """Returns the current full planner state (gift plan + almanac plan + config)."""
+    if not state.current_plan:
+        await state.recompute_plan()
+    return state.current_plan
+
+
 @app.post("/api/plan/refresh")
 async def refresh_plan():
     """Forces an immediate recalculation of the plan."""
     return await state.recompute_plan()
+
+
+@app.get("/api/config")
+async def get_config():
+    """Alias for /api/settings returning current config and UI schema."""
+    return await get_settings()
+
+
+@app.post("/api/config")
+async def update_config(payload: Dict[str, Any]):
+    """Alias for /api/settings updating configuration parameters."""
+    return await update_settings(payload)
+
 
 
 @app.get("/api/settings")
@@ -659,6 +680,24 @@ def _find_local_icon(kind: str, item_id: str) -> Optional[Path]:
         candidates = [
             loc_dir / f"{clean_id}.png",
             loc_dir / clean_id,
+        ]
+        for c in candidates:
+            if c.is_file():
+                return c
+
+    elif clean_kind in ("ui",):
+        ui_dir = icons_root / "ui"
+        if not ui_dir.exists():
+            return None
+
+        candidates = [
+            ui_dir / f"{clean_id}.png",
+            ui_dir / f"{clean_id}.svg",
+            ui_dir / clean_id,
+            ui_dir / f"almanac_{clean_id}.png",
+            ui_dir / f"spr_ui_{clean_id}.png",
+            ui_dir / f"spr_ui_journal_almanac_icon_{clean_id}.png",
+            ui_dir / f"spr_ui_journal_almanac_icon_itemcategory_{clean_id}.png",
         ]
         for c in candidates:
             if c.is_file():

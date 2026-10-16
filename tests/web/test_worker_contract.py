@@ -30,7 +30,7 @@ MANDATORY_DATA_FILES = [
     "item_seasons.json",
 ]
 
-# 16 canonical PlanData keys
+# 17 canonical PlanData keys
 CANONICAL_PLAN_KEYS = [
     "generated_at",
     "save_info",
@@ -47,6 +47,7 @@ CANONICAL_PLAN_KEYS = [
     "recipe_stats",
     "infused_items",
     "config",
+    "almanac",
     "error",
 ]
 

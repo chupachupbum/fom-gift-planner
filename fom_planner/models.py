@@ -581,6 +581,64 @@ class SaveData:
         result = {str(r).strip().lower() for r in unlocks if r and isinstance(r, str)}
         return result if result else None
 
+    def get_acquired_items(self) -> Set[str]:
+        """
+        Returns the set of lowercased item IDs the player has acquired in this save file.
+        Combines:
+          1. player.get("items_acquired", []) normalized to lowercase.
+          2. Any items currently present in the player bag or storage chests
+             (via self.get_all_available_items()) as a defensive fallback.
+          3. Any recipe/item IDs recorded in player.get("recipes_created", [])
+             (or keys if dict) as a defensive fallback.
+        """
+        acquired: Set[str] = set()
+
+        player = getattr(self, "player", None)
+        if isinstance(player, dict):
+            # 1. Primary: player["items_acquired"]
+            raw_acquired = player.get("items_acquired")
+            if isinstance(raw_acquired, (list, set, tuple)):
+                for item in raw_acquired:
+                    if item and isinstance(item, str):
+                        norm = item.strip().lower()
+                        if norm:
+                            acquired.add(norm)
+            elif isinstance(raw_acquired, dict):
+                for item in raw_acquired.keys():
+                    if item and isinstance(item, str):
+                        norm = item.strip().lower()
+                        if norm:
+                            acquired.add(norm)
+
+            # 2. Defensive fallback: player["recipes_created"]
+            raw_created = player.get("recipes_created")
+            if isinstance(raw_created, (list, set, tuple)):
+                for item in raw_created:
+                    if item and isinstance(item, str):
+                        norm = item.strip().lower()
+                        if norm:
+                            acquired.add(norm)
+            elif isinstance(raw_created, dict):
+                for item in raw_created.keys():
+                    if item and isinstance(item, str):
+                        norm = item.strip().lower()
+                        if norm:
+                            acquired.add(norm)
+
+        # 3. Defensive fallback: items currently in bag or chests
+        try:
+            available = self.get_all_available_items()
+            if isinstance(available, dict):
+                for item_id in available.keys():
+                    if item_id and isinstance(item_id, str):
+                        norm = item_id.strip().lower()
+                        if norm:
+                            acquired.add(norm)
+        except Exception:
+            pass
+
+        return acquired
+
     def get_completed_quest_keys(self) -> Set[str]:
         """
         Returns a set of normalized lowercase snake_case quest IDs for all quests

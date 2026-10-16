@@ -410,5 +410,11 @@ def plan_to_json(
         "focus_trees": _to_serializable(plan_results.get("focus_trees", [])),
         "source_priority": source_priority,
         "npc_progress": npc_progress,
+        "almanac": _to_serializable(plan_results.get("almanac", {})),
         "error": None,
     }
+
+
+# Public alias
+export_full_state = plan_to_json
+

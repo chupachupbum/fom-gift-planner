@@ -32,6 +32,20 @@
         </div>
       </div>
 
+      <!-- Mode Tab Switcher -->
+      <nav class="mode-nav-tabs" role="tablist" aria-label="Planner Modes">
+        <button class="mode-tab active" id="tabBtnGiftPlanner" data-mode="gift" type="button" role="tab" aria-selected="true" aria-controls="giftPlannerSection">
+          <img class="mode-tab-icon" src="icons/ui/icon_gift.png" alt="" />
+          <span>Gift Planner</span>
+        </button>
+        <button class="mode-tab" id="tabBtnAlmanacPlanner" data-mode="almanac" type="button" role="tab" aria-selected="false" aria-controls="almanacPlannerSection">
+          <img class="mode-tab-icon" src="icons/ui/spr_ui_journal_almanac_header_icon.png" alt="" />
+          <span>Almanac Planner</span>
+          <span class="mode-tab-beta">BETA</span>
+          <span class="mode-tab-badge" id="headerAlmanacPct">0%</span>
+        </button>
+      </nav>
+
       <div class="date-status-bar date-badge-wrap header-actions">
         <div class="date-badge interactive-badge" id="dateBadge" role="button" tabindex="0" title="Click to open Fields of Mistria Calendar & Date Override">
           <span class="season-tag season-spring" id="seasonTag">SPRING</span>
@@ -147,6 +161,9 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
+
+      <!-- Mode View 1: Gift Planner Section -->
+      <div id="giftPlannerSection" class="planner-mode-view active" role="tabpanel" aria-labelledby="tabBtnGiftPlanner">
 
       <!-- Section 0: Overview Statistics Dashboard -->
       <section id="section-stats" class="stats-dashboard-section">
@@ -316,6 +333,150 @@
         <div id="infusedContainer" class="recipients-container" style="padding: 14px;"></div>
       </section>
 
+      </div>
+
+      <!-- Mode View 2: Almanac Planner Section -->
+      <div id="almanacPlannerSection" class="planner-mode-view" role="tabpanel" aria-labelledby="tabBtnAlmanacPlanner" style="display: none;">
+        
+        <!-- Section A: 12-Category Almanac Progress Dashboard Grid -->
+        <section id="section-almanac-dashboard" class="almanac-dashboard-section almanac-section">
+          <div class="section-header almanac-section-header">
+            <h2>
+              <img class="section-icon" src="icons/ui/spr_ui_journal_almanac_header_icon.png" alt="" />
+              Almanac Collection Dashboard
+            </h2>
+            <div class="section-header-meta">
+              <span class="badge-counter" id="almanacOverallBadge">0 / 0 Collected (0%)</span>
+            </div>
+          </div>
+
+          <!-- 12 Category Progress Grid -->
+          <div class="almanac-category-grid" id="almanacCategoryGrid">
+            <!-- Populated dynamically: 12 Cards -->
+          </div>
+        </section>
+
+        <!-- Section B: Ready to Craft / Cook Now Batch Queue -->
+        <section id="section-almanac-ready-to-craft" class="almanac-craft-section almanac-section">
+          <div class="section-header almanac-section-header">
+            <div class="almanac-section-title-wrap">
+              <h2>
+                <img class="section-icon" src="icons/ui/icon_hammer.png" alt="" />
+                Ready to Craft / Cook Now
+              </h2>
+              <span class="badge-counter almanac-count-badge" id="readyToCraftBadge">0 Batches</span>
+            </div>
+            <div class="almanac-section-actions">
+              <button type="button" class="action-btn toggle-completed-craft-btn" id="btnToggleCompletedCrafts" style="display: none;" title="Show or hide items checked off during this session"></button>
+              <button type="button" class="action-btn reset-craft-checks-btn" id="btnResetCraftChecks" style="display: none;" title="Uncheck all temporarily completed items">↺ Reset</button>
+              <div class="almanac-view-toggle">
+                <button type="button" class="view-toggle-btn active" id="btnBatchViewChains" title="View grouped recipe chains">Chains</button>
+                <button type="button" class="view-toggle-btn" id="btnBatchViewSteps" title="View sequential step list">Steps</button>
+              </div>
+              <button type="button" class="action-btn copy-craft-btn" id="btnCopyCraftList" title="Copy crafting checklist to clipboard">
+                📋 Copy List
+              </button>
+            </div>
+          </div>
+          <p class="almanac-section-desc">
+            Craftable immediately using ingredients currently in your inventory and storage chests. Intermediate recipes are scheduled in optimal sequence.
+          </p>
+          <div class="almanac-craft-station-filters" id="readyToCraftStationFilters" role="tablist" aria-label="Filter by Crafting Station">
+            <!-- Populated dynamically via renderReadyToCraftQueue() -->
+          </div>
+          <div id="almanacBatchQueueContainer" class="almanac-batch-queue-grid">
+            <!-- Populated dynamically via renderReadyToCraftQueue() -->
+          </div>
+          <div class="drawer-pagination-row almanac-craft-pagination-row" id="readyToCraftPaginationRow" style="display: none;">
+            <button type="button" class="recipes-more-btn" id="btnShowNext5Crafts">
+              <span>Show Next 5 ▼</span>
+            </button>
+            <button type="button" class="drawer-close-btn" id="btnCollapseCrafts" style="display: none;">
+              Collapse to Top 5 ▲
+            </button>
+          </div>
+        </section>
+
+        <!-- Section C: Raw Material Blockers -->
+        <section id="section-almanac-blockers" class="almanac-section">
+          <div class="section-header almanac-section-header">
+            <div class="almanac-section-title-wrap">
+              <h2>
+                <img class="section-icon" src="icons/ui/icon_warning.svg" alt="Blockers">
+                Raw Material Blockers
+              </h2>
+              <span class="badge-counter almanac-count-badge" id="almanacBlockersBadge">0 Missing Materials</span>
+            </div>
+            <div class="almanac-section-actions">
+              <button type="button" class="action-btn toggle-completed-craft-btn" id="btnToggleCompletedBlockers" style="display: none;" title="Show or hide materials checked off during this session"></button>
+              <button type="button" class="action-btn reset-craft-checks-btn" id="btnResetBlockerChecks" style="display: none;" title="Uncheck all temporarily completed materials">↺ Reset</button>
+              <input type="text" id="almanacBlockerSearch" class="almanac-search-input" placeholder="Search missing materials..." autocomplete="off">
+            </div>
+          </div>
+          <p class="almanac-section-desc">
+            Base raw materials required to unblock downstream Almanac crafting recipes. Ranked by combined Almanac, Gift, and Quest deficit.
+          </p>
+          <div class="almanac-craft-station-filters" id="almanacBlockerCategoryFilters" role="tablist" aria-label="Filter by Material Category" style="display: none;">
+            <!-- Populated dynamically: All + categories present in raw_material_blockers -->
+          </div>
+          <div id="almanacBlockersContainer" class="almanac-blockers-grid">
+            <!-- Populated dynamically via renderRawMaterialBlockers() -->
+          </div>
+          <div class="drawer-pagination-row almanac-craft-pagination-row" id="almanacBlockersPaginationRow" style="display: none;">
+            <button type="button" class="recipes-more-btn" id="btnShowNext5Blockers">
+              <span>Show Next 5 ▼</span>
+            </button>
+            <button type="button" class="drawer-close-btn" id="btnCollapseBlockers" style="display: none;">
+              Collapse to Top 5 ▲
+            </button>
+          </div>
+        </section>
+
+        <!-- Section D: Unified Acquisition Source Priority -->
+        <section id="section-almanac-sources" class="almanac-sources-section almanac-section">
+          <div class="section-header almanac-section-header">
+            <div class="almanac-section-title-wrap">
+              <h2>
+                <img class="section-icon" src="icons/ui/icon_location_pin.png" alt="Sources">
+                Acquisition Priority &amp; Raw Material Blockers
+              </h2>
+              <span class="badge-counter almanac-count-badge" id="almanacSourcesBadge">0 Sources</span>
+            </div>
+            <div class="almanac-section-actions">
+              <button type="button" class="action-btn toggle-completed-craft-btn" id="btnToggleCompletedSources" style="display: none;" title="Show or hide sources checked off during this session"></button>
+              <button type="button" class="action-btn reset-craft-checks-btn" id="btnResetSourceChecks" style="display: none;" title="Uncheck all temporarily completed sources">↺ Reset</button>
+              <div class="almanac-tier-tabs" id="almanacTierTabs">
+                <button type="button" class="tier-tab-btn active" data-tier="all">All Sources</button>
+                <button type="button" class="tier-tab-btn tier-quick" data-tier="quick">
+                  <img class="inline-icon" src="icons/ui/tier_quick.png" alt="Quick"> Quick
+                </button>
+                <button type="button" class="tier-tab-btn tier-grind" data-tier="grind">
+                  <img class="inline-icon" src="icons/ui/tier_grind.png" alt="Grind"> Grind
+                </button>
+                <button type="button" class="tier-tab-btn tier-farm" data-tier="farm">
+                  <img class="inline-icon" src="icons/ui/tier_farm.png" alt="Farm"> Farm
+                </button>
+              </div>
+            </div>
+          </div>
+          <p class="almanac-section-desc">
+            Physical sources and locations ranked by <strong>Total Almanac Impact</strong> (direct unobtained fish, bugs, forage, and dig site finds plus downstream craftable recipes unblocked by materials from that location).
+          </p>
+          <div id="almanacSourcesContainer" class="almanac-sources-grid">
+            <!-- Populated dynamically via renderSourcePriority() -->
+          </div>
+          <div class="drawer-pagination-row almanac-craft-pagination-row" id="almanacSourcesPaginationRow" style="display: none;">
+            <button type="button" class="recipes-more-btn" id="btnShowNext5Sources">
+              <span>Show Next 5 ▼</span>
+            </button>
+            <button type="button" class="drawer-close-btn" id="btnCollapseSources" style="display: none;">
+              Collapse to Top 5 ▲
+            </button>
+          </div>
+        </section>
+
+      </div>
+
     </main>
 
     <!-- Sidebar: Controls & Settings -->
@@ -353,15 +514,15 @@
               <span style="color: var(--text-muted);">Loaded File:</span>
               <strong id="saveFilename" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">None</strong>
             </div>
-            <div class="save-status-row">
+            <div class="save-status-row" data-planner-mode="gift">
               <span style="color: var(--text-muted);">Coverage:</span>
               <span id="coverageSummary">0/0 Villagers</span>
             </div>
-            <div class="save-status-row">
+            <div class="save-status-row" data-planner-mode="gift">
               <span style="color: var(--text-muted);">Strategy:</span>
               <span id="activeStrategy">Journal</span>
             </div>
-            <div class="save-status-row">
+            <div class="save-status-row" data-planner-mode="gift">
               <span style="color: var(--text-muted);">Mode:</span>
               <span id="activeMode">Auto</span>
             </div>
@@ -541,6 +702,76 @@
           <button type="button" class="preset-btn-save" id="presetSaveBtn">Save Preset</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Almanac Category Slide-Out Item Drawer Overlay -->
+  <div id="almanacDrawerBackdrop" class="almanac-drawer-backdrop" style="display: none;">
+    <div id="almanacCategoryDrawer" class="almanac-drawer" role="dialog" aria-modal="true" aria-labelledby="almanacDrawerTitle">
+      
+      <!-- Drawer Header -->
+      <div class="almanac-drawer-header">
+        <div class="almanac-drawer-title-group">
+          <img id="almanacDrawerIcon" class="almanac-drawer-icon" src="icons/ui/icon_gift.png" alt="" />
+          <div>
+            <h3 id="almanacDrawerTitle" class="almanac-drawer-title">Category Name</h3>
+            <div id="almanacDrawerSubtitle" class="almanac-drawer-subtitle">0 / 0 Obtained (0%)</div>
+          </div>
+        </div>
+        <button type="button" class="almanac-drawer-close" id="closeAlmanacDrawerBtn" title="Close Drawer (Esc)">
+          <img class="inline-icon" src="icons/ui/icon_close.svg" alt="Close" />
+        </button>
+      </div>
+
+      <!-- Drawer Controls: Search & Filter Pills -->
+      <div class="almanac-drawer-controls">
+        <div class="almanac-search-row">
+          <div class="search-input-wrapper">
+            <input type="text" id="almanacSearchInput" class="almanac-search-input" placeholder="Search item, source, or recipe..." autocomplete="off" />
+            <button type="button" id="almanacSearchClearBtn" class="search-clear-btn" style="display: none;" title="Clear search">✕</button>
+          </div>
+        </div>
+
+        <!-- Filter Pill Bars -->
+        <div class="almanac-filters-group">
+          <!-- Status Filters -->
+          <div class="almanac-filter-row">
+            <span class="filter-row-label">Status:</span>
+            <div class="filter-pills" id="almanacStatusFilters">
+              <button type="button" class="pill-btn active" data-filter="all">All (<span id="countStatusAll">0</span>)</button>
+              <button type="button" class="pill-btn" data-filter="obtained">Obtained (<span id="countStatusObtained">0</span>)</button>
+              <button type="button" class="pill-btn" data-filter="missing">Missing (<span id="countStatusMissing">0</span>)</button>
+              <button type="button" class="pill-btn" data-filter="craftable">Craftable Now (<span id="countStatusCraftable">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Season Filters -->
+          <div class="almanac-filter-row">
+            <span class="filter-row-label">Season:</span>
+            <div class="filter-pills" id="almanacSeasonFilters">
+              <button type="button" class="pill-btn active" data-season="all">All</button>
+              <button type="button" class="pill-btn pill-spring" data-season="spring">Spring</button>
+              <button type="button" class="pill-btn pill-summer" data-season="summer">Summer</button>
+              <button type="button" class="pill-btn pill-fall" data-season="fall">Fall</button>
+              <button type="button" class="pill-btn pill-winter" data-season="winter">Winter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Items Grid / Content Area -->
+      <div class="almanac-drawer-body" id="almanacDrawerBody">
+        <div class="almanac-items-grid" id="almanacItemsGrid">
+          <!-- Populated dynamically with item cards or furniture group cards -->
+        </div>
+      </div>
+
+      <!-- Drawer Footer Summary -->
+      <div class="almanac-drawer-footer">
+        <span id="almanacShowingCount">Showing 0 items</span>
+        <button type="button" class="btn-drawer-close" id="closeAlmanacDrawerBottomBtn">Done</button>
+      </div>
+
     </div>
   </div>
 
